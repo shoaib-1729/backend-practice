@@ -7,7 +7,7 @@
 - etc...
 ### Credits : 
 
-- [Code Thread](www.youtube.com/@thecodethread)
+- [Code Thread](https://www.youtube.com/@thecodethread)
 
 
 ## Badges
