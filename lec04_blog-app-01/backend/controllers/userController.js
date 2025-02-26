@@ -26,15 +26,27 @@ async function createUser(req, res) {
 
     // error handling
     if (!name) {
-        res.send("Enter name")
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the name"
+        });
     }
     if (!email) {
-        res.send("Enter email")
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the email"
+        });
+
     }
     if (!password) {
-        res.send("Enter passowrd")
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the password"
+        });
     }
     try {
+        console.log("Received Form Data:", req.body);
+
         // database mei store karo
         await User.create({ name, email, password });
 

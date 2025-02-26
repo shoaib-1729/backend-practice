@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const dbConnect = require("./config/dbConnect.js");
 const userRoute = require("./routes/userRoute.js");
 const blogRoute = require("./routes/blogRoute.js");
@@ -6,6 +7,9 @@ const blogRoute = require("./routes/blogRoute.js");
 
 // create server
 const app = express();
+
+// cors
+app.use(cors())
 
 // middleware
 app.use(express.json());
