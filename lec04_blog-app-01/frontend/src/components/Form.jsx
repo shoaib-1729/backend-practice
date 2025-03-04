@@ -39,7 +39,7 @@ async function handleSubmit(e){
 
     return(
         <div>
-        {/* <form onSubmit={handleSubmit}> */}
+        <form onSubmit={handleSubmit}>
                 {/* Name Input */}
                 <input
                     type="text"
@@ -77,8 +77,8 @@ async function handleSubmit(e){
                 <br /><br />
 
                 {/* Submit Button */}
-                <button onClick={handleSubmit} type="submit">Submit</button>
-        {/* </form>   */}
+                <button type="submit">Submit</button>
+        </form>  
             </div>
     )
 }

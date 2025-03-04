@@ -1,41 +1,86 @@
+const { trusted } = require("mongoose");
 const Blog = require("../models/blogModel.js")
-const User = require("../models/userModel.js")
+const User = require("../models/userModel.js");
+const { validToken, decodeToken } = require("../utils/generateToken.js");
+
 
 async function getBlogs(req, res) {
     try {
         const blogs = await Blog.find({ "draft": false }).populate({ path: 'creator', select: '-password' });
-        res.json({ "message": "Blogs fetched successfully...", blogs })
+        return res.json({
+            "success": true,
+            "message": "Blogs fetched successfully...",
+            blogs
+        })
     } catch (err) {
-        res.status(500).json({ "message": "Error fetching blogs", "error": err.message })
+        return res.status(500).json({
+            success: false,
+            "message": "Error fetching blogs",
+            "error": err.message
+        })
     }
 
 }
+
 async function getBlog(req, res) {
     try {
         // draft false ->  only accessed by blog author, authorization will be required
         const blog = await Blog.findById(req.params.id);
-        res.json({ "message": "Blog fetched successfully...", blog })
+        return res.json({
+            "success": true,
+            "message": "Blog fetched successfully...",
+            blog
+        })
     } catch (err) {
-        res.status(500).json({ "message": "Error fetching blog", "error": err.message })
+        return res.status(500).json({
+            "success": false,
+            "message": "Error fetching blog",
+            "error": err.message
+        })
     }
 
 }
+
 async function createBlog(req, res) {
     try {
+
+        // decoded
+        console.log("Decoded Token: ", decodeToken(req.body.token));
+
+        // creating blog -> check valid authenticated
+        const isValid = validToken(req.body.token);
+
+        // not valid token -> early return
+        if (!isValid) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Invalid Token"
+            })
+        }
+
         const { title, description, draft, creator } = req.body;
         // check user with id creator exists
         const author = await User.findById(creator)
 
         // validations
         if (!title) {
-            res.status(400).json({ "message": "Please enter the title" })
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the title"
+            })
         }
         if (!description) {
-            res.status(400).json({ "message": "Please enter the title" })
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the title"
+            })
         }
         // creator not there -> early return
         if (!author) {
-            res.status(404).json({ "message": "Creator not found" })
+            return res.status(404).json({
+                "success": false,
+                "message": "Creator not found"
+            })
         }
 
         const blog = await Blog.create({ title, description, draft, creator });
@@ -43,10 +88,17 @@ async function createBlog(req, res) {
         // blog create -> add blogs in user collection
         await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
 
-        res.json({ "message": "Blog created successfully..." })
+        return res.json({
+            "success": true,
+            "message": "Blog created successfully..."
+        })
 
     } catch (err) {
-        res.status(500).json({ "message": "Error creating blogs", "error": err.message })
+        return res.status(500).json({
+            "success": false,
+            "message": "Error creating blogs",
+            "error": err.message
+        })
     }
 
 }
@@ -59,20 +111,38 @@ async function updateBlog(req, res) {
         });
         // check if the user exists
         if (!updatedBlog) {
-            return res.status(404).json({ message: "Blog not found" });
+            return res.status(404).json({
+                "success": false,
+                "message": "Blog not found"
+            });
         }
-        res.json({ "message": "Blog updated successfully..." })
+        return res.json({
+            "success": true,
+            "message": "Blog updated successfully..."
+        })
 
     } catch (err) {
-        res.status(500).json({ "message": "Error updating blogs", "error": err.message })
+        return res.status(500).json({
+            "success": false,
+            "message": "Error updating blogs",
+            "error": err.message
+        })
     }
 }
+
 async function deleteBlog(req, res) {
     try {
         await Blog.findByIdAndDelete(req.params.id)
-        res.json({ "message": "Blog deleted successfully..." })
+        return res.json({
+            "success": true,
+            "message": "Blog deleted successfully..."
+        })
     } catch (err) {
-        res.status(500).json({ "message": "Error deleting blogs", "error": err.message })
+        return res.status(500).json({
+            "success": false,
+            "message": "Error deleting blogs",
+            "error": err.message
+        })
     }
 }
 
