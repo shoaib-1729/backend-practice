@@ -1,4 +1,5 @@
 const express = require("express");
+const verifyUser = require("../middlewares/auth.js");
 const { getBlog, getBlogs, createBlog, updateBlog, deleteBlog } = require("../controllers/blogController.js");
 const router = express.Router();
 
@@ -9,7 +10,8 @@ router.get("/blogs", getBlogs);
 router.get("/blogs/:id", getBlog);
 
 // create blogs
-router.post("/blogs", createBlog);
+// verify user => create blog
+router.post("/blogs", verifyUser, createBlog);
 
 // update blogs
 router.put("/blogs/:id", updateBlog);

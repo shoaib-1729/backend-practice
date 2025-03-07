@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-const Blog = ()=>{
+function Blog(){
     // states for data
     const [blogData, setBlogData] = useState([])
     // function for blogs
@@ -9,30 +9,30 @@ const Blog = ()=>{
             const res = await fetch("http://localhost:3000/api/v1/blogs", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json" 
+                    "Content-Type": "application/json"
                 }
             });
-            
+
             const data = await res.json();
             console.log(data);
             setBlogData(data.blogs);
         } catch (error) {
-            console.error("Error fetching blogs:", error);  
+            console.error("Error fetching blogs:", error);
         }
     }
-    // api call -> use Effect pr
+    // api call -> use effect pr
     useEffect(() => {
         handleBlogs();
     }, []);
 
     return(
         <div>
-          {
+        {
     blogData.map((blog) => (
         <ul key={blog._id}>
             <li>{blog.title}</li>
             <li>{blog.description}</li>
-            <li>{blog.creator.name}</li>
+            {/* <li>{blog.creator.name}</li> */}
         </ul>
     ))
 }

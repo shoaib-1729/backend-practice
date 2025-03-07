@@ -7,11 +7,12 @@ function generateToken(payload) {
 
 function validToken(token) {
     try {
-        const isValid = jwt.verify(token, "jsonkakhatarnakwalakey");
-        return true;
+        const data = jwt.verify(token, "jsonkakhatarnakwalakey");
+        return data;
 
     } catch (err) {
-        return false;
+        // user not verified -> return null
+        return null;
     }
 }
 

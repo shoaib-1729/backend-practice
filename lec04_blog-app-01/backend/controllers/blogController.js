@@ -1,7 +1,5 @@
-const { trusted } = require("mongoose");
 const Blog = require("../models/blogModel.js")
 const User = require("../models/userModel.js");
-const { validToken, decodeToken } = require("../utils/generateToken.js");
 
 
 async function getBlogs(req, res) {
@@ -44,21 +42,11 @@ async function getBlog(req, res) {
 async function createBlog(req, res) {
     try {
 
-        // decoded
-        console.log("Decoded Token: ", decodeToken(req.body.token));
+        // extract creator id from req custom field
+        let creator = req.user;
 
-        // creating blog -> check valid authenticated
-        const isValid = validToken(req.body.token);
+        const { title, description, draft } = req.body;
 
-        // not valid token -> early return
-        if (!isValid) {
-            return res.status(400).json({
-                "success": false,
-                "message": "Invalid Token"
-            })
-        }
-
-        const { title, description, draft, creator } = req.body;
         // check user with id creator exists
         const author = await User.findById(creator)
 
