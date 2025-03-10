@@ -4,7 +4,7 @@ async function verifyUser(req, res, next) {
     // token verify
     // extract token from headers
     let token = req.headers.authorization.split(" ")[1];
-    console.log("Token:", token);
+    // console.log("Token:", token);
 
     // if token is not there -> early return
     if (!token) {
@@ -16,7 +16,7 @@ async function verifyUser(req, res, next) {
 
     // if token is there -> check token validity
     try {
-        const userData = await validToken(token)
+        const userData = validToken(token)
             // if userData not there -> early return
         if (!userData) {
             res.status(400).json({
@@ -41,13 +41,10 @@ async function verifyUser(req, res, next) {
     }
 
 
-
-
     // pass control to next function
     // valid user -> next, otherwise -> early return
     // next();
 
 }
 
-module.exports = verifyUser;
 module.exports = verifyUser;

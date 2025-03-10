@@ -59,11 +59,7 @@ function CreateBlog () {
         }
         // Empty dependency array to run only once
     }, [navigate]);
-
-if (!token) {
-    return navigate("/signup");
-     }
-
+    
     return (
         <div>
         <h1>Create Blog</h1>

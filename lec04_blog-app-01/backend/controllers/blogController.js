@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Blog = require("../models/blogModel.js")
 const User = require("../models/userModel.js");
 
@@ -93,22 +94,52 @@ async function createBlog(req, res) {
 
 async function updateBlog(req, res) {
     try {
-        const updatedBlog = await Blog.findByIdAndUpdate(req.params.id, req.body, {
-            new: true, // Return the updated document
-            runValidators: true // Ensure validation is applied
-        });
-        // check if the user exists
-        if (!updatedBlog) {
-            return res.status(404).json({
-                "success": false,
-                "message": "Blog not found"
-            });
-        }
-        return res.json({
-            "success": true,
-            "message": "Blog updated successfully..."
-        })
+        // update blog
+        const { title, description, draft } = req.body;
+        // extract id from params
+        const { id } = req.params;
 
+        // Check if the id is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid ID format' });
+        }
+
+        // blog by id
+        const blog = await Blog.findById(id);
+
+        // creator id
+        const creator = req.user;
+
+        // validation
+        // if blog does not exits?
+        if (!blog) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Blog does not exists",
+            })
+        }
+
+        // check the user is valid to update blog?
+        if (blog.creator != creator) {
+            return res.status(400).json({
+                "success": false,
+                "message": "You are not authorized for this action",
+            })
+        }
+
+
+        // update blog
+        const updatedBlog = await Blog.findByIdAndUpdate(id, {
+            title,
+            description,
+            draft
+        }, { new: true })
+
+        return res.status(200).json({
+            "success": true,
+            "message": "Blog updated successfully...",
+            "blog": updatedBlog
+        })
     } catch (err) {
         return res.status(500).json({
             "success": false,
