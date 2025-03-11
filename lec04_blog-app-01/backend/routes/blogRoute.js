@@ -17,7 +17,7 @@ router.post("/blogs", verifyUser, createBlog);
 router.put("/blogs/:id", verifyUser, updateBlog);
 
 // delete blogs
-router.delete("/blogs/:id", deleteBlog);
+router.delete("/blogs/:id", verifyUser, deleteBlog);
 
 // export router
 module.exports = router;

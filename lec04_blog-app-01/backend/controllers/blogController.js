@@ -151,8 +151,45 @@ async function updateBlog(req, res) {
 
 async function deleteBlog(req, res) {
     try {
-        await Blog.findByIdAndDelete(req.params.id)
-        return res.json({
+        // blog id
+        const { id } = req.params;
+
+        // Check if the id is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid ID format' });
+        }
+
+        // find blog by id
+        const blog = await Blog.findById(id);
+        const creator = req.user;
+
+
+
+        // validation
+        // blog id valid?
+        if (!blog) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Blog does not exits",
+            })
+        }
+        // check user deleting the blog is creator or not?
+        if (blog.creator != creator) {
+            return res.status(400).json({
+                "success": false,
+                "message": "You are not authorized for this action",
+            })
+        }
+
+
+        // delete blog
+        await Blog.findByIdAndDelete(id);
+
+        // user se bhi delete karo
+        await User.findByIdAndUpdate(creator, { $pull: { blogs: id } })
+
+
+        return res.status(200).json({
             "success": true,
             "message": "Blog deleted successfully..."
         })

@@ -1,44 +1,54 @@
 const { validToken } = require("../utils/generateToken")
 
 async function verifyUser(req, res, next) {
-    // token verify
-    // extract token from headers
-    let token = req.headers.authorization.split(" ")[1];
-    // console.log("Token:", token);
-
-    // if token is not there -> early return
-    if (!token) {
-        res.status(400).json({
-            "success": false,
-            "message": "Please Sign in"
-        })
-    }
-
-    // if token is there -> check token validity
+    // try-catch mei error handling karo  -> server chalta rehna chahiye 
     try {
-        const userData = validToken(token)
-            // if userData not there -> early return
-        if (!userData) {
+        // token verify
+        // extract token from headers
+        let token = req.headers.authorization.split(" ")[1];
+        // console.log("Token:", token);
+
+        // if token is not there -> early return
+        if (!token) {
             res.status(400).json({
                 "success": false,
                 "message": "Please Sign in"
             })
         }
 
-        // set user id extracted via token to custom request property
-        req.user = userData.id;
+        // if token is there -> check token validity
+        try {
+            const userData = validToken(token)
+                // if userData not there -> early return
+            if (!userData) {
+                res.status(400).json({
+                    "success": false,
+                    "message": "Please Sign in"
+                })
+            }
 
-        // if token valid -> call controller
-        next()
+            // set user id extracted via token to custom request property
+            req.user = userData.id;
 
-    } catch (err) {
+            // if token valid -> call controller
+            next()
+
+        } catch (err) {
+            res.status(500).json({
+                "success": false,
+                "message": "Error verifying user",
+                "error": err.message
+            })
+
+        }
+    } catch (error) {
         res.status(500).json({
             "success": false,
-            "error": "Error verifying user",
-            "message": err.message
+            "error": error.message,
+            "message": "Token missing"
         })
-
     }
+
 
 
     // pass control to next function
