@@ -2,10 +2,16 @@ const mongoose = require("mongoose");
 const Blog = require("../models/blogModel.js")
 const User = require("../models/userModel.js");
 
-
+// get all blogs controller
 async function getBlogs(req, res) {
     try {
-        const blogs = await Blog.find({ "draft": false }).populate({ path: 'creator', select: '-password' });
+        const blogs = await Blog.find({ "draft": false }).populate({
+            path: "creator",
+            select: "-password"
+        }).populate({
+            path: "likes",
+            select: "name email"
+        });
         return res.json({
             "success": true,
             "message": "Blogs fetched successfully...",
@@ -21,6 +27,7 @@ async function getBlogs(req, res) {
 
 }
 
+// get blog by id controller
 async function getBlog(req, res) {
     try {
         // draft false ->  only accessed by blog author, authorization will be required
@@ -40,6 +47,7 @@ async function getBlog(req, res) {
 
 }
 
+// create blog controller
 async function createBlog(req, res) {
     try {
 
@@ -92,6 +100,7 @@ async function createBlog(req, res) {
 
 }
 
+// update blog  controller
 async function updateBlog(req, res) {
     try {
         // update blog
@@ -149,6 +158,7 @@ async function updateBlog(req, res) {
     }
 }
 
+// delete blog controller
 async function deleteBlog(req, res) {
     try {
         // blog id
@@ -202,11 +212,72 @@ async function deleteBlog(req, res) {
     }
 }
 
+// like blog controller
+async function likeBlog(req, res) {
+    try {
+        // blog id
+        const { id } = req.params;
+
+        // Check if the id is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ error: 'Invalid ID format' });
+        }
+
+        // find blog by id
+        const blog = await Blog.findById(id);
+        // creator refers to the authenticated user (not the one creating the blog)
+        const creator = req.user;
+
+
+
+        // validation
+        // blog id valid?
+        if (!blog) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Blog does not exits",
+            })
+        }
+        // user id exists in like array -> dislike else like
+        if (!blog.likes.includes(creator)) {
+            // like blog logic
+            // push user id to like array
+            await Blog.findByIdAndUpdate(id, { $push: { likes: creator } })
+
+
+            // response message
+            return res.status(200).json({
+                "success": true,
+                "message": "Blog liked successfully..."
+            })
+
+        } else {
+            // dislike blog logic
+            // pull user id to like array
+            await Blog.findByIdAndUpdate(id, { $pull: { likes: creator } })
+
+
+
+            // response message
+            return res.status(200).json({
+                "success": true,
+                "message": "Blog disliked successfully..."
+            })
+        }
+    } catch (err) {
+        return res.status(500).json({
+            "success": false,
+            "message": "Error liking blog",
+            "error": err.message
+        })
+    }
+}
 
 module.exports = {
     getBlogs,
     getBlog,
     createBlog,
     updateBlog,
-    deleteBlog
+    deleteBlog,
+    likeBlog
 }
