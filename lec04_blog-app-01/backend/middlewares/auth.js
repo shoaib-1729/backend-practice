@@ -44,8 +44,8 @@ async function verifyUser(req, res, next) {
     } catch (error) {
         res.status(500).json({
             "success": false,
-            "error": error.message,
-            "message": "Token missing"
+            "message": "Token missing",
+            "error": error.message
         })
     }
 

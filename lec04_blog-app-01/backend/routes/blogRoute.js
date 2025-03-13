@@ -1,6 +1,8 @@
 const express = require("express");
 const verifyUser = require("../middlewares/auth.js");
-const { getBlog, getBlogs, createBlog, updateBlog, deleteBlog, likeBlog, addComment, deleteComment } = require("../controllers/blogController.js");
+const { getBlog, getBlogs, createBlog, updateBlog, deleteBlog, likeBlog } = require("../controllers/blogController.js");
+const { addComment, deleteComment, editComment, likeComment } = require("../controllers/commentController.js")
+
 const router = express.Router();
 
 // get blogs
@@ -27,6 +29,12 @@ router.post("/blogs/comment/:id", verifyUser, addComment)
 
 // delete comment
 router.delete("/blogs/comment/:id", verifyUser, deleteComment)
+
+// edit comment
+router.put("/blogs/edit-comment/:id", verifyUser, editComment)
+
+// like comment
+router.post("/blogs/like-comment/:id", verifyUser, likeComment)
 
 // export router
 module.exports = router;
