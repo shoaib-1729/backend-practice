@@ -2,6 +2,7 @@ const express = require("express");
 const verifyUser = require("../middlewares/auth.js");
 const { getBlog, getBlogs, createBlog, updateBlog, deleteBlog, likeBlog } = require("../controllers/blogController.js");
 const { addComment, deleteComment, editComment, likeComment } = require("../controllers/commentController.js")
+const upload = require("../utils/multer.js")
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.get("/blogs/:id", getBlog);
 
 // create blogs
 // verify user => create blog
-router.post("/blogs", verifyUser, createBlog);
+router.post("/blogs", verifyUser, upload.single("image"), createBlog);
 
 // update blogs
 router.put("/blogs/:id", verifyUser, updateBlog);

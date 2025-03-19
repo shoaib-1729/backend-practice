@@ -13,6 +13,16 @@ const blogSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // image url
+    image: {
+        type: String,
+        required: true
+    },
+    // image url
+    imageId: {
+        type: String,
+        required: true
+    },
     // blog -> creator
     creator: {
         type: mongoose.Schema.Types.ObjectId,

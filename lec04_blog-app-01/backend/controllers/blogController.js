@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
+const fs = require("node:fs");
 const Blog = require("../models/blogModel.js")
 const User = require("../models/userModel.js");
+const { cloudinaryImageUpload, cloudinaryDestroyImage } = require("../config/cloudinaryConfig.js")
 
 // get all blogs controller
 async function getBlogs(req, res) {
@@ -63,11 +65,21 @@ async function createBlog(req, res) {
         let creator = req.user;
 
         const { title, description, draft } = req.body;
+        console.log(req.body);
+
+        // image
+        const image = req.file;
 
         // check user with id creator exists
         const author = await User.findById(creator)
 
         // validations
+        if (!image) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please select the image"
+            })
+        }
         if (!title) {
             return res.status(400).json({
                 "success": false,
@@ -88,7 +100,17 @@ async function createBlog(req, res) {
             })
         }
 
-        const blog = await Blog.create({ title, description, draft, creator });
+        // cloudinary image url
+        // public id delete karne ke liye chahiye hogi
+        const { secure_url, public_id } = await cloudinaryImageUpload(image.path);
+
+        // cloudinary mei upload ho jaane ke baad image ko uploads folder se hata do
+        fs.unlinkSync(image.path);
+
+
+
+        // yaha pr image:url bhi aayega, image multer se aa rahi hogi
+        const blog = await Blog.create({ title, description, draft, creator, image: secure_url, imageId: public_id });
 
         // blog create -> add blogs in user collection
         await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
@@ -172,6 +194,7 @@ async function deleteBlog(req, res) {
         // blog id
         const { id } = req.params;
 
+
         // Check if the id is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ error: 'Invalid ID format' });
@@ -205,6 +228,9 @@ async function deleteBlog(req, res) {
 
         // user se bhi delete karo
         await User.findByIdAndUpdate(creator, { $pull: { blogs: id } })
+
+        // cloudinary se bhi hata do
+        await cloudinaryDestroyImage(blog.imageId);
 
 
         return res.status(200).json({
