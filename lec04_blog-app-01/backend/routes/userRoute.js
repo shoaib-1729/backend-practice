@@ -9,10 +9,10 @@ router.get("/users", getUser);
 router.get("/users/:id", getUserById);
 
 // create users
-router.post("/users", createUser);
+router.post("/signup", createUser);
 
 // login user
-router.post("/login", loginUser);
+router.post("/signin", loginUser);
 
 // update users
 router.put("/users/:id", updateUser);

@@ -1,20 +1,14 @@
-import { Route, Routes } from "react-router-dom"
-import "./App.css"
-import Blog from "./components/Blog"
-import Signup from "./pages/signup"
-import Signin from "./pages/signin"
-import CreateBlog from "./components/CreateBlog"
-
+import { Routes, Route} from 'react-router-dom';
+import AuthForm from './pages/authForm';
 function App() {
 
   return (
-    <Routes>
-      <Route path="/" element={<Blog></Blog>}></Route>
-      <Route path="/signup" element={<Signup></Signup>}></Route>
-      <Route path="/signin" element={<Signin></Signin>}></Route>
-      <Route path="/create-blog" element={<CreateBlog></CreateBlog>}></Route>
-      <Route path="*" element={<h1>Page Not Found</h1>}></Route>
-    </Routes>
+    <div className='relative h-screen bg-gray-200'>
+      <Routes>
+        <Route path="/signup" element={<AuthForm type={"signup"} />}></Route>
+        <Route path="/signin" element={<AuthForm type={"signin"} />}></Route>
+      </Routes>
+    </div>
   )
 }
 
