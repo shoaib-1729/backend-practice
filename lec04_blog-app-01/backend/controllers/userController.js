@@ -78,8 +78,8 @@ async function createUser(req, res) {
             "user": {
                 name: newUser.name,
                 email: newUser.email,
-                token
             },
+            token
         });
     } catch (error) {
         // Error handling for DB operation
@@ -109,7 +109,7 @@ async function loginUser(req, res) {
 
         // check if user exits already in DB
         const checkExistingUser = await User.findOne({ email });
-        
+
         // generate token -> user login hone par
         const token = generateToken({
             id: checkExistingUser._id,

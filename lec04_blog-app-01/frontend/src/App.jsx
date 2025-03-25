@@ -1,15 +1,27 @@
-import { Routes, Route} from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import AuthForm from './pages/authForm';
-function App() {
+import Navbar from '../components/Navbar';
+import HomePage from '../components/HomePage';
+import AddBlog from '../components/AddBlog';
 
+function App() {
+  const location = useLocation();
   return (
-    <div className='relative h-screen bg-gray-200'>
-      <Routes>
-        <Route path="/signup" element={<AuthForm type={"signup"} />}></Route>
-        <Route path="/signin" element={<AuthForm type={"signin"} />}></Route>
-      </Routes>
+    <div className="min-h-screen bg-gray-200 flex flex-col">
+      {/* Navbar stays at the top */}
+      {location.pathname !== "/add-blog" && <Navbar />}
+      
+      {/* Main content will take the remaining space */}
+      <div className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/add-blog" element={<AddBlog />} />
+          <Route path="/signup" element={<AuthForm type={"signup"} />} />
+          <Route path="/signin" element={<AuthForm type={"signin"} />} />
+        </Routes>
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import axios from "axios";
 import toast from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
 
 const AuthForm = ({type}) => {
     // state for user data 
@@ -13,31 +14,37 @@ const AuthForm = ({type}) => {
         "password":""
     });
 
+    // navigate hook
+    const navigate = useNavigate();
 
     // form submit pr backend call -> API: create user
     async function handleAuthForm(e){
         try{
             // prevent form from refresh
             e.preventDefault();
-        //     console.log("Form submitted with user data:", userData);
-        //     const data = await fetch(`http://localhost:3000/api/v1/${type}`, {
-        //     method:"POST",
-        //     body:JSON.stringify(userData),
-        //     headers:{
-        //            "Content-Type": "application/json"
-        //       }
-        // });
-        //    const res = await data.json();
 
         // axios
         const res = await axios.post(`http://localhost:3000/api/v1/${type}`, userData);
 
            console.log("Axios wala response:", res);
+           // token store
+           localStorage.setItem("token", res.data.token);
+           
               // Success (status 200)
            if(res.status === 200){
                toast.success(res.data.message);
                console.log(res);
            }
+            // If it's a signin, redirect to home page
+            if (type == "signin") {
+                // Redirect to the home page
+              return navigate("/");
+          }
+            // If it's a signup, redirect to signin page
+            if (type == "signup") {
+                // Redirect to the home page
+              return navigate("/signin");
+          }
         }
         catch(err){
           // Error (network issue or status 4xx/5xx)
@@ -89,6 +96,17 @@ const AuthForm = ({type}) => {
             <Button type="submit" className="w-full">
            { type=="signup" ? "Register" : "Sign In"}
             </Button>
+
+           <div>
+            {
+            type=="signin" ? (
+              <p>Don't have an account <Link to="/signup">Sign up</Link></p>
+            ) : (
+              <p>Already have an account <Link to="/signin">Sign in</Link></p>
+            )
+            }
+
+           </div>
           </form>
         </div>
       )
