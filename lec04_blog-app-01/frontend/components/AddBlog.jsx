@@ -14,7 +14,7 @@ const AddBlog = () => {
     const [blogData, setBlogData] = useState({
         "title":"",
         "description":"",
-        "image":""
+        "image":null
         })
 
         // Handle form data
@@ -51,7 +51,8 @@ const AddBlog = () => {
                     }
                 }
             )
-                console.log(res);
+                console.log(blogData);
+
                 // redirect to home page
                 if(res.status == 200){
                     toast.success(res.data.message)
@@ -96,16 +97,26 @@ const AddBlog = () => {
             />
           </div>
           <div>
-            <label htmlFor="image" className="block text-lg font-medium text-gray-700">
-              Image
+          <div>
+            <label htmlFor="image" className="text-lg font-medium text-gray-700">
+              {
+                blogData.image ? <img src={URL.createObjectURL(blogData.image)} alt="Preview-Image" />
+                :(
+                  <div className="bg-slate-200 m-2 p-15 rounded-md  w-lg h-lg flex justify-center items-center">Select Image</div>
+
+                )
+              }
             </label>
             <input
               id="image"
+              accept=".png, .jpg, .jpeg"
               type="file"
               name="image"
+              placeholder="Select Image"
               onChange={handleBlogData}
-              className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+              className="hidden w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+             />
+            </div>
           </div>
           <div className="mt-6">
             <button

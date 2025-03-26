@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
     const [data, setData] = useState([]);
-
-    console.log("hello")
 
     // page load hote hi -> fetch blogs
     useEffect(() => {
@@ -30,12 +29,14 @@ const HomePage = () => {
     return (
         <div className="container mx-auto p-6">
             {/* Mapping through the blogs */}
-            {data.map(blog => (
-                <div key={blog._id} className="flex justify-between bg-white shadow-lg rounded-lg p-6 mb-6">
+            {
+            data.map(blog => (
+            <Link key={blog._id} to={`/blog/${blog.blogId}`}>
+                <div  className="flex justify-between bg-white shadow-lg rounded-lg p-6 mb-6">
                     {/* Left Side: Blog Content */}
                     <div className="flex-1 mr-6">
                         {/* Blog Creator */}
-                        <p className="text-gray-500 text-sm">By Shoaib</p>
+                        <p className="text-gray-500 text-sm">{blog.creator.name}</p>
 
                         {/* Blog Title */}
                         <h1 className="text-3xl font-semibold text-gray-900 mt-2 mb-4">{blog.title}</h1>
@@ -60,9 +61,11 @@ const HomePage = () => {
                         />
                     </div>
                 </div>
-            ))}
+            </Link>
+
+            )
+    )}
         </div>
-    );
-};
+)};
 
 export default HomePage;

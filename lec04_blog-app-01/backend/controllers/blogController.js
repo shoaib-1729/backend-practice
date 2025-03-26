@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const fs = require("node:fs");
 const Blog = require("../models/blogModel.js")
 const User = require("../models/userModel.js");
+const { v4: uuidv4 } = require('uuid');
 const { cloudinaryImageUpload, cloudinaryDestroyImage } = require("../config/cloudinaryConfig.js")
 
 // get all blogs controller
@@ -32,8 +33,9 @@ async function getBlogs(req, res) {
 // get blog by id controller
 async function getBlog(req, res) {
     try {
+        const { id } = req.params;
         // draft false ->  only accessed by blog author, authorization will be required
-        const blog = await Blog.findById(req.params.id).populate({
+        const blog = await Blog.findOne({ blogId: id }).populate({
             path: "comments",
             // populate user inside comments (nested populate)
             // populating user because username is required for displaying above the comment
@@ -41,6 +43,9 @@ async function getBlog(req, res) {
                 path: "user",
                 select: "name email"
             }
+        }).populate({
+            path: "creator",
+            select: "name email"
         });
         return res.json({
             "success": true,
@@ -66,6 +71,10 @@ async function createBlog(req, res) {
 
         const { title, description, draft } = req.body;
         console.log(req.body);
+
+        // blog id wala kaam karna hoga
+        const randomId = title.split(" ").join("-") + "-" + uuidv4().substring(0, 7);
+        console.log(randomId);
 
         // image
         const image = req.file;
@@ -110,7 +119,7 @@ async function createBlog(req, res) {
 
 
         // yaha pr image:url bhi aayega, image multer se aa rahi hogi
-        const blog = await Blog.create({ title, description, draft, creator, image: secure_url, imageId: public_id });
+        const blog = await Blog.create({ title, description, draft, creator, image: secure_url, imageId: public_id, blogId: randomId });
 
         // blog create -> add blogs in user collection
         await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
