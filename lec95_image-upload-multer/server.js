@@ -1,6 +1,5 @@
 const express = require("express")
 const path = require("node:path")
-const fs = require("node:fs")
     // multer
 const multer = require("multer");
 // uploading destination
@@ -14,12 +13,11 @@ app.use(express.json());
 // url encoded
 app.use(express.urlencoded({ extended: true }));
 
-const uploadDir = path.join(__dirname, "uploads/")
-
 // multer
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
-        cb(null, uploadDir);
+        // Use relative path for uploads folder
+        cb(null, path.join(__dirname, "uploads/"));
     },
     filename: function(req, file, cb) {
         // 1. error 2. filename

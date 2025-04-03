@@ -32,7 +32,7 @@ const HomePage = () => {
             {
             data.map(blog => (
             <Link key={blog._id} to={`/blog/${blog.blogId}`}>
-                <div  className="flex justify-between bg-white shadow-lg rounded-lg p-6 mb-6">
+                <div  className="flex justify-between bg-white shadow-lg rounded-lg p-6 mb-6 cursor-pointer">
                     {/* Left Side: Blog Content */}
                     <div className="flex-1 mr-6">
                         {/* Blog Creator */}

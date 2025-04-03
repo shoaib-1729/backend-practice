@@ -10,16 +10,15 @@ const router = express.Router();
 router.get("/blogs", getBlogs);
 
 // get particular blog (with id)
-router.get("/blogs/:id", getBlog);
+router.get("/blog/:id", getBlog);
 
 // create blogs
 // verify user => create blog
-
 router.post("/blogs", verifyUser, upload.single("image"), createBlog);
 
 
 // update blogs
-router.put("/blogs/:id", verifyUser, updateBlog);
+router.put("/blogs/:id", verifyUser, upload.single("image"), updateBlog);
 
 // delete blogs
 router.delete("/blogs/:id", verifyUser, deleteBlog);

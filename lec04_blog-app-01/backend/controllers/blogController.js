@@ -73,10 +73,17 @@ async function createBlog(req, res) {
         console.log(req.body);
 
         // blog id wala kaam karna hoga
-        const randomId = title.split(" ").join("-") + "-" + uuidv4().substring(0, 7);
+        const randomId = title
+            .trim() // Remove leading & trailing spaces
+            .toLowerCase() // Convert to lowercase
+            .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special characters
+            .replace(/\s+/g, "-") // Replace spaces with hyphens
+            .replace(/-+/g, "-") // Remove multiple hyphens
+            +
+            "-" + uuidv4().substring(0, 7);
         console.log(randomId);
 
-        // image
+        // image (req.file access -> multer)
         const image = req.file;
 
         // check user with id creator exists
@@ -144,16 +151,17 @@ async function updateBlog(req, res) {
     try {
         // update blog
         const { title, description, draft } = req.body;
+
+        // multer
+        const image = req.file;
+        // console.log(image);
+
+
         // extract id from params
         const { id } = req.params;
 
-        // Check if the id is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
-        }
-
         // blog by id
-        const blog = await Blog.findById(id);
+        const blog = await Blog.findOne({ blogId: id });
 
         // creator id
         const creator = req.user;
@@ -175,13 +183,28 @@ async function updateBlog(req, res) {
             })
         }
 
+        // image change -> file otherwise undefined
+        if (image) {
+            // old image haat do cloudinary se
+            await cloudinaryDestroyImage(blog.imageId);
+            // new image upload kardo cloudinary par
+            let { secure_url, public_id } = await cloudinaryImageUpload(image.path);
+            // update image and imageId from DB
+            blog.image = secure_url;
+            blog.imageId = public_id;
 
-        // update blog
-        const updatedBlog = await Blog.findByIdAndUpdate(id, {
-            title,
-            description,
-            draft
-        }, { new: true })
+            // after new image cloudinary upload -> upload folder se hata do
+            fs.unlinkSync(image.path);
+        }
+
+        // set other values
+        blog.title = title
+        blog.description = description
+        blog.draft = draft
+
+        // save updated blog in DB
+        const updatedBlog = await blog.save();
+
 
         return res.status(200).json({
             "success": true,

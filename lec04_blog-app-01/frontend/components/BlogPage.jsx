@@ -1,61 +1,60 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom"
+import { Link, useParams} from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const BlogPage = () => {
-    // data
     const [blog, setBlog] = useState(null);
-    
-    // params
-    const {id} = useParams();
-
+    const { id } = useParams();
 
     async function fetchBlog() {
         try {
-            const res = await axios.get(`http://localhost:3000/api/v1/blogs/${id}`)
+            const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`);
             setBlog(res.data.blog);
         } catch (err) {
-            console.error("Error fetching blog: ", err);     
+            console.error("Error fetching blog: ", err);
         }
     }
 
-    // page load -> api call
     useEffect(() => {
-        fetchBlog()
+        fetchBlog();
     }, [id]);
 
-
-
-
-    return(
+    return (
         <div>
-            {
-                !blog ? <h1>Loading...</h1> :(
-                        <div key={blog._id} className="flex justify-between bg-white shadow-lg rounded-lg p-6 mb-6">
-                          <div className="flex-1 mr-6">
-                            {/* Blog Creator */}
-                             <p className="text-gray-500 text-sm">{blog.creator.name}</p>
-    
-                            {/* Blog Title */}
-                             <h1 className="text-3xl font-semibold text-gray-900 mt-2 mb-4">{blog.title}</h1>
-    
-                            {/* Blog Description */}
-                             <h3 className="text-xl text-gray-700 mb-4">{blog.description}</h3>
-                         </div>
-    
-                        {/* Right Side: Blog Image */}
+            {!blog ? (
+                <h1>Loading...</h1>
+            ) : (
+                <div key={blog._id} className="bg-white shadow-lg rounded-lg p-6 mb-6 flex flex-col">
+                    {/* Blog Content */}
+                    <div className="flex justify-between">
+                        <div className="flex-1 mr-6">
+                            <p className="text-gray-500 text-sm">{blog.creator.name}</p>
+                            <h1 className="text-3xl font-semibold text-gray-900 mt-2 mb-4">{blog.title}</h1>
+                            <h3 className="text-xl text-gray-700 mb-4">{blog.description}</h3>
+                        </div>
+
                         <div className="w-1/3">
                             <img
-                                src={blog.image} 
+                                src={blog.image}
                                 alt="Blog-Image"
                                 className="w-full h-auto rounded-lg shadow-md"
                             />
                         </div>
                     </div>
-                    )
-            }
-        </div>
-    )
-}
 
-export default BlogPage
+                    {/* Edit Button */}
+                    <div className="text-center mt-4">
+                        <Link to={`/edit/${blog.blogId}`}>
+                          <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
+                            Edit
+                          </Button>
+                        </Link>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default BlogPage;

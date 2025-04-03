@@ -1,21 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
-// import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const AddBlog = () => {
+  const [blogData, setBlogData] = useState({
+      title:"",
+      description:"",
+      image:null
+      })
+
+  const {id} = useParams()
+
     // token
     const token = localStorage.getItem("token");
 
     // navigate
-    // const navigate = useNavigate();
-
-
-    const [blogData, setBlogData] = useState({
-        "title":"",
-        "description":"",
-        "image":null
-        })
+    const navigate = useNavigate();
 
         // Handle form data
   const handleBlogData = (e) => {
@@ -39,6 +40,54 @@ const AddBlog = () => {
     }
   };
 
+  // page load hote hi blog ka data fetch karo -> edit waale case mei
+  useEffect(()=> {
+    if(id){
+      fetchBlogData()
+    }
+  }, [id])
+
+  async function fetchBlogData(){
+    try{
+      const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`)
+      // set kardo state par
+      setBlogData(res.data.blog)
+    }catch(err){
+      // toast.error(err.response.data.message || err.response.data.error)
+      toast.error(err.response.data.message)
+      console.log("Error posting blog", err)
+    }
+  };
+
+  // handle edit blog
+  async function handleEditBlog(e){
+    try{
+      e.preventDefault();
+      // console.log(typeof(blogData.image))
+      // console.log(blogData.image)
+      const res = await axios.put(`http://localhost:3000/api/v1/blogs/${id}`, blogData,
+        {
+          headers:{
+              "Content-Type":"multipart/form-data",
+              Authorization: `Bearer ${token}`
+          }
+      }
+  )
+  console.log(blogData);
+
+  //  redirect to home page
+   if(res.status == 200){
+    toast.success(res.data.message)
+    // navigate -> home page
+    navigate("/")
+   }
+}catch(err){
+      toast.error(err.response.data.message)
+      console.log("Error posting blog", err)
+  }
+
+  }
+
     // form submit pr db call karwao -> create blog
     async function handlePostBlog(e){
         try{
@@ -51,13 +100,13 @@ const AddBlog = () => {
                     }
                 }
             )
-                console.log(blogData);
+                // console.log(blogData);
 
                 // redirect to home page
                 if(res.status == 200){
                     toast.success(res.data.message)
                     // navigate -> home page
-                    // navigate("/")
+                    navigate("/")
         
                 }
 
@@ -68,10 +117,13 @@ const AddBlog = () => {
 
     }
 
+
     return (
       <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-        <h1 className="text-3xl font-semibold text-gray-800 mb-6">Add Blog</h1>
-        <form className="space-y-4" onSubmit={handlePostBlog}>
+        <h1 className="text-3xl font-semibold text-gray-800 mb-6">
+        {id ? "Edit Blog" : "Add Blog"}
+        </h1>
+        <form className="space-y-4" onSubmit={id ? handleEditBlog : handlePostBlog}>
           <div>
             <label htmlFor="title" className="block text-lg font-medium text-gray-700">
               Title
@@ -80,6 +132,7 @@ const AddBlog = () => {
               id="title"
               type="text"
               name="title"
+              value={blogData.title}
               onChange={(handleBlogData)}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -91,23 +144,23 @@ const AddBlog = () => {
             <textarea
               id="description"
               name="description"
+              value={blogData.description}
               onChange={handleBlogData}
               className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows="4"
             />
           </div>
           <div>
-          <div>
-            <label htmlFor="image" className="text-lg font-medium text-gray-700">
-              {
-                blogData.image ? <img src={URL.createObjectURL(blogData.image)} alt="Preview-Image" />
-                :(
+           <div>
+             <label htmlFor="image" className="text-lg font-medium text-gray-700">
+               {
+                 blogData.image ? <img src={typeof(blogData.image)=="string" ? blogData.image : URL.createObjectURL(blogData.image)} alt="Preview-Image" />
+                 : (
                   <div className="bg-slate-200 m-2 p-15 rounded-md  w-lg h-lg flex justify-center items-center">Select Image</div>
-
                 )
               }
-            </label>
-            <input
+             </label>
+             <input
               id="image"
               accept=".png, .jpg, .jpeg"
               type="file"
@@ -115,7 +168,7 @@ const AddBlog = () => {
               placeholder="Select Image"
               onChange={handleBlogData}
               className="hidden w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-             />
+              />
             </div>
           </div>
           <div className="mt-6">
@@ -123,7 +176,8 @@ const AddBlog = () => {
               type="submit"
               className="w-full bg-blue-500 text-white py-3 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              Post Blog
+              {/* id undefined hai toh post blog, else edit */}
+              {id ? "Edit Blog" : "Add Blog"}
             </button>
           </div>
         </form>
