@@ -7,6 +7,9 @@ const BlogPage = () => {
     const [blog, setBlog] = useState(null);
     const { id } = useParams();
 
+    // user nikaalo local storage se
+    const userData = JSON.parse(localStorage.getItem("user"))
+
     async function fetchBlog() {
         try {
             const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`);
@@ -46,9 +49,11 @@ const BlogPage = () => {
                     {/* Edit Button */}
                     <div className="text-center mt-4">
                         <Link to={`/edit/${blog.blogId}`}>
-                          <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
+                        {/* email login -> token;  */}
+                        {userData && blog.creator.email === userData.email && <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
                             Edit
-                          </Button>
+                          </Button> 
+                        }
                         </Link>
                     </div>
                 </div>

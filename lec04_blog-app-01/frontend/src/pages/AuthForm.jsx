@@ -29,6 +29,8 @@ const AuthForm = ({type}) => {
            console.log("Axios wala response:", res);
            // token store
            localStorage.setItem("token", res.data.token);
+           // user store
+       localStorage.setItem("user", JSON.stringify(res.data.user));
            
               // Success (status 200)
            if(res.status === 200){
