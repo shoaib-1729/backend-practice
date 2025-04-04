@@ -2,18 +2,26 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { Link, useParams} from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { removeSelectedBlog, addSelectedBlog } from "../src/utils/selectedBlogSlice";
+import { useDispatch, useSelector } from "react-redux"
+
 
 const BlogPage = () => {
     const [blog, setBlog] = useState(null);
     const { id } = useParams();
 
-    // user nikaalo local storage se
-    const userData = JSON.parse(localStorage.getItem("user"))
+    // get use data using redux
+    const {token, email} = useSelector((slice) => slice.user)
+    // console.log(token);
+
+    const dispatch = useDispatch();
+
 
     async function fetchBlog() {
         try {
             const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`);
             setBlog(res.data.blog);
+            dispatch(addSelectedBlog(res.data.blog));
         } catch (err) {
             console.error("Error fetching blog: ", err);
         }
@@ -21,7 +29,16 @@ const BlogPage = () => {
 
     useEffect(() => {
         fetchBlog();
-    }, [id]);
+
+        // This will run when the component unmounts or when the `id` changes
+        return () => {
+             // Check if we are NOT on the edit page
+            if (!window.location.pathname.includes("/edit/")) {
+                 // Remove the selected blog if we are not on the edit page
+                dispatch(removeSelectedBlog());
+            }
+         };
+     }, [id, dispatch]);
 
     return (
         <div>
@@ -50,7 +67,7 @@ const BlogPage = () => {
                     <div className="text-center mt-4">
                         <Link to={`/edit/${blog.blogId}`}>
                         {/* email login -> token;  */}
-                        {userData && blog.creator.email === userData.email && <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
+                        {token && blog.creator.email === email && <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
                             Edit
                           </Button> 
                         }

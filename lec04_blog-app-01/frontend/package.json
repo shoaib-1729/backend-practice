@@ -12,6 +12,7 @@
   "dependencies": {
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-slot": "^1.1.2",
+    "@reduxjs/toolkit": "^2.6.1",
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/postcss": "^4.0.14",
     "@tailwindcss/vite": "^4.0.14",
@@ -22,6 +23,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.4.0",
     "shadcn": "^2.4.0-canary.17",
     "tailwind-merge": "^3.0.2",

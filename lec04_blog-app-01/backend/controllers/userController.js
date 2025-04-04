@@ -78,8 +78,8 @@ async function createUser(req, res) {
             "user": {
                 name: newUser.name,
                 email: newUser.email,
+                token
             },
-            token
         });
     } catch (error) {
         // Error handling for DB operation
@@ -148,9 +148,9 @@ async function loginUser(req, res) {
             "message": "User logged in successfully",
             "user": {
                 name: checkExistingUser.name,
-                email: checkExistingUser.email
+                email: checkExistingUser.email,
+                token
             },
-            token
         });
     } catch (error) {
         // Error handling for DB operation

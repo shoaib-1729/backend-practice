@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+
 
 const AddBlog = () => {
   const [blogData, setBlogData] = useState({
@@ -12,8 +14,11 @@ const AddBlog = () => {
 
   const {id} = useParams()
 
-    // token
-    const token = localStorage.getItem("token");
+    // user data from store
+    const {token} = useSelector((slice) => slice.user);
+
+    // blog slice data from store
+    const {title, description, image} = useSelector((slice) => slice.selectedBlog);
 
     // navigate
     const navigate = useNavigate();
@@ -48,15 +53,20 @@ const AddBlog = () => {
   }, [id])
 
   async function fetchBlogData(){
-    try{
-      const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`)
+    // try{
+      // const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`)
       // set kardo state par
-      setBlogData(res.data.blog)
-    }catch(err){
-      // toast.error(err.response.data.message || err.response.data.error)
-      toast.error(err.response.data.message)
-      console.log("Error posting blog", err)
-    }
+      setBlogData({
+        title: title,
+        description: description,
+        image: image
+      });
+
+    // }catch(err){
+    //   // toast.error(err.response.data.message || err.response.data.error)
+    //   toast.error(err.response.data.message)
+    //   console.log("Error posting blog", err)
+    // }
   };
 
   // handle edit blog
