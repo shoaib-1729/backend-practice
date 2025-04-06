@@ -76,6 +76,7 @@ async function createUser(req, res) {
             "success": true,
             "message": "User created successfully",
             "user": {
+                id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
                 token
@@ -147,6 +148,7 @@ async function loginUser(req, res) {
             "success": true,
             "message": "User logged in successfully",
             "user": {
+                id: checkExistingUser._id,
                 name: checkExistingUser.name,
                 email: checkExistingUser.email,
                 token

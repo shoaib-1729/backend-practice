@@ -284,16 +284,10 @@ async function likeBlog(req, res) {
         // blog id
         const { id } = req.params;
 
-        // Check if the id is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
-        }
-
         // find blog by id
-        const blog = await Blog.findById(id);
+        const blog = await Blog.findOne({ blogId: id });
         // creator refers to the authenticated user (not the one creating the blog)
         const creator = req.user;
-
 
 
         // validation
@@ -308,26 +302,29 @@ async function likeBlog(req, res) {
         if (!blog.likes.includes(creator)) {
             // like blog logic
             // push user id to like array
-            await Blog.findByIdAndUpdate(id, { $push: { likes: creator } })
+            await Blog.findOneAndUpdate({ blogId: id }, { $push: { likes: creator } });
 
 
             // response message
             return res.status(200).json({
                 "success": true,
-                "message": "Blog liked successfully..."
+                "message": "Blog liked successfully...",
+                "isLiked": true,
+                blog
             })
 
         } else {
             // dislike blog logic
             // pull user id to like array
-            await Blog.findByIdAndUpdate(id, { $pull: { likes: creator } })
+            await Blog.findOneAndUpdate({ blogId: id }, { $pull: { likes: creator } })
 
 
 
             // response message
             return res.status(200).json({
                 "success": true,
-                "message": "Blog disliked successfully..."
+                "message": "Blog disliked successfully...",
+                "isLiked": false,
             })
         }
     } catch (err) {

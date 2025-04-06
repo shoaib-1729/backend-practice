@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/blogs", getBlogs);
 
 // get particular blog (with id)
-router.get("/blog/:id", getBlog);
+router.get("/blogs/:id", getBlog);
 
 // create blogs
 // verify user => create blog
