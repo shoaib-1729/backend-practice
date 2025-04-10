@@ -1,9 +1,9 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
 import AuthForm from './pages/authForm';
-import Navbar from '../components/Navbar';
-import HomePage from '../components/HomePage';
-import AddBlog from '../components/AddBlog';
-import BlogPage from '../components/BlogPage';
+import Navbar from './react-components/Navbar';
+import HomePage from './react-components/HomePage';
+import AddBlog from './react-components/AddBlog';
+import BlogPage from './pages/BlogPage';
 
 function App() {
   const location = useLocation();

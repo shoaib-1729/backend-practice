@@ -2,8 +2,8 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { removeSelectedBlog, addSelectedBlog, changeLikes } from "../src/utils/selectedBlogSlice";
+import { Button } from "@/shadcn-components/ui/button";
+import { removeSelectedBlog, addSelectedBlog, changeLikes } from "../utils/selectedBlogSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 const BlogPage = () => {
@@ -29,9 +29,9 @@ const BlogPage = () => {
             // Add the fetched blog to Redux
             dispatch(addSelectedBlog(blog));
             // if userId exits -> hit like
-            // if(blog.likes.includes(userId)){
-            //    setIsLiked((prev) => !prev)
-            // }
+            if(blog.likes.includes(userId)){
+               setIsLiked((prev) => !prev);
+            }
         } catch (err) {
             console.log("Error fetching blog: ", err);
         }
@@ -69,11 +69,17 @@ const BlogPage = () => {
 
         // Cleanup on unmount
         return () => {
-            if (!window.location.pathname.includes(`/edit/${id}`)) {
+            if (
+                window.location.pathname !== `/edit/${id}` &&
+                window.location.pathname !== `/blog/${id}`
+              ) {
                 dispatch(removeSelectedBlog());
-            }
+              }
         };
-    }, [id]);
+    },  [id]);
+
+
+
 
     return (
         <div>
@@ -112,12 +118,14 @@ const BlogPage = () => {
                     {/* Like and Comment Section */}
                     <div className="flex items-center mt-4 space-x-6">
                         {/* Like Icon */}
-                        <div className="flex items-center">
-                            <i
-                                onClick={handleLike}
-                                className={`fi ${isLiked ? 'fi-rr-social-network' : 'fi-sr-thumbs-up'} text-3xl cursor-pointer hover:text-blue-500 transition-colors`}
-                            ></i>
-                            <p className="ml-2 text-lg font-semibold">{likes.length}</p> {/* Like count */}
+                        <div className="flex items-center space-x-2">
+                <i
+                  onClick={handleLike}
+                  className={`fi ${isLiked ? "fi-sr-thumbs-up": "fi-rr-social-network"}  text-3xl mt-1  transition-colors duration-200 hover:text-blue-500 cursor-pointer`}  
+                ></i> 
+               <p className="text-xl font-semibold text-gray-700 hover:text-blue-500 transition-colors duration-200">
+                                {likes.length}
+                            </p>
                         </div>
 
                         {/* Comment Icon */}
