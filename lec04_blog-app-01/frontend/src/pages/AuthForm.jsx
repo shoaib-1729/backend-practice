@@ -18,7 +18,7 @@ const AuthForm = ({ type }) => {
 
     // navigate hook
     const navigate = useNavigate();
-    
+
     // use dispatch
     const dispatch = useDispatch();
 
@@ -96,7 +96,7 @@ const AuthForm = ({ type }) => {
 
                 <div>
                     {type === "signin" ? (
-                        <p>Don't have an account <Link to="/signup">Sign up</Link></p>
+                        <p>Don't have an account 5<Link to="/signup">Sign up</Link></p>
                     ) : (
                         <p>Already have an account <Link to="/signin">Sign in</Link></p>
                     )}

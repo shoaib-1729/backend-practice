@@ -5,133 +5,121 @@ import { Link, useParams } from "react-router-dom";
 import { Button } from "@/shadcn-components/ui/button";
 import { removeSelectedBlog, addSelectedBlog, changeLikes } from "../utils/selectedBlogSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { formatDate } from "../utils/formatDate"
 
 const BlogPage = () => {
     const [blog, setBlog] = useState(null);
     const { id } = useParams();
-
-    // Like state (to handle toggling)
     const [isLiked, setIsLiked] = useState(false);
 
-    // Redux: Token, Email, and likes (for authenticated user)
     const { token, email, id: userId } = useSelector((slice) => slice.user);
     const { likes } = useSelector((slice) => slice.selectedBlog);
-
     const dispatch = useDispatch();
 
-    // Fetch blog details
     async function fetchBlog() {
         try {
-            let {
-                data: {blog},
-            } = await axios.get(`http://localhost:3000/api/v1/blogs/${id}`);
+            const { data: { blog } } = await axios.get(`http://localhost:3000/api/v1/blogs/${id}`);
             setBlog(blog);
-            // Add the fetched blog to Redux
             dispatch(addSelectedBlog(blog));
-            // if userId exits -> hit like
-            if(blog.likes.includes(userId)){
-               setIsLiked((prev) => !prev);
+
+            if (blog.likes.includes(userId)) {
+                setIsLiked(true);
             }
         } catch (err) {
-            console.log("Error fetching blog: ", err);
+            console.error("Error fetching blog:", err);
         }
     }
 
-    // Handle like/dislike
     async function handleLike() {
         try {
             if (token) {
-                setIsLiked((prev) => !prev)
+                setIsLiked((prev) => !prev);
 
-                let res = await axios.post(
+                const res = await axios.post(
                     `http://localhost:3000/api/v1/blogs/like/${blog.blogId}`,
                     {},
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
+                    { headers: { Authorization: `Bearer ${token}` } }
                 );
- 
-                // Update Redux store
-                dispatch(changeLikes(userId));
 
+                dispatch(changeLikes(userId));
                 toast.success(res.data.message);
             }
         } catch (err) {
-            console.log("Error liking blog", err);
+            console.error("Error liking blog:", err);
         }
     }
 
     useEffect(() => {
         fetchBlog();
 
-
-        // Cleanup on unmount
         return () => {
             if (
                 window.location.pathname !== `/edit/${id}` &&
                 window.location.pathname !== `/blog/${id}`
-              ) {
+            ) {
                 dispatch(removeSelectedBlog());
-              }
+            }
         };
-    },  [id]);
-
-
-
+    }, [id]);
 
     return (
-        <div>
+        <div className="max-w-3xl mx-auto px-4 py-8">
             {!blog ? (
                 <h1>Loading...</h1>
             ) : (
-                <div key={blog._id} className="bg-white shadow-lg rounded-lg p-6 mb-6 flex flex-col">
-                    {/* Blog Content */}
-                    <div className="flex justify-between">
-                        <div className="flex-1 mr-6">
-                            <p className="text-gray-500 text-sm">{blog.creator.name}</p>
-                            <h1 className="text-3xl font-semibold text-gray-900 mt-2 mb-4">{blog.title}</h1>
-                            <h3 className="text-xl text-gray-700 mb-4">{blog.description}</h3>
-                        </div>
+                <div key={blog._id}>
+                    {/* Title */}
+                    <h1 className="text-4xl font-bold text-gray-900 leading-tight mb-4">{blog.title}</h1>
 
-                        <div className="w-1/3">
-                            <img
-                                src={blog.image}
-                                alt="Blog-Image"
-                                className="w-full h-auto rounded-lg shadow-md"
-                            />
-                        </div>
+                    {/* Author Info */}
+                    <div className="flex items-center space-x-3 text-sm text-gray-600 mb-4">
+                        {/* Todo: profile image aayegi yaha */}
+                        <img
+                            src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                            alt="author"
+                            className="w-8 h-8 rounded-full"
+                        />
+                        <span className="font-medium">{blog.creator.name}</span>
+                        <span>&middot;</span>
+                        <span>{formatDate(blog.createdAt)}</span>
                     </div>
+
+                    {/* Meta Separator */}
+                    <hr className="border-gray-300 mb-6" />
+
+                    {/* Image */}
+                    <img
+                        src={blog.image}
+                        alt="Blog visual"
+                        className="max-w-lg rounded-lg mb-6 shadow-sm"
+                    />
+
+                    {/* Description */}
+                    <p className="text-lg text-gray-700 leading-relaxed mb-6">
+                        {blog.description}
+                    </p>
 
                     {/* Edit Button */}
-                    <div className="text-center mt-4">
-                        <Link to={`/edit/${blog.blogId}`}>
-                            {token && blog.creator.email === email && (
-                                <Button type="submit" className="w-1/2 md:w-1/3 py-2 px-6 mx-auto cursor-pointer">
-                                    Edit
-                                </Button>
-                            )}
-                        </Link>
-                    </div>
+                    {token && blog.creator.email === email && (
+                        <div className="text-center mb-8">
+                            <Link to={`/edit/${blog.blogId}`}>
+                                <Button className="px-6 py-2">Edit</Button>
+                            </Link>
+                        </div>
+                    )}
 
-                    {/* Like and Comment Section */}
-                    <div className="flex items-center mt-4 space-x-6">
-                        {/* Like Icon */}
-                        <div className="flex items-center space-x-2">
-                <i
-                  onClick={handleLike}
-                  className={`fi ${isLiked ? "fi-sr-thumbs-up": "fi-rr-social-network"}  text-3xl mt-1  transition-colors duration-200 hover:text-blue-500 cursor-pointer`}  
-                ></i> 
-               <p className="text-xl font-semibold text-gray-700 hover:text-blue-500 transition-colors duration-200">
-                                {likes.length}
-                            </p>
+                    {/* Like & Comment */}
+                    <div className="flex items-center space-x-6 border-t border-gray-300 pt-4">
+                        {/* Like */}
+                        <div className="flex items-center space-x-2 cursor-pointer" onClick={handleLike}>
+                            <i className={`fi ${isLiked ? "fi-sr-thumbs-up" : "fi-rr-social-network"} text-xl hover:text-blue-500`}></i>
+                            <span className="text-sm text-gray-700 font-medium">{likes.length}</span>
                         </div>
 
-                        {/* Comment Icon */}
-                        <div className="flex items-center">
-                            <i className="fi fi-sr-comment-alt text-3xl cursor-pointer hover:text-blue-500 transition-colors"></i>
-                            <p className="ml-2 text-lg font-semibold">0</p> {/* Comment count */}
+                        {/* Comment */}
+                        <div className="flex items-center space-x-2 cursor-pointer">
+                            <i className="fi fi-sr-comment-alt text-xl hover:text-blue-500"></i>
+                            <span className="text-sm text-gray-700 font-medium">0</span>
                         </div>
                     </div>
                 </div>
