@@ -8,7 +8,7 @@ import BlogPage from './pages/BlogPage';
 function App() {
   const location = useLocation();
   return (
-    <div className="min-h-screen bg-gray-200 flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar stays at the top */}
       {location.pathname !== "/add-blog" && <Navbar />}
       

@@ -3,12 +3,12 @@ import logo from "../../public/logo.svg"
 
 const Navbar = () => {
     return (
-        <nav className="bg-white shadow-sm border-b border-gray-200">
-            <div className="max-w-5xl mx-auto px-4 h-[72px] flex items-center justify-between">
+        <nav className=" drop-shadow border-b ">
+            <div className="max-w-5xl px-4 h-[60px] flex items-center justify-between">
                 {/* Left: Logo + Search */}
                 <div className="flex items-center space-x-6">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center">
+                    <Link to="/" className="flex items-center ml-2">
                        <img src={logo} alt="blog-logo" />
                     </Link>
 
@@ -26,7 +26,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Right: Links */}
-                <div className="flex items-center space-x-6 text-gray-700 text-sm font-medium">
+                <div className="flex items-center space-x-6 ml-4 text-gray-700 text-sm font-medium">
                     <Link to="/" className="hover:text-black transition-colors">Home</Link>
                     <Link to="/add-blog" className="hover:text-black transition-colors">
                         <div className="flex items-center space-x-1">

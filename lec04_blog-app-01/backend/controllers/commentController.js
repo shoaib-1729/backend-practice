@@ -15,12 +15,6 @@ async function addComment(req, res) {
         // comment text  -> request body
         const { comment } = req.body
 
-        // Check if the id is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
-        }
-
-
         // validation
         // blog id valid?
         if (!blog) {
@@ -43,11 +37,17 @@ async function addComment(req, res) {
 
         // create comment
         const newComment = await Comment.create({
-            comment,
-            blog: id,
-            user: creator
+                comment,
+                blog: id,
+                user: creator
 
-        })
+            })
+            .then((comment) => {
+                return comment.populate({
+                    path: "user",
+                    select: "name email"
+                })
+            })
 
         // push comment in blog
         await Blog.findByIdAndUpdate(id, { $push: { comments: newComment._id } })
@@ -56,7 +56,8 @@ async function addComment(req, res) {
         // response message
         return res.status(200).json({
             "success": true,
-            "message": "Comment added successfully..."
+            "message": "Comment added successfully...",
+            newComment
         })
 
     } catch (err) {

@@ -6,14 +6,17 @@ import { Button } from "@/shadcn-components/ui/button";
 import { removeSelectedBlog, addSelectedBlog, changeLikes } from "../utils/selectedBlogSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { formatDate } from "../utils/formatDate"
+import Comment from "../react-components/Comment"
+import { setIsOpen } from "../utils/commentSlice"
 
 const BlogPage = () => {
     const [blog, setBlog] = useState(null);
     const { id } = useParams();
     const [isLiked, setIsLiked] = useState(false);
 
-    const { token, email, id: userId } = useSelector((slice) => slice.user);
-    const { likes } = useSelector((slice) => slice.selectedBlog);
+    const { token, email, id: userId } = useSelector((state) => state.user);
+    const { likes, comments } = useSelector((state) => state.selectedBlog);
+    const { isOpen } = useSelector((state) => state.comment);
     const dispatch = useDispatch();
 
     async function fetchBlog() {
@@ -52,7 +55,9 @@ const BlogPage = () => {
     useEffect(() => {
         fetchBlog();
 
+
         return () => {
+            dispatch(setIsOpen(false));
             if (
                 window.location.pathname !== `/edit/${id}` &&
                 window.location.pathname !== `/blog/${id}`
@@ -116,12 +121,29 @@ const BlogPage = () => {
                             <span className="text-sm text-gray-700 font-medium">{likes.length}</span>
                         </div>
 
-                        {/* Comment */}
+                        {/* Comment Icon */}
                         <div className="flex items-center space-x-2 cursor-pointer">
-                            <i className="fi fi-sr-comment-alt text-xl hover:text-blue-500"></i>
-                            <span className="text-sm text-gray-700 font-medium">0</span>
+                            <i onClick={() => dispatch(setIsOpen())} className="fi fi-sr-comment-alt text-xl hover:text-blue-500"></i>
+                            <span className="text-sm text-gray-700 font-medium">
+                                { comments.length }
+                            </span>
                         </div>
                     </div>
+
+                    {/* Overlay Div */}
+                {
+                    isOpen && (
+                    <div
+                    onClick={() => dispatch(setIsOpen(false))}
+                    className="fixed inset-0 bg-black/10 z-40"
+                    style={{ width: "calc(100% - 400px)" }}
+                    ></div>
+                )}
+                        
+                   {/* Comment Box */}
+                    {
+                        isOpen && <Comment/>
+                    }
                 </div>
             )}
         </div>
