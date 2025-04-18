@@ -251,7 +251,7 @@ async function likeComment(req, res) {
             })
 
         } else {
-            // dislike blog logic
+            // dislike comment logic
             // pull user id to like array
             await Comment.findByIdAndUpdate(commentId, { $pull: { likes: userId } })
 

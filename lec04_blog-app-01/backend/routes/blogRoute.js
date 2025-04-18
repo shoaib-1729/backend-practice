@@ -36,7 +36,7 @@ router.delete("/blogs/comment/:id", verifyUser, deleteComment)
 router.put("/blogs/edit-comment/:id", verifyUser, editComment)
 
 // like comment
-router.post("/blogs/like-comment/:id", verifyUser, likeComment)
+router.patch("/blogs/like-comment/:id", verifyUser, likeComment)
 
 // export router
 module.exports = router;
