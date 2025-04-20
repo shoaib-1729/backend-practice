@@ -117,7 +117,6 @@ const Comment = () => {
               <i className={`fi ${comment.likes.includes(userId) ? "fi-sr-thumbs-up" : "fi-rr-social-network"}  text-xl hover:text-blue-500`}></i>
               <span>{comment.likes.length}</span>
             </div>
-
           </div>
         </div>
       ))}
