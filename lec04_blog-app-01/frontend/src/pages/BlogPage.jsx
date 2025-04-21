@@ -58,9 +58,10 @@ const BlogPage = () => {
 
         return () => {
             dispatch(setIsOpen(false));
+            // edit aur blog page par matt hatao selected blog
             if (
                 window.location.pathname !== `/edit/${id}` &&
-                window.location.pathname !== `/blog/${id}`
+                window.location.pathname !== `/blog/${id}` 
             ) {
                 dispatch(removeSelectedBlog());
             }

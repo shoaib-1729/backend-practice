@@ -89,7 +89,7 @@ const AddBlog = () => {
    if(res.status == 200){
     toast.success(res.data.message)
     // navigate -> home page
-    navigate("/")
+    navigate("/", { replace: true });
    }
 }catch(err){
       toast.error(err.response.data.message)

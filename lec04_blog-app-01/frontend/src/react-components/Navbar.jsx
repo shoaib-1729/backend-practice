@@ -8,9 +8,9 @@ const Navbar = () => {
 
   return (
     <nav className="border-b drop-shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 h-[60px] flex items-center justify-between">
-        {/* Left: Logo + Search */}
-        <div className="flex items-center gap-6">
+      <div className="max-w-[90vw] mx-auto px-4 h-[60px] flex items-center justify-between">
+        {/* Left: Logo + Searrh */}
+        <div className="flex items-center gap-6 ml-0">
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img src={logo} alt="blog-logo" className="h-6 w-auto" />
@@ -46,24 +46,20 @@ const Navbar = () => {
           ) : (
             <div className="flex items-center gap-3">
               <Link to="/signin">
-                 <Button
+                <Button
                   variant="outline"
                   className="rounded-full px-5 py-2 text-sm font-medium hover:bg-gray-100 transition-colors"
-                 >
-                 Sign In
-                 </Button>
-
+                >
+                  Sign In
+                </Button>
               </Link>
 
               {/* sign up button */}
               <Link to="/signup">
-                 <Button
-                 className="rounded-full bg-black text-white px-5 py-2 text-sm font-medium hover:bg-gray-800 transition-colors"
-                 >
-                 Sign Up
-                 </Button>
+                <Button className="rounded-full bg-black text-white px-5 py-2 text-sm font-medium hover:bg-gray-800 transition-colors">
+                  Sign Up
+                </Button>
               </Link>
-              
             </div>
           )}
         </div>

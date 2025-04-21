@@ -70,6 +70,7 @@ async function createBlog(req, res) {
         let creator = req.user;
 
         const { title, description, draft } = req.body;
+        console.log(draft);
         console.log(req.body);
 
         // blog id wala kaam karna hoga
@@ -123,10 +124,23 @@ async function createBlog(req, res) {
         // cloudinary mei upload ho jaane ke baad image ko uploads folder se hata do
         fs.unlinkSync(image.path);
 
+        const blogData = {
+            title,
+            description,
+            creator,
+            image: secure_url,
+            imageId: public_id,
+            blogId: randomId
+        };
 
+        // only set draft is user sent it
+        if (typeof draft !== "undefined") {
+            blogData.draft = draft;
+        }
 
         // yaha pr image:url bhi aayega, image multer se aa rahi hogi
-        const blog = await Blog.create({ title, description, draft, creator, image: secure_url, imageId: public_id, blogId: randomId });
+        const blog = await Blog.create(blogData);
+
 
         // blog create -> add blogs in user collection
         await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
@@ -200,7 +214,11 @@ async function updateBlog(req, res) {
         // set other values
         blog.title = title
         blog.description = description
-        blog.draft = draft
+
+        // set only if user send it
+        if (typeof draft !== "undefined") {
+            blog.draft = draft;
+        }
 
         // save updated blog in DB
         const updatedBlog = await blog.save();

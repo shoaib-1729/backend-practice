@@ -6,23 +6,25 @@ import { formatDate } from "../utils/formatDate"
 const HomePage = () => {
     const [data, setData] = useState([]);
 
-    useEffect(() => {
-        getBlogs();
-    }, []);
 
+    console.log("Home page rendered....")
+
+    
     async function getBlogs() {
-        const res = await axios.get("http://localhost:3000/api/v1/blogs");
-        setData(res.data.blogs);
+        try {
+          console.log("Calling API...");
+          const res = await axios.get("http://localhost:3000/api/v1/blogs");
+          console.log("Fetched Blogs:", res.data.blogs);
+          setData(res.data.blogs);
+        } catch (err) {
+            console.error("Failed to fetch blogs", err);
+        }
     }
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        });
-    };
+    
+    useEffect(() => {
+        console.log("HomePage useEffect triggered");
+            getBlogs();
+      }, []);
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-10">

@@ -15,7 +15,7 @@ function App() {
       {/* Main content will take the remaining space */}
       <div className="flex-1">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage key={Date.now()} />} /> 
           <Route path="/add-blog" element={<AddBlog />} />
           <Route path="/edit/:id" element={<AddBlog />} />
           <Route path="/signup" element={<AuthForm type={"signup"} />} />
