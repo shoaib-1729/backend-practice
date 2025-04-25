@@ -7,14 +7,13 @@ const HomePage = () => {
     const [data, setData] = useState([]);
 
 
-    console.log("Home page rendered....")
 
     
     async function getBlogs() {
         try {
           console.log("Calling API...");
           const res = await axios.get("http://localhost:3000/api/v1/blogs");
-          console.log("Fetched Blogs:", res.data.blogs);
+        //   console.log("Fetched Blogs:", res.data.blogs);
           setData(res.data.blogs);
         } catch (err) {
             console.error("Failed to fetch blogs", err);

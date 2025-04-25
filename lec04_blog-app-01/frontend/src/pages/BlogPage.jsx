@@ -131,6 +131,9 @@ const BlogPage = () => {
                         </div>
                     </div>
 
+                    {/* blog content */}
+                    
+
                     {/* Overlay Div */}
                 {
                     isOpen && (
