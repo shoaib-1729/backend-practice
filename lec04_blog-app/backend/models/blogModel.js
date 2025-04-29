@@ -9,6 +9,10 @@ const blogSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    content: {
+        type: Object,
+        required: true
+    },
     draft: {
         type: Boolean,
         default: false

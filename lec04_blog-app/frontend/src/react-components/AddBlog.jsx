@@ -1,18 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef} from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+import EditorJS from '@editorjs/editorjs';
+import Header from '@editorjs/header';
 
 
 const AddBlog = () => {
   const [blogData, setBlogData] = useState({
       title:"",
       description:"",
-      image:null
+      image:null,
+      content: ""
       })
 
   const {id} = useParams()
+
+  // useRef
+  const editorjsRef = useRef(null);
 
     // user data from store
     const {token} = useSelector((slice) => slice.user);
@@ -22,6 +29,8 @@ const AddBlog = () => {
 
     // navigate
     const navigate = useNavigate();
+
+
 
         // Handle form data
   const handleBlogData = (e) => {
@@ -127,6 +136,42 @@ const AddBlog = () => {
 
     }
 
+    
+    // editor js
+    // config
+    function initializeEditorjs() {
+      editorjsRef.current  = new EditorJS({
+        holder: 'editorjs',
+        tools: {
+          header: {
+            class: Header,
+            inlineToolbar: true,
+            config:{
+              placeholder: "Enter header",
+              levels: [2, 3, 4],
+              defaultLevel: 3
+            }
+          },
+        },
+        onChange: async () => {
+          const data = await editorjsRef.current.save();
+          // set content in blog data
+          setBlogData((blogData) => ({
+            ...blogData,
+            content: data
+          }))
+          // editorjsRef.current = data;
+          console.log(data);
+        }
+      });
+    }
+
+// editor js
+    useEffect(()=>{
+      if(editorjsRef.current == null){
+        initializeEditorjs();
+      }
+    }, [])
 
     return (
       <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
@@ -181,6 +226,8 @@ const AddBlog = () => {
               />
             </div>
           </div>
+          {/* editor js */}
+          <div id="editorjs"></div>
           <div className="mt-6">
             <button
               type="submit"

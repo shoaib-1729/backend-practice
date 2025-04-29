@@ -69,9 +69,9 @@ async function createBlog(req, res) {
         // extract creator id from req custom field
         let creator = req.user;
 
-        const { title, description, draft } = req.body;
-        console.log(draft);
-        console.log(req.body);
+        const { title, description, draft, content } = req.body;
+        // console.log(draft);
+        // console.log(req.body);
 
         // blog id wala kaam karna hoga
         const randomId = title
@@ -109,6 +109,12 @@ async function createBlog(req, res) {
                 "message": "Please enter the title"
             })
         }
+        if (!content) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the content"
+            })
+        }
         // creator not there -> early return
         if (!author) {
             return res.status(404).json({
@@ -130,7 +136,8 @@ async function createBlog(req, res) {
             creator,
             image: secure_url,
             imageId: public_id,
-            blogId: randomId
+            blogId: randomId,
+            content
         };
 
         // only set draft is user sent it
