@@ -6,6 +6,11 @@ import { useSelector } from "react-redux";
 
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
+import EditorjsList from '@editorjs/list';
+import CodeTool from '@editorjs/code';
+import Marker from '@editorjs/marker';
+import Embed from '@editorjs/embed';
+import ImageTool from '@editorjs/image';
 
 
 const AddBlog = () => {
@@ -29,6 +34,9 @@ const AddBlog = () => {
 
     // navigate
     const navigate = useNavigate();
+
+    // form data
+    const formData = new FormData();
 
 
 
@@ -109,9 +117,23 @@ const AddBlog = () => {
 
     // form submit pr db call karwao -> create blog
     async function handlePostBlog(e){
+      e.preventDefault();
+      formData.append("title", blogData.title);
+      formData.append("description", blogData.description);
+      formData.append("content", JSON.stringify(blogData.content));
+      formData.append("image", blogData.image);
+
+      blogData.content.blocks.forEach((block) => {
+        if(block.type === "image"){
+          formData.append("images", block.data.file.image);
+        }
+      })
+
+      console.log(blogData)
+
         try{
             e.preventDefault();
-           const res =  await axios.post("http://localhost:3000/api/v1/blogs", blogData, 
+           const res =  await axios.post("http://localhost:3000/api/v1/blogs", formData, 
                 {
                     headers:{
                         "Content-Type":"multipart/form-data",
@@ -150,8 +172,42 @@ const AddBlog = () => {
               placeholder: "Enter header",
               levels: [2, 3, 4],
               defaultLevel: 3
+            },
+          },
+          list:{
+            class: EditorjsList,
+            inlineToolbar: true,
+          },
+          image: {
+             class: ImageTool,
+             config:{
+              uploader: {
+                uploadByFile: async(image) => {
+                    return {
+                      success: 1,
+                      file: {
+                        url: URL.createObjectURL(image),
+                        image
+                      }
+                    }
+                  }
+                },
+              },
+          },
+          embed: {
+            class: Embed,
+            config: {
+              services: {
+                youtube: true,
+                coub: true,
+              }
             }
           },
+          Marker:{
+            class: Marker,
+          },
+  
+          code: CodeTool,
         },
         onChange: async () => {
           const data = await editorjsRef.current.save();
@@ -159,7 +215,7 @@ const AddBlog = () => {
           setBlogData((blogData) => ({
             ...blogData,
             content: data
-          }))
+          })),
           // editorjsRef.current = data;
           console.log(data);
         }
@@ -227,7 +283,9 @@ const AddBlog = () => {
             </div>
           </div>
           {/* editor js */}
-          <div id="editorjs"></div>
+          <div id="editorjs">
+
+          </div>
           <div className="mt-6">
             <button
               type="submit"

@@ -14,7 +14,7 @@ router.get("/blogs/:id", getBlog);
 
 // create blogs
 // verify user => create blog
-router.post("/blogs", verifyUser, upload.single("image"), createBlog);
+router.post("/blogs", verifyUser, upload.fields([{ name: "image" }, { name: "images" }]), createBlog);
 
 
 // update blogs

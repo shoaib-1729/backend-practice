@@ -69,93 +69,94 @@ async function createBlog(req, res) {
         // extract creator id from req custom field
         let creator = req.user;
 
-        const { title, description, draft, content } = req.body;
+        const { title, description, draft } = req.body;
+        const content = JSON.parse(req.body.content);
         // console.log(draft);
-        // console.log(req.body);
+        console.log(req.body);
+        console.log(content);
+
+        const image = req.files;
+        console.log(image);
 
         // blog id wala kaam karna hoga
-        const randomId = title
-            .trim() // Remove leading & trailing spaces
-            .toLowerCase() // Convert to lowercase
-            .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special characters
-            .replace(/\s+/g, "-") // Replace spaces with hyphens
-            .replace(/-+/g, "-") // Remove multiple hyphens
-            +
-            "-" + uuidv4().substring(0, 7);
-        console.log(randomId);
-
-        // image (req.file access -> multer)
-        const image = req.file;
-
-        // check user with id creator exists
-        const author = await User.findById(creator)
-
-        // validations
-        if (!image) {
-            return res.status(400).json({
-                "success": false,
-                "message": "Please select the image"
-            })
-        }
-        if (!title) {
-            return res.status(400).json({
-                "success": false,
-                "message": "Please enter the title"
-            })
-        }
-        if (!description) {
-            return res.status(400).json({
-                "success": false,
-                "message": "Please enter the title"
-            })
-        }
-        if (!content) {
-            return res.status(400).json({
-                "success": false,
-                "message": "Please enter the content"
-            })
-        }
-        // creator not there -> early return
-        if (!author) {
-            return res.status(404).json({
-                "success": false,
-                "message": "Creator not found"
-            })
-        }
-
-        // cloudinary image url
-        // public id delete karne ke liye chahiye hogi
-        const { secure_url, public_id } = await cloudinaryImageUpload(image.path);
-
-        // cloudinary mei upload ho jaane ke baad image ko uploads folder se hata do
-        fs.unlinkSync(image.path);
-
-        const blogData = {
-            title,
-            description,
-            creator,
-            image: secure_url,
-            imageId: public_id,
-            blogId: randomId,
-            content
-        };
-
-        // only set draft is user sent it
-        if (typeof draft !== "undefined") {
-            blogData.draft = draft;
-        }
-
-        // yaha pr image:url bhi aayega, image multer se aa rahi hogi
-        const blog = await Blog.create(blogData);
+        //     const randomId = title
+        //         .trim() // Remove leading & trailing spaces
+        //         .toLowerCase() // Convert to lowercase
+        //         .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special characters
+        //         .replace(/\s+/g, "-") // Replace spaces with hyphens
+        //         .replace(/-+/g, "-") // Remove multiple hyphens
+        //         +
+        //         "-" + uuidv4().substring(0, 7);
+        //     console.log(randomId);
 
 
-        // blog create -> add blogs in user collection
-        await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
 
-        return res.json({
-            "success": true,
-            "message": "Blog created successfully..."
-        })
+        //     // check user with id creator exists
+        //     const author = await User.findById(creator)
+
+        //     // validations
+        //     if (!image) {
+        //         return res.status(400).json({
+        //             "success": false,
+        //             "message": "Please select the image"
+        //         })
+        //     }
+        //     if (!title) {
+        //         return res.status(400).json({
+        //             "success": false,
+        //             "message": "Please enter the title"
+        //         })
+        //     }
+        //     if (!description) {
+        //         return res.status(400).json({
+        //             "success": false,
+        //             "message": "Please enter the title"
+        //         })
+        //     }
+        //     if (!content) {
+        //         return res.status(400).json({
+        //             "success": false,
+        //             "message": "Please enter the content"
+        //         })
+        //     }
+        //     // creator not there -> early return
+        //     if (!author) {
+        //         return res.status(404).json({
+        //             "success": false,
+        //             "message": "Creator not found"
+        //         })
+        //     }
+
+        //     // cloudinary image url
+        //     // public id delete karne ke liye chahiye hogi
+        //     const { secure_url, public_id } = await cloudinaryImageUpload(image.path);
+
+        //     const blogData = {
+        //         title,
+        //         description,
+        //         creator,
+        //         image: secure_url,
+        //         imageId: public_id,
+        //         blogId: randomId,
+        //         content
+        //     };
+
+        //     // only set draft is user sent it
+        //     if (typeof draft !== "undefined") {
+        //         blogData.draft = draft;
+        //     }
+
+        //     // yaha pr image:url bhi aayega, image multer se aa rahi hogi
+        //     const blog = await Blog.create(blogData);
+
+
+        //     // blog create -> add blogs in user collection
+        //     await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
+
+        //     return res.json({
+        //         "success": true,
+        //         "message": "Blog created successfully..."
+        //     })
 
     } catch (err) {
         return res.status(500).json({
