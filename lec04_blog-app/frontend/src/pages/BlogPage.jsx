@@ -88,7 +88,7 @@ const BlogPage = () => {
 
           {/* Author Info */}
           <div className="flex items-center space-x-3 text-sm text-gray-600 mb-4">
-            {/* Todo: profile image aayegi yaha */}
+            {/* To-Do: profile image aayegi yaha */}
             <img
               src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
               alt="author"
@@ -192,7 +192,17 @@ const BlogPage = () => {
                       dangerouslySetInnerHTML={{ __html: block.data.text }}
                     ></p>
                   );
-                } else {
+                }
+                // type images
+                else if (block.type === "image") {
+                  return (
+                    <div className="">
+                      <img src={block.data.file.url} alt="content-image"/>
+                      <p>{block.data.caption}</p>
+                    </div>
+                  );
+                }
+                else {
                   return "";
                 }
               })

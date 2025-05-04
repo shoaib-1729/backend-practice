@@ -72,91 +72,133 @@ async function createBlog(req, res) {
         const { title, description, draft } = req.body;
         const content = JSON.parse(req.body.content);
         // console.log(draft);
-        console.log(req.body);
-        console.log(content);
+        // console.log(req.body);
+        // console.log(content);
 
-        const image = req.files;
-        console.log(image);
+        const { image, images } = req.files;
+        // console.log(image);
 
         // blog id wala kaam karna hoga
-        //     const randomId = title
-        //         .trim() // Remove leading & trailing spaces
-        //         .toLowerCase() // Convert to lowercase
-        //         .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special characters
-        //         .replace(/\s+/g, "-") // Replace spaces with hyphens
-        //         .replace(/-+/g, "-") // Remove multiple hyphens
-        //         +
-        //         "-" + uuidv4().substring(0, 7);
+        const randomId = title
+            .trim() // Remove leading & trailing spaces
+            .toLowerCase() // Convert to lowercase
+            .replace(/[^a-zA-Z0-9\s]/g, "") // Remove special characters
+            .replace(/\s+/g, "-") // Replace spaces with hyphens
+            .replace(/-+/g, "-") // Remove multiple hyphens
+            +
+            "-" + uuidv4().substring(0, 7);
         //     console.log(randomId);
 
 
 
-        //     // check user with id creator exists
-        //     const author = await User.findById(creator)
+        //      check user with id creator exists
+        const author = await User.findById(creator)
 
-        //     // validations
-        //     if (!image) {
-        //         return res.status(400).json({
-        //             "success": false,
-        //             "message": "Please select the image"
-        //         })
-        //     }
-        //     if (!title) {
-        //         return res.status(400).json({
-        //             "success": false,
-        //             "message": "Please enter the title"
-        //         })
-        //     }
-        //     if (!description) {
-        //         return res.status(400).json({
-        //             "success": false,
-        //             "message": "Please enter the title"
-        //         })
-        //     }
-        //     if (!content) {
-        //         return res.status(400).json({
-        //             "success": false,
-        //             "message": "Please enter the content"
-        //         })
-        //     }
-        //     // creator not there -> early return
-        //     if (!author) {
-        //         return res.status(404).json({
-        //             "success": false,
-        //             "message": "Creator not found"
-        //         })
-        //     }
+        // validations
+        if (!image) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please select the image"
+            })
+        }
+        if (!title) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the title"
+            })
+        }
+        if (!description) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the title"
+            })
+        }
+        if (!content) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the content"
+            })
+        }
+        // creator not there -> early return
+        if (!author) {
+            return res.status(404).json({
+                "success": false,
+                "message": "Creator not found"
+            })
+        }
 
-        //     // cloudinary image url
-        //     // public id delete karne ke liye chahiye hogi
-        //     const { secure_url, public_id } = await cloudinaryImageUpload(image.path);
+        // image upload cludinary pr
+        // images -> content images
 
-        //     const blogData = {
-        //         title,
-        //         description,
-        //         creator,
-        //         image: secure_url,
-        //         imageId: public_id,
-        //         blogId: randomId,
-        //         content
-        //     };
+        let imageIndex = 0;
+        for (let i = 0; i < content.blocks.length; i++) {
+            // har block nikaalo
+            const block = content.blocks[i];
 
-        //     // only set draft is user sent it
-        //     if (typeof draft !== "undefined") {
-        //         blogData.draft = draft;
-        //     }
+            // check karo image waale ko
+            if (block.type == "image") {
+                console.log("object")
+                console.log(images[imageIndex]);
 
-        //     // yaha pr image:url bhi aayega, image multer se aa rahi hogi
-        //     const blog = await Blog.create(blogData);
+                // cloudinary upload -> memory storage par image path nhi dega multer
+                // use buffer for image upload, bahut bada data aayega yeh
+                // console.log(images[imageIndex].buffer)
+
+                // cloudinary image upload
+                const { secure_url, public_id } = await cloudinaryImageUpload(
+                    `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
+                      "base64"
+                    )}`
+                );
+
+                // console.log(secure_url);
+                // console.log(public_id);
+
+                // url change kardo abb
+                // public id for delete
+                block.data.file = {
+                        url: secure_url,
+                        imageId: public_id
+                    }
+                    // jab image hogi tabhi index badhao
+                imageIndex++;
+            }
+        }
 
 
-        //     // blog create -> add blogs in user collection
-        //     await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
+        // main image bhi upload kardo cloudinary par
+        // memory storage -> no file path given by multer -> use buffer to upload the file
+        const { secure_url, public_id } = await uploadImage(
+            `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
+        );
 
-        //     return res.json({
-        //         "success": true,
-        //         "message": "Blog created successfully..."
-        //     })
+        const blogData = {
+            title,
+            description,
+            creator,
+            image: secure_url,
+            imageId: public_id,
+            blogId: randomId,
+            // content ke andar abb image bhi hogi
+            content
+        };
+
+        // only set draft is user sent it
+        if (typeof draft !== "undefined") {
+            blogData.draft = draft;
+        }
+
+        // yaha pr image:url bhi aayega, image multer se aa rahi hogi
+        const blog = await Blog.create(blogData);
+
+
+        // blog create -> add blogs in user collection
+        await User.findByIdAndUpdate(creator, { $push: { blogs: blog._id } });
+
+        return res.json({
+            "success": true,
+            "message": "Blog created successfully..."
+        })
 
     } catch (err) {
         return res.status(500).json({

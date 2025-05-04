@@ -70,20 +70,13 @@ const AddBlog = () => {
   }, [id])
 
   async function fetchBlogData(){
-    // try{
-      // const res = await axios.get(`http://localhost:3000/api/v1/blog/${id}`)
-      // set kardo state par
+
       setBlogData({
         title: title,
         description: description,
         image: image
       });
 
-    // }catch(err){
-    //   // toast.error(err.response.data.message || err.response.data.error)
-    //   toast.error(err.response.data.message)
-    //   console.log("Error posting blog", err)
-    // }
   };
 
   // handle edit blog
@@ -129,28 +122,25 @@ const AddBlog = () => {
         }
       })
 
-      console.log(blogData)
+      // console.log(blogData)
 
         try{
             e.preventDefault();
-           const res =  await axios.post("http://localhost:3000/api/v1/blogs", formData, 
+             const res =  await axios.post("http://localhost:3000/api/v1/blogs", formData, 
                 {
                     headers:{
                         "Content-Type":"multipart/form-data",
                         Authorization: `Bearer ${token}`
                     }
                 }
-            )
-                // console.log(blogData);
+            );
 
                 // redirect to home page
                 if(res.status == 200){
                     toast.success(res.data.message)
                     // navigate -> home page
                     navigate("/")
-        
                 }
-
         }catch(err){
             toast.error(err.response.data.message)
             console.log("Error posting blog", err)
@@ -158,7 +148,6 @@ const AddBlog = () => {
 
     }
 
-    
     // editor js
     // config
     function initializeEditorjs() {
