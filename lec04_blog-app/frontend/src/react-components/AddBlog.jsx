@@ -81,121 +81,72 @@ const AddBlog = () => {
   };
 
   // handle edit blog
-//   async function handleEditBlog(e){
-//     e.preventDefault(); 
+  async function handleEditBlog(e){
+    e.preventDefault(); 
     
-//     let formData = new FormData();
-//     formData.append("title", blogData.title);
-//     formData.append("description", blogData.description);
-//     formData.append("image", blogData.image);
-//     formData.append("content", JSON.stringify(blogData.content));
+    let formData = new FormData();
+    formData.append("title", blogData.title);
+    formData.append("description", blogData.description);
+    formData.append("image", blogData.image);
+    formData.append("content", JSON.stringify(blogData.content));
 
-//     // console.log(blogData);
-//     // console.log(JSON.parse(blogData.content));
-//     // for(let data of formData.entries()){
-//     //   console.log(data);
-//     // }
+    // console.log(blogData);
+    // console.log(JSON.parse(blogData.content));
+    // for(let data of formData.entries()){
+    //   console.log(data);
+    // }
 
-//     // case-1 (if se handle hoga)
-//     // content edit, new image add
+    // case-1 (if se handle hoga)
+    // content edit, new image add
 
-//     // case-2 (else se handle hoga)
-//     // existing image (shown from DB) delete
-//     let existingImages = [];
+    // case-2 (else se handle hoga)
+    // existing image (shown from DB) delete
+    let existingImages = [];
 
  
-//     blogData.content.blocks.forEach((block) => {
-//       if (block.type === "image") {
-//         if (block.data.file.image) {
-//           formData.append("images", block.data.file.image);
-//         } else {
-//           existingImages.push({
-//             url: block.data.file.url,
-//             imageId: block.data.file.imageId,
-//           });
-//         }
-//       }
-//     });
-
-//     formData.append("existingImages", JSON.stringify(existingImages));
-
-//     console.log(existingImages);
-
-//     try{
-//       // console.log(typeof(blogData.image))
-//       // console.log(blogData.image)
-//       const res = await axios.put(`http://localhost:3000/api/v1/blogs/${id}`, formData,
-//         {
-//           headers:{
-//               "Content-Type":"multipart/form-data",
-//               Authorization: `Bearer ${token}`
-//           }
-//       }
-//   )
-//   console.log(blogData);
-
-//   //  redirect to home page
-//    if(res.status == 200){
-//     toast.success(res.data.message)
-//     // navigate -> home page
-//     navigate("/", { replace: true });
-//    }
-// }
-// catch(err){
-//       toast.error(err.response.data.message)
-//       console.log("Error posting blog", err)
-//   }
-
-//   }
-
-async function handleEditBlog(e) {
-  e.preventDefault();
-  let formData = new FormData();
-
-  formData.append("title", blogData.title);
-  formData.append("description", blogData.description);
-  formData.append("image", blogData.image);
-
-  formData.append("content", JSON.stringify(blogData.content));
-
-  // formData.append("tags", JSON.stringify(blogData.tags));
-  // formData.append("draft", blogData.draft);
-  let existingImages = [];
-
-  blogData.content.blocks.forEach((block) => {
-    if (block.type === "image") {
-      if (block.data.file.image) {
-        formData.append("images", block.data.file.image);
-      } else {
-        existingImages.push({
-          url: block.data.file.url,
-          imageId: block.data.file.imageId,
-        });
+    blogData.content.blocks.forEach((block) => {
+      if (block.type === "image") {
+        if (block.data.file.image) {
+          formData.append("images", block.data.file.image);
+        } else {
+          existingImages.push({
+            url: block.data.file.url,
+            imageId: block.data.file.imageId,
+          });
+        }
       }
-    }
-  });
+    });
 
-  formData.append("existingImages", JSON.stringify(existingImages));
+    formData.append("existingImages", JSON.stringify(existingImages));
 
-  try {
-    const res = await axios.put(
-      `http://localhost:3000/api/v1/blogs/${id}`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+    console.log(existingImages);
+
+    try{
+      // console.log(typeof(blogData.image))
+      // console.log(blogData.image)
+      const res = await axios.put(`http://localhost:3000/api/v1/blogs/${id}`, formData,
+        {
+          headers:{
+              "Content-Type":"multipart/form-data",
+              Authorization: `Bearer ${token}`
+          }
       }
-    );
+  )
+  console.log(blogData);
 
-    toast.success(res.data.message);
-    navigate("/");
-  } catch (error) {
-    console.log(error);
-    toast.error(error.response.data.message);
-  }
+  //  redirect to home page
+   if(res.status == 200){
+    toast.success(res.data.message)
+    // navigate -> home page
+    navigate("/", { replace: true });
+   }
 }
+catch(err){
+      toast.error(err.response.data.message)
+      console.log("Error posting blog", err)
+  }
+
+  }
 
     // form submit pr db call karwao -> create blog
     async function handlePostBlog(e){
