@@ -168,7 +168,7 @@ async function createBlog(req, res) {
 
         // main image bhi upload kardo cloudinary par
         // memory storage -> no file path given by multer -> use buffer to upload the file
-        const { secure_url, public_id } = await uploadImage(
+        const { secure_url, public_id } = await cloudinaryImageUpload(
             `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
         );
 
@@ -216,9 +216,15 @@ async function updateBlog(req, res) {
         // update blog
         const { title, description, draft } = req.body;
 
+
+
+        const content = JSON.parse(req.body.content);
+        const existingImages = JSON.parse(req.body.existingImages);
+
+
         // multer
-        const image = req.file;
-        // console.log(image);
+        const { image, images } = req.files;
+        console.log(image, images);
 
 
         // extract id from params
@@ -247,23 +253,72 @@ async function updateBlog(req, res) {
             })
         }
 
+        // image nikaalo joh cloudinary se delete karni hai
+        let imagesToDelete = blog.content.blocks
+            .filter((block) => block.type == "image")
+            .filter(
+                (block) => !existingImages.find(({ url }) => url == block.data.file.url)
+            )
+            .map((block) => block.data.file.imageId);
+
+        // delete kardo abb
+        if (imagesToDelete.length > 0) {
+            await Promise.all(imagesToDelete.map(id => cloudinaryDestroyImage(id)));
+        }
+
+        // joh images add hui hai unko add karwao (same logic add image in blog content wala)
+        // image upload cloudinary pr
+        // images -> content images
+        // agar images hai toh add karo
+        if (images) {
+            let imageIndex = 0;
+            for (let i = 0; i < content.blocks.length; i++) {
+                // har block nikaalo
+                const block = content.blocks[i];
+
+                // check karo jismei nayi image add hui hai
+                if (block.type === "image" && block.data.file.image) {
+                    // cloudinary upload -> memory storage par image path nhi dega multer
+                    // use buffer for image upload, bahut bada data aayega yeh
+                    // console.log(images[imageIndex].buffer)
+
+                    // cloudinary image upload
+                    const { secure_url, public_id } = await cloudinaryImageUpload(
+                        `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
+                          "base64"
+                        )}`
+                    );
+
+                    // url change kardo abb
+                    block.data.file = {
+                            url: secure_url,
+                            imageId: public_id
+                        }
+                        // jab image hogi tabhi index badhao
+                    imageIndex++;
+                }
+            }
+        }
+
+
+
         // image change -> file otherwise undefined
         if (image) {
             // old image haat do cloudinary se
             await cloudinaryDestroyImage(blog.imageId);
             // new image upload kardo cloudinary par
-            let { secure_url, public_id } = await cloudinaryImageUpload(image.path);
+            let { secure_url, public_id } = await cloudinaryImageUpload(
+                `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
+            );
             // update image and imageId from DB
             blog.image = secure_url;
             blog.imageId = public_id;
-
-            // after new image cloudinary upload -> upload folder se hata do
-            fs.unlinkSync(image.path);
         }
 
         // set other values
         blog.title = title
         blog.description = description
+        blog.content = content;
 
         // set only if user send it
         if (typeof draft !== "undefined") {
@@ -280,6 +335,7 @@ async function updateBlog(req, res) {
             "blog": updatedBlog
         })
     } catch (err) {
+        console.log(err);
         return res.status(500).json({
             "success": false,
             "message": "Error updating blogs",
