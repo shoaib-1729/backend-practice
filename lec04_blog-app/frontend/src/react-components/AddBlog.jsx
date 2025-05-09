@@ -12,7 +12,8 @@ import Marker from '@editorjs/marker';
 import Embed from '@editorjs/embed';
 import ImageTool from '@editorjs/image';
 
-
+// add blog aur edit blpg dono ke liye same component ka use kar rahe hai
+// blog id ka use karke conditional render karwa rahe hai
 const AddBlog = () => {
   const [blogData, setBlogData] = useState({
       title:"",
