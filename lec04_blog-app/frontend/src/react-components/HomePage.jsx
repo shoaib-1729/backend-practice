@@ -1,19 +1,20 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { formatDate } from "../utils/formatDate"
+import {removeSelectedBlog} from "../utils/selectedBlogSlice";
 
 const HomePage = () => {
     const [data, setData] = useState([]);
 
+    const dispatch = useDispatch();
 
 
-    
     async function getBlogs() {
         try {
           console.log("Calling API...");
           const res = await axios.get("http://localhost:3000/api/v1/blogs");
-        //   console.log("Fetched Blogs:", res.data.blogs);
           setData(res.data.blogs);
         } catch (err) {
             console.error("Failed to fetch blogs", err);
@@ -23,7 +24,11 @@ const HomePage = () => {
     useEffect(() => {
         console.log("HomePage useEffect triggered");
             getBlogs();
+            dispatch(removeSelectedBlog());
       }, []);
+
+
+
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-10">

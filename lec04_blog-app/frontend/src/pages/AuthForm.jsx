@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/shadcn-components/ui/button";
 import { Input } from "@/shadcn-components/ui/input";
 import { Label } from "@/shadcn-components/ui/label";
@@ -20,6 +20,14 @@ const AuthForm = ({ type }) => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        setUserData(() => ({
+            name: "",
+            email: "",
+            password: ""
+        }))
+    }, [type])
+
     async function handleAuthForm(e) {
         try {
             e.preventDefault();
@@ -31,6 +39,7 @@ const AuthForm = ({ type }) => {
             if (type === "signin") {
                 navigate("/");
             } else if (type === "signup") {
+                
                 navigate("/signin");
             }
         } catch (err) {
