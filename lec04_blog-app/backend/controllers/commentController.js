@@ -40,7 +40,6 @@ async function addComment(req, res) {
                 comment,
                 blog: id,
                 user: creator
-
             })
             .then((comment) => {
                 return comment.populate({
@@ -272,6 +271,72 @@ async function likeComment(req, res) {
     }
 }
 
+// add nested comment
+async function addNestedComment(req, res) {
+    try {
+        const { id: blogId, parentCommentId } = req.params;
+
+        const userId = req.user;
+
+        const { reply } = req.body
+
+        // find comment
+        const comment = await Comment.findById(parentCommentId);
+
+        const blog = await Blog.findById(blogId);
+
+        // validation
+
+        if (!comment) {
+            return res.status(500).json({
+                message: "parent comment is not found",
+            });
+        }
+
+        if (!blog) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Blog does not exits",
+            })
+        }
+
+        // add reply after validation
+        // create reply
+        const newReply = await Comment.create({
+            blog: blogId,
+            comment: reply,
+            parentComment: parentCommentId,
+            user: userId,
+        }).then((reply) => {
+            return reply.populate({
+                path: "user",
+                select: "name email",
+            });
+        });
+
+        // add reply to parent comment
+        await Comment.findByIdAndUpdate(parentCommentId, {
+            $push: { replies: newReply._id },
+        });
+
+
+        // response message
+        return res.status(200).json({
+            "success": true,
+            "message": "Reply added successfully...",
+            newReply
+        })
+
+    } catch (err) {
+
+        return res.status(500).json({
+            "success": false,
+            "message": "Error replying comment",
+            "error": err.message
+        })
+    }
+}
+
 
 
 
@@ -279,5 +344,6 @@ module.exports = {
     addComment,
     deleteComment,
     editComment,
-    likeComment
+    likeComment,
+    addNestedComment
 }

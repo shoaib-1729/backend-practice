@@ -8,11 +8,12 @@ import axios from "axios";
 import { formatDate } from "../utils/formatDate";
 
 const Comment = () => {
-  const [comment, setComment] = useState([]);
+  const [comment, setComment] = useState("");
+
+
   const dispatch = useDispatch();
 
-
-  const { token, id: userId} = useSelector((state) => state.user);
+  const { token, id: userId } = useSelector((state) => state.user);
   const { _id: id, comments } = useSelector((state) => state.selectedBlog);
 
   async function handleComment() {
@@ -28,32 +29,13 @@ const Comment = () => {
       );
       dispatch(addNewComment(res.data.newComment));
       toast.success(res.data.message);
+      setComment(""); // Clear input
     } catch (err) {
       console.log(err);
     }
   }
-// handle comment like
-  async function handleCommentLike(commentId){
-    try{
-        const res = await axios.patch(
-            `http://localhost:3000/api/v1/blogs/like-comment/${commentId}`,
-            {},
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                }
-            }
-        )
-        console.log(res);
-        // dispatch action
-        dispatch(setCommentLike({ commentId, userId }))
-        toast.success(res.data.message);
 
-    }catch(err){
-        console.log(err);
-        toast.error(err.response.data.error)
-    }
-  }
+
   return (
     <div className="bg-white drop-shadow-lg border-l border-gray-200 h-screen fixed top-0 right-0 w-[400px] p-6 flex flex-col overflow-y-scroll">
       {/* Header */}
@@ -69,6 +51,7 @@ const Comment = () => {
       <input
         type="text"
         placeholder="Write a comment..."
+        value={comment}
         onChange={(e) => setComment(e.target.value)}
         className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-0 text-lg"
       />
@@ -85,7 +68,89 @@ const Comment = () => {
       <div className="my-6 border-t border-gray-300"></div>
 
       {/* Render Comments */}
-      {comments.map((comment) => (
+      <DisplayComments 
+       comments={comments}
+       token={token}
+       blogId={id}
+       userId={userId}
+      />
+    </div>
+  );
+};
+
+
+
+// display comments
+const DisplayComments = (
+  {
+    comments,
+    token,
+    blogId,
+    userId,
+  }
+) => {
+   // For toggling reply box per comment
+  const [activeReply, setActiveReply] = useState(null);
+
+  const [reply, setReply] = useState("");
+
+  const dispatch = useDispatch();
+
+
+  // Toggle reply box for a specific comment
+  function handleActiveReply(id) {
+    setActiveReply((prev) => (prev === id ? null : id));
+  }
+
+   // Handle comment like
+  async function handleCommentLike(commentId) {
+    try {
+      const res = await axios.patch(
+        `http://localhost:3000/api/v1/blogs/like-comment/${commentId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      dispatch(setCommentLike({ commentId, userId }));
+      toast.success(res.data.message);
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.error);
+    }
+  }
+
+  async function handleReply(parentCommentId){
+    try{
+      let res = await axios.post(
+        `http://localhost:3000/api/v1/comment/${parentCommentId}/${blogId}`,
+        { reply },
+         {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // setReply(null);
+      // setActiveReply(null);
+
+      console.log(res)
+      
+
+
+    }catch(err){
+      console.log(err);
+       toast.error(err.response.data.error);
+    }
+  }
+
+
+
+  return(
+    <>
+    {comments.map((comment) => (
         <div key={comment._id} className="border-b border-gray-200 py-4">
           {/* Header */}
           <div className="flex items-start justify-between">
@@ -110,18 +175,56 @@ const Comment = () => {
             {comment.comment}
           </p>
 
-          {/* Footer: Like + Comment */}
-          <div className="flex items-center gap-6 mt-4 text-sm text-gray-600">
+          {/* Footer: Like + Replies */}
+          <div className="flex items-center gap-6 mt-4 text-sm text-gray-600 ml-1">
             {/* Like */}
-            <div className="flex items-center gap-2 cursor-pointer hover:text-blue-500" onClick={() => handleCommentLike(comment._id)}>
-              <i className={`fi ${comment.likes.includes(userId) ? "fi-sr-thumbs-up" : "fi-rr-social-network"}  text-xl hover:text-blue-500`}></i>
+            <div
+              className="flex items-center gap-2 cursor-pointer hover:text-blue-500"
+              onClick={() => handleCommentLike(comment._id)}
+            >
+              <i
+                className={`fi ${
+                  comment.likes.includes(userId)
+                    ? "fi-sr-thumbs-up"
+                    : "fi-rr-social-network"
+                } text-xl`}
+              ></i>
               <span>{comment.likes.length}</span>
             </div>
+
+            {/* Replies */}
+            <div
+              className="flex items-center gap-1 cursor-pointer hover:text-blue-600"
+              onClick={() => handleActiveReply(comment._id)}
+            >
+              <i className="fi fi-sr-comments text-lg"></i>
+              <span className="text-sm">2</span> {/* Static for now */}
+              <span className="text-sm underline">Replies</span>
+            </div>
           </div>
+
+          {/* Reply Input Box (conditional) */}
+          {activeReply === comment._id && (
+            <div className="mt-4 p-4 border border-gray-300 rounded-md bg-gray-50 ml-12">
+              <input
+                type="text"
+                placeholder="Write a reply..."
+                onChange={(e) => setReply(e.target.value)}
+                className="border border-gray-300 px-4 py-2 rounded-md w-full focus:outline-none focus:ring-0 text-sm"
+              />
+              <Button
+                onClick={() => handleReply(comment._id)}
+                className="mt-2 bg-green-500 hover:bg-green-600 text-white text-sm"
+              >
+                Reply
+              </Button>
+            </div>
+          )}
+          
         </div>
       ))}
-    </div>
-  );
-};
+    </>
+  )
+}
 
 export default Comment;

@@ -13,6 +13,7 @@ const {
     deleteComment,
     editComment,
     likeComment,
+    addNestedComment
 } = require("../controllers/commentController.js");
 const upload = require("../utils/multer.js");
 
@@ -58,6 +59,9 @@ router.put("/blogs/edit-comment/:id", verifyUser, editComment);
 
 // like comment
 router.patch("/blogs/like-comment/:id", verifyUser, likeComment);
+
+// add nested comment (reply)
+router.post("/comment/:parentCommentId/:id", verifyUser, addNestedComment);
 
 // export router
 module.exports = router;
