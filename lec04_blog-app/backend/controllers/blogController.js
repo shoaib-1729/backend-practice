@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const fs = require("node:fs");
 const Blog = require("../models/blogModel.js")
+const Comment = require("../models/commentModel.js")
 const User = require("../models/userModel.js");
 const { v4: uuidv4 } = require('uuid');
 const { cloudinaryImageUpload, cloudinaryDestroyImage } = require("../config/cloudinaryConfig.js")
@@ -36,17 +37,47 @@ async function getBlog(req, res) {
         const { id } = req.params;
         // draft false ->  only accessed by blog author, authorization will be required
         const blog = await Blog.findOne({ blogId: id }).populate({
-            path: "comments",
-            // populate user inside comments (nested populate)
-            // populating user because username is required for displaying above the comment
-            populate: {
-                path: "user",
+                path: "comments",
+                // populate user inside comments (nested populate)
+                // populating user because username is required for displaying above the comment
+                populate: {
+                    path: "user",
+                    select: "name email"
+                }
+            }).populate({
+                path: "creator",
                 select: "name email"
+            })
+            .lean()
+
+        async function populateReplies(comments) {
+            for (const comment of comments) {
+                let populatedComment = await Comment.findById(comment._id)
+                    .populate({
+                        path: "replies",
+                        populate: {
+                            path: "user",
+                            select: "name email"
+                        }
+                    })
+                    .lean();
+
+
+                // set populated data to comment replies
+                comment.replies = populatedComment.replies
+
+                // populate reply ke bhi replies 
+                // recursive base case
+                if (comment.replies.length > 0) {
+                    await populateReplies(comment.replies);
+                }
             }
-        }).populate({
-            path: "creator",
-            select: "name email"
-        });
+            return comments
+        }
+
+        blog.comments = await populateReplies(blog.comments)
+
+
         return res.json({
             "success": true,
             "message": "Blog fetched successfully...",

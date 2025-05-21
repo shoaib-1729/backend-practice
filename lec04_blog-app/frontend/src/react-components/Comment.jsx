@@ -7,8 +7,13 @@ import { useState } from "react";
 import axios from "axios";
 import { formatDate } from "../utils/formatDate";
 
+
 const Comment = () => {
   const [comment, setComment] = useState("");
+  
+  
+  // For toggling reply box per comment
+  const [activeReply, setActiveReply] = useState(null);
 
 
   const dispatch = useDispatch();
@@ -73,6 +78,8 @@ const Comment = () => {
        token={token}
        blogId={id}
        userId={userId}
+       activeReply={activeReply}
+                  setActiveReply={setActiveReply}
       />
     </div>
   );
@@ -87,10 +94,12 @@ const DisplayComments = (
     token,
     blogId,
     userId,
+    activeReply,
+    setActiveReply
+
   }
 ) => {
-   // For toggling reply box per comment
-  const [activeReply, setActiveReply] = useState(null);
+
 
   const [reply, setReply] = useState("");
 
@@ -133,8 +142,8 @@ const DisplayComments = (
           },
         }
       );
-      // setReply(null);
-      // setActiveReply(null);
+      setReply(null);
+      setActiveReply(null);
 
       console.log(res)
       
@@ -148,83 +157,92 @@ const DisplayComments = (
 
 
 
-  return(
-    <>
+ return (
+  <>
     {comments.map((comment) => (
-        <div key={comment._id} className="border-b border-gray-200 py-4">
-          {/* Header */}
-          <div className="flex items-start justify-between">
-            <div className="flex gap-3">
-              <img
-                src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`}
-                alt="avatar"
-                className="w-10 h-10 rounded-full"
-              />
-              <div>
-                <p className="font-semibold text-sm">{comment.user.name}</p>
-                <p className="text-xs text-gray-500">
-                  {formatDate(comment.createdAt)}
-                </p>
-              </div>
-            </div>
-            <i className="fi fi-bs-menu-dots text-gray-500 text-lg cursor-pointer hover:text-gray-700"></i>
-          </div>
-
-          {/* Comment text */}
-          <p className="mt-3 text-sm text-gray-800 leading-snug">
-            {comment.comment}
-          </p>
-
-          {/* Footer: Like + Replies */}
-          <div className="flex items-center gap-6 mt-4 text-sm text-gray-600 ml-1">
-            {/* Like */}
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:text-blue-500"
-              onClick={() => handleCommentLike(comment._id)}
-            >
-              <i
-                className={`fi ${
-                  comment.likes.includes(userId)
-                    ? "fi-sr-thumbs-up"
-                    : "fi-rr-social-network"
-                } text-xl`}
-              ></i>
-              <span>{comment.likes.length}</span>
+      <div key={comment._id} className="py-4">
+        {/* Header */}
+        <div className="flex items-start gap-3">
+          <img
+            src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`}
+            alt="avatar"
+            className="w-8 h-8 rounded-full"
+          />
+          <div className="flex-1">
+            <div className="flex justify-between items-center">
+              <p className="font-medium text-sm text-gray-800">{comment.user.name}</p>
+              <p className="text-xs text-gray-400">{formatDate(comment.createdAt)}</p>
             </div>
 
-            {/* Replies */}
-            <div
-              className="flex items-center gap-1 cursor-pointer hover:text-blue-600"
-              onClick={() => handleActiveReply(comment._id)}
-            >
-              <i className="fi fi-sr-comments text-lg"></i>
-              <span className="text-sm">2</span> {/* Static for now */}
-              <span className="text-sm underline">Replies</span>
-            </div>
-          </div>
+            {/* Comment text */}
+            <p className="mt-1 text-sm text-gray-700 leading-relaxed">
+              {comment.comment}
+            </p>
 
-          {/* Reply Input Box (conditional) */}
-          {activeReply === comment._id && (
-            <div className="mt-4 p-4 border border-gray-300 rounded-md bg-gray-50 ml-12">
-              <input
-                type="text"
-                placeholder="Write a reply..."
-                onChange={(e) => setReply(e.target.value)}
-                className="border border-gray-300 px-4 py-2 rounded-md w-full focus:outline-none focus:ring-0 text-sm"
-              />
-              <Button
-                onClick={() => handleReply(comment._id)}
-                className="mt-2 bg-green-500 hover:bg-green-600 text-white text-sm"
+            {/* Actions: Like + Replies */}
+            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+              <button
+                onClick={() => handleCommentLike(comment._id)}
+                className="flex items-center gap-1 hover:text-blue-500"
               >
-                Reply
-              </Button>
+                <i
+                  className={`fi ${
+                    comment.likes.includes(userId)
+                      ? "fi-sr-thumbs-up"
+                      : "fi-rr-social-network"
+                  } text-base`}
+                ></i>
+                <span>{comment.likes.length}</span>
+              </button>
+
+              <button
+                onClick={() => handleActiveReply(comment._id)}
+                className="flex items-center gap-1 hover:text-blue-600"
+              >
+                <i className="fi fi-sr-comments text-base"></i>
+                <span>{comment.replies.length}</span>
+                <span className="underline">Replies</span>
+              </button>
             </div>
-          )}
-          
+
+            {/* Reply Input Box */}
+            {activeReply === comment._id && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  placeholder="Write a reply..."
+                  onChange={(e) => setReply(e.target.value)}
+                  className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+                />
+                <Button
+                  onClick={() => handleReply(comment._id)}
+                  className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs"
+                >
+                  Reply
+                </Button>
+              </div>
+            )}
+
+            {/* Nested Replies */}
+            {comment.replies.length > 0 && (
+              <div className="pl-5 mt-4 border-l border-gray-200">
+                <DisplayComments
+                  comments={comment.replies}
+                  userId={userId}
+                  blogId={blogId}
+                  token={token}
+                  activeReply={activeReply}
+                  setActiveReply={setActiveReply}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      ))}
-    </>
-  )
+      </div>
+    ))}
+  </>
+);
+
 }
 
 export default Comment;
