@@ -61,11 +61,68 @@ const selectedBlogSlice = createSlice({
                 // Like
                 comment.likes = [...comment.likes, userId];
             }
+        },
+
+        // add new reply
+        setReplies(state, action) {
+            let newReply = action.payload;
+
+            function findParentComment(comments) {
+                let parentComment;
+
+                // parent comment pata lagao
+                for (let comment of comments) {
+                    // case-1: comment ka reply (parent find karo)
+                    if (comment._id === newReply.parentComment) {
+                        // add reply to parent comemnt
+                        parentComment = {
+                                ...comment,
+                                replies: [...comment.replies, newReply]
+                            }
+                            // jaise parent mil jaaye loop break kardo (pita ji ek hi hoge)
+                        break;
+                    }
+
+                    // case-2: comment ke reply ka bhi reply
+                    // abb reply parent comment bann jaayega
+                    // bss joh cheez parent ke saath kari thi wahi same cheez karni hai magar abb woh reply ke saath karni hai
+                    if (comment.replies.length > 0) {
+                        // find parent comment - recursion lagega
+                        parentComment = findParentComment(comment.replies);
+
+                        // agar parent commemnt mila
+                        if (parentComment) {
+                            // parent comment ko mutate kardo (replies array ko change)
+                            parentComment = {
+                                    ...comment,
+                                    replies: comment.replies.map((reply) => {
+                                        return reply._id = parentComment._id ? parentComment : reply;
+                                    })
+
+                                }
+                                // jab parent mil jaaaye break kardo
+                            break;
+                        }
+                    }
+                }
+                // yeh top level comment ko return kar rahe (replies usmei add karke)
+                return parentComment;
+            }
+
+            let parentComment = findParentComment(state.comments);
+
+            // state par set kardo 
+            state.comments = state.comments.map((comment) => {
+                return comment._id == parentComment._id ? parentComment : comment
+            })
+
+
+
         }
 
     }
 });
 
-export const { addSelectedBlog, removeSelectedBlog, changeLikes, addNewComment, setCommentLike } = selectedBlogSlice.actions;
+export const { addSelectedBlog, removeSelectedBlog, changeLikes, addNewComment, setCommentLike, setReplies } = selectedBlogSlice.actions;
 export default selectedBlogSlice.reducer;
 ``

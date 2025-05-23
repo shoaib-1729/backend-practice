@@ -2,7 +2,7 @@ import { Button } from "@/shadcn-components/ui/button";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsOpen } from "../utils/commentSlice";
-import { addNewComment, setCommentLike } from "../utils/selectedBlogSlice";
+import { addNewComment, setCommentLike, setReplies } from "../utils/selectedBlogSlice";
 import { useState } from "react";
 import axios from "axios";
 import { formatDate } from "../utils/formatDate";
@@ -145,13 +145,12 @@ const DisplayComments = (
       setReply(null);
       setActiveReply(null);
 
-      console.log(res)
-      
-
-
+      // dispatch action
+      dispatch(setReplies(res.data.newReply))
+    
     }catch(err){
       console.log(err);
-       toast.error(err.response.data.error);
+      //  toast.error(err.response.data.message);
     }
   }
 
