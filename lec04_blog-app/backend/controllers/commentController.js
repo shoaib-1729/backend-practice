@@ -148,7 +148,7 @@ async function editComment(req, res) {
         const userId = req.user;
 
         // update -> request body
-        const { updatedComment } = req.body;
+        const { updatedCommentContent } = req.body;
 
         // Check if the commentId is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(commentId)) {
@@ -182,21 +182,25 @@ async function editComment(req, res) {
             });
         }
 
-        // check if the comment exists in the blog's comments array
-        if (!comment.blog.comments.includes(commentId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Comment does not exist in this blog",
-            });
-        }
 
         // update the comment document from the Comment model
-        await Comment.findByIdAndUpdate(commentId, { comment: updatedComment })
+        const updatedComment = await Comment.findByIdAndUpdate(
+            commentId, {
+                comment: updatedCommentContent
+            }, { new: true }
+        ).then((comment) => {
+            return comment.populate({
+                path: "user",
+                select: "name email"
+            })
+        })
+
 
         // response message
         return res.status(200).json({
             success: true,
-            message: "Comment updated successfully"
+            message: "Comment updated successfully",
+            updatedComment
         });
 
     } catch (err) {

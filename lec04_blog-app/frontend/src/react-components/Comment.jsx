@@ -15,11 +15,17 @@ const Comment = () => {
   // For toggling reply box per comment
   const [activeReply, setActiveReply] = useState(null);
 
+    // states for 3 dots popoup
+  const [currentPopup, setCurrentPopup] = useState(null);
+
+    // states for edit comment div show
+      const [currentEditComment, setCurrentEditComment] = useState(null);
+
 
   const dispatch = useDispatch();
 
   const { token, id: userId } = useSelector((state) => state.user);
-  const { _id: id, comments } = useSelector((state) => state.selectedBlog);
+  const { _id: id, comments, creator:{_id: creatorId}} = useSelector((state) => state.selectedBlog);
 
   async function handleComment() {
     try {
@@ -80,6 +86,11 @@ const Comment = () => {
        userId={userId}
        activeReply={activeReply}
                   setActiveReply={setActiveReply}
+                  currentPopup={currentPopup}
+                  setCurrentPopup={setCurrentPopup}
+                  currentEditComment={currentEditComment}
+                  setCurrentEditComment={setCurrentEditComment}
+                  creatorId={creatorId}
       />
     </div>
   );
@@ -95,13 +106,21 @@ const DisplayComments = (
     blogId,
     userId,
     activeReply,
-    setActiveReply
-
+    setActiveReply,
+    currentPopup,
+    setCurrentPopup,
+    currentEditComment,
+    setCurrentEditComment,
+    creatorId
   }
 ) => {
 
 
   const [reply, setReply] = useState("");
+
+  // edit comment
+  const [updatedCommentContent, setUpdatedCommentContent] = useState("");
+
 
   const dispatch = useDispatch();
 
@@ -110,6 +129,8 @@ const DisplayComments = (
   function handleActiveReply(id) {
     setActiveReply((prev) => (prev === id ? null : id));
   }
+
+
 
    // Handle comment like
   async function handleCommentLike(commentId) {
@@ -128,6 +149,31 @@ const DisplayComments = (
     } catch (err) {
       console.log(err);
       toast.error(err.response.data.error);
+    }
+  }
+
+     // Handle comment like
+  async function handleCommentUpdate(commentId) {
+    try {
+      const res = await axios.put(
+        `http://localhost:3000/api/v1/blogs/edit-comment/${commentId}`,
+        { updatedCommentContent },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // TODO: dispatch karna hai
+      toast.success(res.data.message);
+      // khaali kardo textarea ko
+      setUpdatedCommentContent("")
+      // comment ko phir se dikha do
+      setCurrentEditComment(null);
+
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
     }
   }
 
@@ -158,90 +204,184 @@ const DisplayComments = (
 
  return (
   <>
-    {comments.map((comment) => (
-      <div key={comment._id} className="py-4">
-        {/* Header */}
-        <div className="flex items-start gap-3">
-          <img
-            src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`}
-            alt="avatar"
-            className="w-8 h-8 rounded-full"
-          />
-          <div className="flex-1">
-            <div className="flex justify-between items-center">
-              <p className="font-medium text-sm text-gray-800">{comment.user.name}</p>
-              <p className="text-xs text-gray-400">{formatDate(comment.createdAt)}</p>
-            </div>
 
-            {/* Comment text */}
-            <p className="mt-1 text-sm text-gray-700 leading-relaxed">
-              {comment.comment}
-            </p>
+{
+  comments.map((comment) => (
+    <div key={comment._id} className="py-4">
+      {currentEditComment === comment._id ? (
+<div className="mt-2">
+  <textarea
+    rows={3}
+    value={updatedCommentContent}
+    onChange={(e) => setUpdatedCommentContent(e.target.value)}
+    placeholder="Edit your response..."
+    className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+  />
 
-            {/* Actions: Like + Replies */}
-            <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-              <button
-                onClick={() => handleCommentLike(comment._id)}
-                className="flex items-center gap-1 hover:text-blue-500"
-              >
-                <i
-                  className={`fi ${
-                    comment.likes.includes(userId)
-                      ? "fi-sr-thumbs-up"
-                      : "fi-rr-social-network"
-                  } text-base`}
-                ></i>
-                <span>{comment.likes.length}</span>
-              </button>
+  <div className="mt-2 flex justify-end gap-3">
+    {/* Cancel Button */}
+    <button
+      onClick={() => {
+        setCurrentEditComment(null);
+        setUpdatedCommentContent("");
+      }}
+      className="px-4 py-1.5 text-sm text-gray-600 bg-gray-100 rounded hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+    >
+      Cancel
+    </button>
 
-              <button
-                onClick={() => handleActiveReply(comment._id)}
-                className="flex items-center gap-1 hover:text-blue-600"
-              >
-                <i className="fi fi-sr-comments text-base"></i>
-                <span>{comment.replies.length}</span>
-                <span className="underline">Replies</span>
-              </button>
-            </div>
+    {/* Update Button */}
+    <button
+      onClick={() => handleCommentUpdate(comment._id)}
+      className="px-4 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600 rounded transition-colors duration-200 cursor-pointer"
+    >
+      Update
+    </button>
+  </div>
+</div>
+) :  (
+        // Outer container
+    <div className="flex items-start gap-3 relative">
+      {/* Avatar */}
+      <img
+        src={`https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`}
+        alt="avatar"
+        className="w-8 h-8 rounded-full"
+        />
 
-            {/* Reply Input Box */}
-            {activeReply === comment._id && (
-              <div className="mt-3">
-                <input
-                  type="text"
-                  placeholder="Write a reply..."
-                  onChange={(e) => setReply(e.target.value)}
-                  className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
-                />
-                <Button
-                  onClick={() => handleReply(comment._id)}
-                  className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs"
-                >
-                  Reply
-                </Button>
-              </div>
-            )}
+      {/* Main content */}
+      <div className="flex-1">
+        {/* Name + Date */}
+        <div>
+          <p className="font-medium text-sm text-gray-800">{comment.user.name}</p>
+          <p className="text-xs text-gray-400">{formatDate(comment.createdAt)}</p>
+        </div>
 
-            {/* Nested Replies */}
-            {comment.replies.length > 0 && (
-              <div className="pl-5 mt-4 border-l border-gray-200">
-                <DisplayComments
-                  comments={comment.replies}
-                  userId={userId}
-                  blogId={blogId}
-                  token={token}
-                  activeReply={activeReply}
-                  setActiveReply={setActiveReply}
-                />
-              </div>
-            )}
+        {/* Comment text */}
+        <p className="mt-1 text-sm text-gray-700 leading-relaxed">
+          {comment.comment}
+        </p>
+
+        {/* Like + Reply buttons */}
+        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+          <button
+            onClick={() => handleCommentLike(comment._id)}
+            className="flex items-center gap-1 hover:text-blue-500"
+          >
+            <i
+              className={`fi ${
+                comment.likes.includes(userId)
+                  ? "fi-sr-thumbs-up"
+                  : "fi-rr-social-network"
+              } text-base`}
+            ></i>
+            <span>{comment.likes.length}</span>
+          </button>
+
+          <button
+            onClick={() => handleActiveReply(comment._id)}
+            className="flex items-center gap-1 hover:text-blue-600"
+          >
+            <i className="fi fi-sr-comments text-base"></i>
+            <span>{comment.replies.length}</span>
+            <span className="underline">Replies</span>
+          </button>
+        </div>
+
+        {/* Reply Input */}
+        {activeReply === comment._id && (
+          <div className="mt-3">
+            <input
+              type="text"
+              value={reply}
+              placeholder="Write a reply..."
+              onChange={(e) => setReply(e.target.value)}
+              className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
+            />
+            <Button
+              onClick={() => handleReply(comment._id)}
+              className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs"
+            >
+              Reply
+            </Button>
           </div>
+        )}
+
+        {/* Nested replies */}
+        {comment.replies.length > 0 && (
+          <div className="pl-5 mt-4 border-l border-gray-200">
+            <DisplayComments
+              comments={comment.replies}
+              userId={userId}
+              blogId={blogId}
+              token={token}
+              activeReply={activeReply}
+              setActiveReply={setActiveReply}
+                  currentPopup={currentPopup}
+    setCurrentPopup={setCurrentPopup}
+    currentEditComment={currentEditComment}
+                  setCurrentEditComment={setCurrentEditComment}
+                  creatorId={creatorId}
+    
+
+            />
+          </div>
+        )}
+      </div>
+
+
+
+      {/* 3-dot icon + dropdown menu with arrow */}
+      <div className="absolute top-0 right-0">
+        <div className="relative">
+          { (userId === comment.user._id || userId === creatorId) && (
+            <button
+            className="text-gray-400 hover:text-gray-600 text-lg cursor-pointer transition-colors"
+            onClick={() => {
+                setCurrentPopup((prev) => (prev === comment._id ? null : comment._id))
+              }}
+          >
+            <i 
+            className="fi fi-sr-menu-dots"></i>
+          </button>
+          )}
+
+          {
+          // Dropdown menu below 3 dots
+          currentPopup === comment._id && (
+          <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded-md z-10 overflow-hidden ">
+            {/* Arrow pointing to 3 dots */}
+            <div className="absolute -top-2 right-3 w-3 h-3 bg-white rotate-45 border-l border-t border-gray-200"></div>
+
+{        comment.user._id === userId &&  (<button
+            onClick={() => {
+              setUpdatedCommentContent(comment.comment);  
+    setCurrentEditComment(comment._id);        
+    setCurrentPopup(null);  
+            }}
+          
+              className="w-full px-4 py-2 text-sm text-gray-500 hover:text-black text-left cursor-pointer transition-opacity duration-200"
+            >
+              Edit Response
+            </button>
+          )}
+            <button
+              className="w-full px-4 py-2 text-sm text-red-400 hover:text-red-700 text-left cursor-pointer transition-opacity duration-200"
+            >
+              Delete Response
+            </button>
+          </div>
+)}
         </div>
       </div>
-    ))}
-  </>
-);
-
+    </div>
+  )}
+  </div>
+))
 }
+
+  </>
+
+)}
 
 export default Comment;

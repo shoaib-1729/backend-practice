@@ -25,6 +25,24 @@ const BlogPage = () => {
   const { isOpen } = useSelector((state) => state.comment);
   const dispatch = useDispatch();
 
+  // comment count (including all nested replies)
+  const countTotalComments = (comments) => {
+  let count = 0;
+
+  const countReplies = (commentList) => {
+    for (const comment of commentList) {
+      count += 1;
+      if (comment.replies && comment.replies.length > 0) {
+        // recursive call
+        countReplies(comment.replies);
+      }
+    }
+  };
+  
+  countReplies(comments);
+  return count;
+}
+
   async function fetchBlog() {
     try {
       const {
@@ -146,9 +164,9 @@ const BlogPage = () => {
                 onClick={() => dispatch(setIsOpen())}
                 className="fi fi-sr-comment-alt text-xl hover:text-blue-500"
               ></i>
-              <span className="text-sm text-gray-700 font-medium">
-                {comments.length}
-              </span>
+             <span className="text-sm text-gray-700 font-medium">
+  {countTotalComments(comments)}
+</span>
             </div>
           </div>
 
