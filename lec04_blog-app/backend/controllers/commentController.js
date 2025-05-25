@@ -109,13 +109,27 @@ async function deleteComment(req, res) {
             });
         }
 
-        // check if the comment exists in the blog's comments array
-        if (!comment.blog.comments.includes(commentId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Comment does not exist in this blog",
-            });
+        async function deleteCommentAndReplies(commentId) {
+            // find comment by id
+            const comment = await Comment.findById(commentId);
+
+            // loop through each reply and delete replies from the parent comment
+            for (let replyId of comment.replies) {
+                await deleteCommentAndReplies(replyId);
+            }
+
+            // check if replies exists
+            if (comment.parentComment) {
+                await Comment.findByIdAndUpdate(comment.parentComment, {
+                    $pull: { replies: commentId }
+                })
+            }
+
+            await Comment.findByIdAndDelete(commentId);
         }
+
+        await deleteCommentAndReplies(commentId)
+
 
         // delete comment -> remove the comment id from the blog's comments array
         await Blog.findByIdAndUpdate(comment.blog._id, { $pull: { comments: commentId } });

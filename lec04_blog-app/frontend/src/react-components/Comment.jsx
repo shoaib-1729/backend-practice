@@ -177,6 +177,26 @@ const DisplayComments = (
     }
   }
 
+  // handle comment delete
+    async function handleCommentDelete(commentId) {
+    try {
+      const res = await axios.delete(
+        `http://localhost:3000/api/v1/blogs/comment/${commentId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      // TODO: dispatch karna hai
+      toast.success(res.data.message);
+
+    } catch (err) {
+      console.log(err);
+      toast.error(err.response.data.message);
+    }
+  }
+
   async function handleReply(parentCommentId){
     try{
       let res = await axios.post(
@@ -366,6 +386,7 @@ const DisplayComments = (
             </button>
           )}
             <button
+            onClick={() => handleCommentDelete(comment._id)}
               className="w-full px-4 py-2 text-sm text-red-400 hover:text-red-700 text-left cursor-pointer transition-opacity duration-200"
             >
               Delete Response
