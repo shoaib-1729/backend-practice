@@ -106,7 +106,7 @@ const AddBlog = () => {
             }
         }
     )
-    console.log(blogData);
+    // console.log(blogData);
   
     //  redirect to home page
      if(res.status == 200){
@@ -328,7 +328,7 @@ const AddBlog = () => {
         <div className="pt-4">
           <button
             type="submit"
-            className="w-full bg-black hover:bg-gray-900 text-white text-lg font-medium py-3 rounded-md transition duration-300"
+            className="w-full bg-black hover:bg-gray-900 text-white text-lg font-medium py-3 rounded-md transition duration-300 cursor-pointer"
           >
             {id ? "Update Blog" : "Publish Blog"}
           </button>

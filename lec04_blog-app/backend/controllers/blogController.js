@@ -168,8 +168,8 @@ async function createBlog(req, res) {
 
             // check karo image waale ko
             if (block.type == "image") {
-                console.log("object")
-                console.log(images[imageIndex]);
+                // console.log("object")
+                // console.log(images[imageIndex]);
 
                 // cloudinary upload -> memory storage par image path nhi dega multer
                 // use buffer for image upload, bahut bada data aayega yeh

@@ -2,7 +2,7 @@ import { Button } from "@/shadcn-components/ui/button";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsOpen } from "../utils/commentSlice";
-import { addNewComment, setCommentLike, setReplies } from "../utils/selectedBlogSlice";
+import { addNewComment, setCommentLike, setReplies, setUpdatedComments } from "../utils/selectedBlogSlice";
 import { useState } from "react";
 import axios from "axios";
 import { formatDate } from "../utils/formatDate";
@@ -58,19 +58,18 @@ const Comment = () => {
         ></i>
       </div>
 
-      {/* Input Box */}
-      <input
-        type="text"
-        placeholder="Write a comment..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-0 text-lg"
-      />
+<textarea
+  rows={3}
+  placeholder="What are your thoughts?"
+  value={comment}
+  onChange={(e) => setComment(e.target.value)}
+  className="w-full min-h-[10rem] bg-gray-100 border border-transparent focus:border-gray-400 p-3 rounded-md text-md focus:outline-none resize-none transition-colors duration-200 placeholder:text-black/30"
+/>
 
       {/* Add Button */}
       <Button
         onClick={handleComment}
-        className="mt-4 bg-green-500 hover:bg-green-600 text-white"
+        className="mt-4 bg-black text-white cursor-pointer"
       >
         Add
       </Button>
@@ -164,16 +163,18 @@ const DisplayComments = (
           },
         }
       );
-      // TODO: dispatch karna hai
       toast.success(res.data.message);
-      // khaali kardo textarea ko
-      setUpdatedCommentContent("")
-      // comment ko phir se dikha do
-      setCurrentEditComment(null);
 
+      dispatch(setUpdatedComments(res.data.updatedComment))
+      
     } catch (err) {
       console.log(err);
       toast.error(err.response.data.message);
+    } finally{
+            // khaali kardo textarea ko
+            setUpdatedCommentContent("")
+            // comment ko phir se dikha do
+           setCurrentEditComment(null);
     }
   }
 
@@ -216,7 +217,7 @@ const DisplayComments = (
     
     }catch(err){
       console.log(err);
-      //  toast.error(err.response.data.message);
+       toast.error(err.response.data.message);
     }
   }
 
@@ -253,7 +254,7 @@ const DisplayComments = (
     {/* Update Button */}
     <button
       onClick={() => handleCommentUpdate(comment._id)}
-      className="px-4 py-1.5 text-sm text-white bg-green-500 hover:bg-green-600 rounded transition-colors duration-200 cursor-pointer"
+      className="px-4 py-1.5 text-sm text-white bg-black rounded transition-colors duration-200 cursor-pointer"
     >
       Update
     </button>
@@ -320,7 +321,7 @@ const DisplayComments = (
             />
             <Button
               onClick={() => handleReply(comment._id)}
-              className="mt-2 bg-green-500 hover:bg-green-600 text-white text-xs"
+              className="mt-2 bg-black  text-white text-xs"
             >
               Reply
             </Button>

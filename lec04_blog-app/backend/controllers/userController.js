@@ -1,7 +1,9 @@
 // business logic
 const User = require("../models/userModel.js");
 const bcrypt = require("bcrypt");
-const { generateToken } = require("../utils/generateToken.js");
+const { generateToken, validToken } = require("../utils/generateToken.js");
+const transporter = require("../utils/mailTransporter.js");
+const sendVerificationMail = require("../utils/emailService.js")
 
 async function getUser(req, res) {
     try {
@@ -25,38 +27,49 @@ async function getUserById(req, res) {
 }
 
 async function createUser(req, res) {
-    const { name, email, password } = req.body;
-
-    // error handling
-    if (!name) {
-        return res.status(400).json({
-            "success": false,
-            "message": "Please enter the name"
-        });
-    }
-    if (!email) {
-        return res.status(400).json({
-            "success": false,
-            "message": "Please enter the email"
-        });
-
-    }
-    if (!password) {
-        return res.status(400).json({
-            "success": false,
-            "message": "Please enter the password"
-        });
-    }
     try {
+        const { name, email, password } = req.body;
+
+        // error handling
+        if (!name) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the name"
+            });
+        }
+        if (!email) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the email"
+            });
+
+        }
+        if (!password) {
+            return res.status(400).json({
+                "success": false,
+                "message": "Please enter the password"
+            });
+        }
         // check if user exits already in DB
         const checkExistingUser = await User.findOne({ email });
 
         // if found -> early return
         if (checkExistingUser) {
-            return res.status(400).json({
-                "success": false,
-                "message": "User already registered with this email"
-            })
+
+            if (checkExistingUser.isVerify) {
+                return res.status(400).json({
+                    "success": false,
+                    "message": "User already registered with this email"
+                })
+            } else {
+                await sendVerificationMail(checkExistingUser)
+
+                // success message
+                return res.status(200).json({
+                    "success": true,
+                    "message": "Please check your email to verify your account",
+                });
+            }
         }
 
         // hash password using bcrypt jab user create ho
@@ -65,28 +78,62 @@ async function createUser(req, res) {
         // database mei store karo with hashed password
         const newUser = await User.create({ name, email, password: hashedPass });
 
-        // generate token -> user login hone par
-        const token = generateToken({
-            id: newUser._id,
-            email: newUser.email
-        });
+        await sendVerificationMail(newUser);
 
         // success message
         return res.status(200).json({
             "success": true,
-            "message": "User created successfully",
-            "user": {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                token
-            },
+            "message": "Please check your email to verify your account",
         });
     } catch (error) {
         // Error handling for DB operation
         return res.status(500).json({ "success": false, "message": "Error creating user", "error": error.message });
     }
 }
+
+async function verifyToken(req, res) {
+    try {
+
+        const { verificationToken } = req.params;
+
+        const verifyToken = validToken(verificationToken)
+
+        if (!verifyToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Token/Email expired"
+            })
+        }
+        const { id } = verifyToken;
+
+        const user = await User.findByIdAndUpdate(
+            id, { isVerify: true }, { new: true }
+        );
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User Not Exists"
+            })
+
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Email verified successfully"
+        })
+
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Please try again",
+            error: err.message
+        })
+
+    }
+}
+
+
 
 // login
 async function loginUser(req, res) {
@@ -137,6 +184,15 @@ async function loginUser(req, res) {
                 "success": false,
                 "message": "Incorrect Password"
             })
+        }
+
+        if (!checkExistingUser.isVerify) {
+            await sendVerificationMail(checkExistingUser);
+
+            return res.status(400).json({
+                success: false,
+                message: "Please verify your email",
+            });
         }
 
         // todo: password validation
@@ -217,6 +273,6 @@ module.exports = {
     createUser,
     updateUser,
     deleteUser,
-    loginUser
-
-}
+    loginUser,
+    verifyToken
+};

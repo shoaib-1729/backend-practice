@@ -115,14 +115,32 @@ const selectedBlogSlice = createSlice({
             state.comments = state.comments.map((comment) => {
                 return comment._id == parentComment._id ? parentComment : comment
             })
+        },
 
+        // update comment and replies
+        setUpdatedComments(state, action) {
 
+            function updateCommentAndReply(comments) {
+
+                return comments.map((comment) =>
+                    comment._id === action.payload._id ? {
+                        ...comment,
+                        comment: action.payload.comment
+                    } :
+                    comment.replies && comment.replies.length > 0 ? {
+                        ...comment,
+                        replies: updateCommentAndReply(comment.replies)
+                    } :
+                    comment
+                )
+            }
+
+            state.comments = updateCommentAndReply(state.comments)
 
         }
 
     }
 });
 
-export const { addSelectedBlog, removeSelectedBlog, changeLikes, addNewComment, setCommentLike, setReplies } = selectedBlogSlice.actions;
+export const { addSelectedBlog, removeSelectedBlog, changeLikes, addNewComment, setCommentLike, setReplies, setUpdatedComments } = selectedBlogSlice.actions;
 export default selectedBlogSlice.reducer;
-``

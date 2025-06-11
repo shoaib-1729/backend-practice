@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getUser, getUserById, createUser, updateUser, deleteUser, loginUser } = require("../controllers/userController.js")
+const { getUser, getUserById, createUser, updateUser, deleteUser, loginUser, verifyToken } = require("../controllers/userController.js")
 
 // get users
 router.get("/users", getUser);
@@ -19,6 +19,9 @@ router.put("/users/:id", updateUser);
 
 // delete users
 router.delete("/users/:id", deleteUser);
+
+// verify user
+router.get("/verify-email/:verificationToken", verifyToken)
 
 
 // export router

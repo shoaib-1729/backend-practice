@@ -18,7 +18,11 @@ const userSchema = mongoose.Schema({
     blogs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Blog"
-    }]
+    }],
+    isVerify: {
+        type: Boolean,
+        default: false
+    }
 })
 
 // compile model using schema

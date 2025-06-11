@@ -4,7 +4,8 @@ import Navbar from "./react-components/Navbar";
 import HomePage from "./react-components/HomePage";
 import AddBlog from "./react-components/AddBlog";
 import BlogPage from "./pages/BlogPage";
-import ProtectedRoute from "./react-components/ProtectedRoute"
+import ProtectedRoute from "./react-components/ProtectedRoute";
+import VerifyUser from "./react-components/VerifyUser";
 
 function App() {
   const location = useLocation();
@@ -40,6 +41,7 @@ function App() {
           <Route path="/signup" element={<AuthForm type={"signup"} />} />
           <Route path="/signin" element={<AuthForm type={"signin"} />} />
           <Route path="/blog/:id" element={<BlogPage />} />
+          <Route path="/verify-user/:verificationToken" element={<VerifyUser />} />
         </Routes>
       </div>
     </div>

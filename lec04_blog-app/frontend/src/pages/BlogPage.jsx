@@ -136,7 +136,7 @@ const BlogPage = () => {
           {token && blog.creator.email === email && (
             <div className="text-center mb-8">
               <Link to={`/edit/${blog.blogId}`}>
-                <Button className="px-6 py-2">Edit</Button>
+                <Button className="px-6 py-2 cursor-pointer">Edit</Button>
               </Link>
             </div>
           )}
