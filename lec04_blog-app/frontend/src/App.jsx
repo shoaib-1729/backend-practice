@@ -12,7 +12,10 @@ import SearchedBlog from "./react-components/SearchedBlog";
 import TagPage from "./pages/TagPage";
 import AboutPage from "./pages/AboutPage";
 import UserBlogs from "./react-components/UserBlogs";
+<<<<<<< HEAD
 import UserList from "./react-components/UserList";
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 
 
@@ -72,6 +75,7 @@ function App() {
             }
             />
             <Route
+<<<<<<< HEAD
              path="list"
             element={
               <ProtectedRoute>
@@ -80,6 +84,8 @@ function App() {
             }
             />
             <Route
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
              path="about"
             element={
               <ProtectedRoute>

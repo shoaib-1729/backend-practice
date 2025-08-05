@@ -64,7 +64,11 @@ const userSchema = mongoose.Schema({
     savedBlogs: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Blog"
+<<<<<<< HEAD
     }],
+=======
+    }]
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 })
 
 // compile model using schema

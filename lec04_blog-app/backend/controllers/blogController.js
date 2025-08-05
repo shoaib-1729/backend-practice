@@ -483,7 +483,11 @@ async function likeBlog(req, res) {
             // push user id to like array
             await Blog.findByIdAndUpdate(id, { $push: { likes: userId } });
             // user model mei bhi push karo
+<<<<<<< HEAD
             const user = await User.findByIdAndUpdate(userId, { $push: { likedBlogs: id } }, { new: true })
+=======
+            await User.findByIdAndUpdate(userId, { $push: { likedBlogs: id } })
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 
 
@@ -492,8 +496,12 @@ async function likeBlog(req, res) {
                 "success": true,
                 "message": "Blog liked successfully...",
                 "isLiked": true,
+<<<<<<< HEAD
                 blog,
                 user,
+=======
+                blog
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
 
         } else {
@@ -501,7 +509,11 @@ async function likeBlog(req, res) {
             // pull user id to like array
             await Blog.findByIdAndUpdate(id, { $pull: { likes: userId } })
                 // user se bhi pull karo
+<<<<<<< HEAD
             const updatedUser = await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } }, { new: true })
+=======
+            await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } })
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 
 
@@ -510,7 +522,10 @@ async function likeBlog(req, res) {
                 "success": true,
                 "message": "Blog disliked successfully...",
                 "isLiked": false,
+<<<<<<< HEAD
                 "user": updatedUser
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
         }
     } catch (err) {
@@ -544,9 +559,15 @@ async function saveBlog(req, res) {
         // user id exists in save array -> dislike else save
         if (blog.savedBy && !blog.savedBy.includes(userId)) {
             // push user id to save array
+<<<<<<< HEAD
             await Blog.findByIdAndUpdate(id, { $push: { savedBy: userId } });
             // user model mei bhi push karo
             const updatedUser = await User.findByIdAndUpdate(userId, { $push: { savedBlogs: id } }, { new: true })
+=======
+            await Blog.findByIdAndUpdate(id, { $set: { savedBy: userId } });
+            // user model mei bhi push karo
+            await User.findByIdAndUpdate(userId, { $set: { savedBlogs: id } })
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 
 
@@ -555,16 +576,26 @@ async function saveBlog(req, res) {
                 "success": true,
                 "message": "Blog saved successfully...",
                 "isLiked": true,
+<<<<<<< HEAD
                 blog,
                 user: updatedUser,
+=======
+                blog
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
 
         } else {
             // unsave blog logic
             // pull user id to save array
+<<<<<<< HEAD
             await Blog.findByIdAndUpdate(id, { $pull: { savedBy: userId } })
                 // user se bhi pull karo
             const updatedUser = await User.findByIdAndUpdate(userId, { $pull: { savedBlogs: id } }, { new: true })
+=======
+            await Blog.findByIdAndUpdate(id, { $unset: { savedBy: userId } })
+                // user se bhi pull karo
+            await User.findByIdAndUpdate(userId, { $unset: { savedBlogs: id } })
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 
 
@@ -573,7 +604,10 @@ async function saveBlog(req, res) {
                 "success": true,
                 "message": "Blog unsaved successfully...",
                 "isLiked": false,
+<<<<<<< HEAD
                 user: updatedUser,
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
         }
     } catch (err) {

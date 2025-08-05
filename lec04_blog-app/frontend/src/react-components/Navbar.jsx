@@ -24,7 +24,10 @@ const Navbar = () => {
     dispatch(logout());
     setShowPopup(false);
     toast.success("Logged out successfully");
+<<<<<<< HEAD
     navigate("/signin")
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
   }
 
   useEffect(() => {

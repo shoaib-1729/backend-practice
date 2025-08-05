@@ -2,8 +2,12 @@ import toast from "react-hot-toast";
 import { updateUser } from "./userSlice";
 import axios from "axios";
 
+<<<<<<< HEAD
 
 export async function handleSaveBlog(blogId, token, setIsSaved, dispatch) {
+=======
+export async function handleSaveBlog(blogId, token, setIsSaved) {
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
     try {
         if (token) {
             setIsSaved((prev) => !prev);
@@ -11,11 +15,14 @@ export async function handleSaveBlog(blogId, token, setIsSaved, dispatch) {
                 `http://localhost:3000/api/v1/save-blog/${blogId}`, {}, { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success(res.data.message);
+<<<<<<< HEAD
             console.log(res.data.user)
                 // ✅ update user in Redux
             if (res.data.user) {
                 dispatch(updateUser(res.data.user));
             }
+=======
+>>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
         }
     } catch (err) {
         console.error("Error saving blog:", err);
