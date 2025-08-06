@@ -12,15 +12,11 @@ import SearchedBlog from "./react-components/SearchedBlog";
 import TagPage from "./pages/TagPage";
 import AboutPage from "./pages/AboutPage";
 import UserBlogs from "./react-components/UserBlogs";
-<<<<<<< HEAD
 import UserList from "./react-components/UserList";
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
-
-
+import BlogList from "./react-components/BlogList";
 
 function App() {
-  console.log(import.meta.env.VITE_BASE_URL)
+  console.log(import.meta.env.VITE_BASE_URL);
   const location = useLocation();
 
   return (
@@ -34,7 +30,7 @@ function App() {
       {/* Main content will take the remaining space */}
       <div className="flex-1">
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<HomePage /> } />
           <Route
             path="/add-blog"
             element={
@@ -54,6 +50,7 @@ function App() {
           <Route path="/signup" element={<AuthForm type={"signup"} />} />
           <Route path="/signin" element={<AuthForm type={"signin"} />} />
           <Route path="/blog/:id" element={<BlogPage />} />
+
           <Route
             path="/verify-user/:verificationToken"
             element={<VerifyUser />}
@@ -65,35 +62,49 @@ function App() {
                 <UserProfile />
               </ProtectedRoute>
             }
-            >
+          >
             <Route
-             index
-            element={
-              <ProtectedRoute>
-                <UserBlogs />
-              </ProtectedRoute>
-            }
+              index
+              element={
+                <ProtectedRoute>
+                  <UserBlogs />
+                </ProtectedRoute>
+              }
             />
             <Route
-<<<<<<< HEAD
-             path="list"
-            element={
-              <ProtectedRoute>
-                <UserList />
-              </ProtectedRoute>
-            }
+              path="list"
+              element={
+                <ProtectedRoute>
+                  <UserList />
+                </ProtectedRoute>
+              }
             />
             <Route
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
-             path="about"
-            element={
-              <ProtectedRoute>
-                <AboutPage />
-              </ProtectedRoute>
-            }
+              path="about"
+              element={
+                <ProtectedRoute>
+                  <AboutPage />
+                </ProtectedRoute>
+              }
             />
           </Route>
+          
+                      <Route
+            path="/:username/bloglist/liked"
+            element={
+              <ProtectedRoute>
+                <BlogList type={"liked"} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/:username/bloglist/saved"
+            element={
+              <ProtectedRoute>
+                <BlogList type={"saved"} />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/edit-profile"
             element={

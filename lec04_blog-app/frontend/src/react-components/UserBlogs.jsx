@@ -17,11 +17,7 @@ const UserBlogs = () => {
               className="group flex flex-col sm:flex-row gap-6 py-6 border-b border-gray-200 hover:bg-gray-50 transition px-2 rounded-lg"
             >
               <div className="flex-1">
-<<<<<<< HEAD
                 <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 ">
-=======
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 group-hover:underline">
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
                   {blog.title}
                 </h2>
                 <p className="text-gray-600 mt-2 text-sm sm:text-base line-clamp-2">

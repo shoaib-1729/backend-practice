@@ -7,11 +7,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-<<<<<<< HEAD
 import { googleAuth } from "../utils/firebase.js";
-=======
-import {googleAuth } from "../utils/firebase.js"
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 import googleIcon from "../assets/google-icon-logo-svgrepo-com.svg";
 
 const AuthForm = ({ type }) => {
@@ -34,7 +30,6 @@ const AuthForm = ({ type }) => {
     }));
   }, [type]);
 
-<<<<<<< HEAD
   //   handle gogole auth
   async function handleGoogleAuth() {
     try {
@@ -63,45 +58,11 @@ const AuthForm = ({ type }) => {
       navigate("/");
     } catch (err) {
       const errorMessage =
-=======
-//   handle gogole auth
-async function handleGoogleAuth(){
-    try{
-        const userData = await googleAuth()
-
-        if(!userData){
-          return
-        }
-
-        const idToken = await userData.getIdToken();
-
-
-        // yeh data backend ko bhejna hoga
-        const res = await axios.post(`${import.meta.env.VITE_BASE_URL}/google-auth`, {
-          accessToken: idToken
-        })
-
-        dispatch(login(res.data.user));
-
-        if (res.status === 200) {
-        toast.success(res.data.message || "Registration successful");
-         }
-
-        navigate("/");
-     
-    }catch(err){
-         const errorMessage =
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
         err?.response?.data?.message ||
         "Something went wrong. Please try again.";
       toast.error(errorMessage);
     }
-<<<<<<< HEAD
   }
-=======
-
-}
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
   async function handleAuthForm(e) {
     try {
@@ -198,11 +159,7 @@ async function handleGoogleAuth(){
             />
           </div>
 
-<<<<<<< HEAD
           <Button type="submit" className="w-full cursor-pointer">
-=======
-          <Button type="submit" className="w-full">
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             {type === "signup" ? "Register" : "Sign In"}
           </Button>
 
@@ -215,7 +172,6 @@ async function handleGoogleAuth(){
           </div>
 
           {/* Google Auth Button */}
-<<<<<<< HEAD
           <button
             type="button"
             onClick={handleGoogleAuth}
@@ -224,17 +180,6 @@ async function handleGoogleAuth(){
             <img src={googleIcon} alt="Google" className="w-5 h-5" />
             Continue with Google
           </button>
-=======
-         <button
-  type="button"
-  onClick={handleGoogleAuth}
-  className="flex items-center justify-center gap-3 px-5 py-2.5 w-full border border-gray-300 rounded-md bg-white text-gray-700 text-base font-medium transition-all duration-200 ease-in-out hover:bg-gray-100 hover:shadow-md hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
->
-  <img src={googleIcon} alt="Google" className="w-5 h-5" />
-  Continue with Google
-</button>
-
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
           <div className="text-sm text-center">
             {type === "signin" ? (

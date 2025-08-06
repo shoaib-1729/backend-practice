@@ -20,10 +20,7 @@ import { setIsOpen } from "../utils/commentSlice";
 import { handleSaveBlog, handleFollowCreator } from "../utils/helperFunc";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-<<<<<<< HEAD
 import { updateUser } from "../utils/userSlice";
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
 
 const BlogPage = () => {
   const [blog, setBlog] = useState(null);
@@ -133,12 +130,9 @@ const renderCodeBlock = (code) => (
         );
         setIsLiked((prev) => !prev);
         dispatch(changeLikes(userId));
-<<<<<<< HEAD
         console.log(res.data.user)
         // update user
         dispatch(updateUser(res.data.user))
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
         toast.success(res.data.message);
       }
     } catch (err) {
@@ -171,14 +165,10 @@ const renderCodeBlock = (code) => (
         <div key={blog._id} className="space-y-8">
           {/* Title */}
           <header className="space-y-6">
-<<<<<<< HEAD
             <h1 
             // className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight"
             className="text-2xl md:text-5xl font-extrabold text-gray-900 leading-snug"
             >
-=======
-            <h1 className="text-5xl md:text-6xl font-light text-gray-900 leading-tight tracking-tight">
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
               {blog.title}
             </h1>
 
@@ -288,7 +278,7 @@ const renderCodeBlock = (code) => (
                     } text-xl hover:text-blue-500`}
                   ></i>
                   <span className="text-sm text-gray-700 font-medium">
-                    {likes.length}
+                    {likes?.length}
                   </span>
                 </div>
               </TooltipTrigger>
@@ -318,11 +308,7 @@ const renderCodeBlock = (code) => (
               <TooltipTrigger>
                 <div className="flex items-center space-x-2 cursor-pointer">
                   <i
-<<<<<<< HEAD
                     onClick={() => handleSaveBlog( blog._id, token, setIsSaved, dispatch)}
-=======
-                    onClick={() => handleSaveBlog(blog._id, token, setIsSaved)}
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
                     className={`fi ${
                       isSaved ? "fi-sr-bookmark" : "fi-rr-bookmark"
                     } text-xl hover:text-blue-500`}

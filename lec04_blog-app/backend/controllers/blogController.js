@@ -482,12 +482,23 @@ async function likeBlog(req, res) {
         if (!blog.likes.includes(userId)) {
             // push user id to like array
             await Blog.findByIdAndUpdate(id, { $push: { likes: userId } });
+
             // user model mei bhi push karo
-<<<<<<< HEAD
-            const user = await User.findByIdAndUpdate(userId, { $push: { likedBlogs: id } }, { new: true })
-=======
-            await User.findByIdAndUpdate(userId, { $push: { likedBlogs: id } })
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+            const updatedUser = await User.findByIdAndUpdate(userId, { $push: { likedBlogs: id } }, { new: true })
+                .populate({
+                    path: "likedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                })
+                .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                });
 
 
 
@@ -496,24 +507,32 @@ async function likeBlog(req, res) {
                 "success": true,
                 "message": "Blog liked successfully...",
                 "isLiked": true,
-<<<<<<< HEAD
                 blog,
-                user,
-=======
-                blog
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+                user: updatedUser,
             })
 
         } else {
             // dislike blog logic
             // pull user id to like array
             await Blog.findByIdAndUpdate(id, { $pull: { likes: userId } })
-                // user se bhi pull karo
-<<<<<<< HEAD
+                // await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } })
+
+            // user se bhi pull karo
             const updatedUser = await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } }, { new: true })
-=======
-            await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } })
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+                .populate({
+                    path: "likedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                })
+                .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                });
 
 
 
@@ -522,10 +541,7 @@ async function likeBlog(req, res) {
                 "success": true,
                 "message": "Blog disliked successfully...",
                 "isLiked": false,
-<<<<<<< HEAD
                 "user": updatedUser
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
         }
     } catch (err) {
@@ -538,7 +554,7 @@ async function likeBlog(req, res) {
 }
 
 
-// save blog controller
+// mera save blog controller
 async function saveBlog(req, res) {
     try {
         // blog id
@@ -559,15 +575,24 @@ async function saveBlog(req, res) {
         // user id exists in save array -> dislike else save
         if (blog.savedBy && !blog.savedBy.includes(userId)) {
             // push user id to save array
-<<<<<<< HEAD
             await Blog.findByIdAndUpdate(id, { $push: { savedBy: userId } });
             // user model mei bhi push karo
             const updatedUser = await User.findByIdAndUpdate(userId, { $push: { savedBlogs: id } }, { new: true })
-=======
-            await Blog.findByIdAndUpdate(id, { $set: { savedBy: userId } });
-            // user model mei bhi push karo
-            await User.findByIdAndUpdate(userId, { $set: { savedBlogs: id } })
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+
+            .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                })
+                .populate({
+                    path: "likedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                });
 
 
 
@@ -576,26 +601,30 @@ async function saveBlog(req, res) {
                 "success": true,
                 "message": "Blog saved successfully...",
                 "isLiked": true,
-<<<<<<< HEAD
                 blog,
                 user: updatedUser,
-=======
-                blog
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
 
         } else {
             // unsave blog logic
             // pull user id to save array
-<<<<<<< HEAD
             await Blog.findByIdAndUpdate(id, { $pull: { savedBy: userId } })
                 // user se bhi pull karo
             const updatedUser = await User.findByIdAndUpdate(userId, { $pull: { savedBlogs: id } }, { new: true })
-=======
-            await Blog.findByIdAndUpdate(id, { $unset: { savedBy: userId } })
-                // user se bhi pull karo
-            await User.findByIdAndUpdate(userId, { $unset: { savedBlogs: id } })
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+                .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                })
+                .populate({
+                    path: "likedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username email"
+                    }
+                });
 
 
 
@@ -604,10 +633,7 @@ async function saveBlog(req, res) {
                 "success": true,
                 "message": "Blog unsaved successfully...",
                 "isLiked": false,
-<<<<<<< HEAD
                 user: updatedUser,
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
             })
         }
     } catch (err) {
@@ -618,6 +644,8 @@ async function saveBlog(req, res) {
         })
     }
 }
+
+
 
 async function fetchSearchedBlog(req, res) {
     try {

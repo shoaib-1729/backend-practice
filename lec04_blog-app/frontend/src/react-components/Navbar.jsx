@@ -20,14 +20,20 @@ const Navbar = () => {
 
   const { token, name, username, profilePic } = useSelector((state) => state.user);
 
+    const handleWriteClick = () => {
+    if (!token) {
+      toast.error("You need to sign in first to carve your story!");
+      // navigate("/signin");
+    } else {
+      navigate("/add-blog");
+    }
+  };
+
   function handleLogout() {
     dispatch(logout());
     setShowPopup(false);
     toast.success("Logged out successfully");
-<<<<<<< HEAD
-    navigate("/signin")
-=======
->>>>>>> 257519a267a29179e6cd778827ff45674ffe0fed
+    navigate("/")
   }
 
   useEffect(() => {
@@ -72,7 +78,7 @@ const Navbar = () => {
         </div>
 
         {/* Middle: Search (hidden on mobile) */}
-        <div className="hidden md:block w-64 relative">
+       { token && <div className="hidden md:block w-64 relative">
           <input
             type="text"
             placeholder="Search"
@@ -90,18 +96,20 @@ const Navbar = () => {
             <i className="fi fi-rs-search" />
           </div>
         </div>
+}
 
         {/* Right: Nav Links */}
         <div className="hidden md:flex items-center gap-6">
-          <Link
-            to="/add-blog"
-            className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors"
-          >
-            <i className="fi fi-ts-file-edit text-base" /> Write
-          </Link>
+         <button
+      onClick={handleWriteClick}
+      className="flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-black transition-colors cursor-pointer"
+    >
+      <i className="fi fi-ts-file-edit text-base" /> Write
+    </button>
 
-          {token ? (
-            <div
+          {token ?
+           (
+             <div
               ref={avatarRef}
               onClick={() => setShowPopup((prev) => !prev)}
               className="relative w-10 h-10 group cursor-pointer"
@@ -117,21 +125,21 @@ const Navbar = () => {
               />
               <div className="absolute inset-0 bg-gray-300/15 group-hover:bg-gray-400/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200" />
             </div>
-          ) : (
+           ) : ( 
             <div className="flex items-center gap-3">
-              <Link to="/signin">
-                <Button variant="outline" className="rounded-full px-5 py-2 text-sm font-medium">
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button className="rounded-full bg-black text-white px-5 py-2 text-sm font-medium hover:bg-gray-800">
-                  Sign Up
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
+               <Link to="/signin">
+                 <Button variant="outline" className="rounded-full px-5 py-2 text-sm font-medium cursor-pointer">
+                   Sign In
+                 </Button>
+               </Link>
+               <Link to="/signup">
+                 <Button className="rounded-full bg-black text-white px-5 py-2 text-sm font-medium hover:bg-gray-800 cursor-pointer">
+                   Sign Up
+                 </Button>
+               </Link>
+             </div>
+           )}
+         </div> 
 
         {/* Mobile Menu Toggle */}
         <div className="md:hidden">
@@ -142,7 +150,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Dropdown Menu */}
-      {menuOpen && (
+      {token && menuOpen && (
         <div className="md:hidden bg-white px-4 pb-4 space-y-2">
           <div className="relative w-full">
             <input
