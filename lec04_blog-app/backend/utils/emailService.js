@@ -12,7 +12,7 @@ async function sendVerificationEmail(user) {
 
     // send email
     await transporter.sendMail({
-        from: "shoaibahktar56@gmail.com",
+        from: process.env.MAIL_USER,
         to: email,
         subject: "Email Verification",
         text: "Please verify your email",
