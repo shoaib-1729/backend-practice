@@ -414,7 +414,7 @@ const BlogPage = () => {
               {blog.tag.map((tag, index) => (
                 <span
                   key={`footer-${index}`}
-                  className="px-4 py-2 text-sm font-medium bg-white border-2 border-gray-900 text-gray-900 rounded-full hover:bg-gray-900 hover:text-white transition-all duration-200 cursor-pointer"
+                  className="px-4 py-2 text-sm font-medium bg-white border-2 border-gray-900 text-gray-900 rounded-full hover:bg-gray-900 hover:text-white transition-all duration-200"
                 >
                   {tag}
                 </span>

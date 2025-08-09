@@ -46,7 +46,7 @@ async function getBlogs(req, res) {
 }
 
 // get blog by id controller
-async function getBlog(req, res) {
+async function getBlogById(req, res) {
     try {
         const { id } = req.params;
         // draft false ->  only accessed by blog author, authorization will be required
@@ -69,7 +69,8 @@ async function getBlog(req, res) {
         //     path: "creator",
         //     select: "name email profilePic followers username"
         // })
-        .lean()
+        // sprt by most recently created 
+        .lean().sort({ createdAt: -1 })
 
         console.log(blog)
 
@@ -792,7 +793,7 @@ async function fetchTaggedBlog(req, res) {
 
 module.exports = {
     getBlogs,
-    getBlog,
+    getBlogById,
     createBlog,
     updateBlog,
     deleteBlog,

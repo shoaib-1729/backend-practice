@@ -4,7 +4,7 @@ import { useState } from "react";
 import { formatDate } from "../utils/formatDate";
 import { handleSaveBlog } from "../utils/helperFunc";
 
-const BlogList = ({ type }) => {
+const SidebarBlogList = ({ type }) => {
   const { token, savedBlogs, likedBlogs } = useSelector((state) => state.user);
 
   // Correct blogs list
@@ -160,4 +160,4 @@ const BlogList = ({ type }) => {
   );
 };
 
-export default BlogList;
+export default SidebarBlogList;

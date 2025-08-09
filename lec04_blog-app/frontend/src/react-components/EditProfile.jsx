@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/shadcn-components/ui/button";
 import { Input } from "@/shadcn-components/ui/input";
@@ -20,10 +20,118 @@ const EditProfile = () => {
     profilePic,
   });
 
+  // Character limits
+  const LIMITS = {
+    name: 50,
+    username: 30,
+    bio: 160,
+  };
+
+  const [inputNumChar, setInputNumChar] = useState({
+    name: name ? name.length : 0,
+    username: username ? username.length : 0,
+    bio: bio ? bio.length : 0,
+  });
+
+  // Username availability states
+  const [usernameStatus, setUsernameStatus] = useState({
+    isChecking: false,
+    isAvailable: null,
+    message: "",
+    hasChecked: false,
+  });
+
   const fileInputRef = useRef();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
+  // Debounced username check
+  const debounceTimer = useRef(null);
+
+  const checkUsernameAvailability = useCallback(async (usernameToCheck) => {
+    if (!usernameToCheck || usernameToCheck === username) {
+      setUsernameStatus({
+        isChecking: false,
+        isAvailable: true,
+        message: "",
+        hasChecked: false,
+      });
+      return;
+    }
+
+    if (usernameToCheck.length < 3) {
+      setUsernameStatus({
+        isChecking: false,
+        isAvailable: false,
+        message: "Username must be at least 3 characters long",
+        hasChecked: true,
+      });
+      return;
+    }
+
+    // Username valid - Set it
+    setUsernameStatus(prev => ({
+      ...prev,
+      isChecking: true,
+    }));
+
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BASE_URL}/users/check-username/${usernameToCheck}?currentUserId=${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setUsernameStatus({
+        isChecking: false,
+        isAvailable: response.data.available,
+        message: response.data.message,
+        hasChecked: true,
+      });
+    } catch (error) {
+      setUsernameStatus({
+        isChecking: false,
+        isAvailable: false,
+        message: error.response?.data?.message || "Error checking username",
+        hasChecked: true,
+      });
+    }
+  }, [username, userId, token]);
+
+  // Debounced username check effect
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    if (userData.username !== username) {
+      debounceTimer.current = setTimeout(() => {
+        checkUsernameAvailability(userData.username);
+      }, 500);
+    }
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [userData.username, checkUsernameAvailability, username]);
+
+  // Check if any field exceeds limit
+  const hasExceededLimit = () => {
+    return Object.keys(LIMITS).some(field => 
+      inputNumChar[field] > LIMITS[field]
+    );
+  };
+
+  // Check if username is invalid
+  const isUsernameInvalid = () => {
+    return usernameStatus.hasChecked && !usernameStatus.isAvailable;
+  };
 
   const handleInputChange = (e) => {
     setIsButtonDisabled(false);
@@ -32,15 +140,41 @@ const EditProfile = () => {
     if (files) {
       setUserData((prev) => ({ ...prev, [name]: files[0] }));
     } else {
+      // Update userData
       setUserData((prev) => ({ ...prev, [name]: value }));
+      
+      // Update character count
+      setInputNumChar((prev) => ({ ...prev, [name]: value.length }));
+
+      // Reset username status when typing
+      if (name === 'username') {
+        setUsernameStatus(prev => ({
+          ...prev,
+          hasChecked: false,
+          isAvailable: null,
+          message: "",
+        }));
+      }
     }
   };
 
   const handleUpdateProfile = async () => {
-    // if (!userData.name || !userData.username) {
-    //   toast.error("Name and username are required");
-    //   return;
-    // }
+    if (!userData.name || !userData.username) {
+      toast.error("Name and username are required");
+      return;
+    }
+
+    // Check if any field exceeds limit
+    if (hasExceededLimit()) {
+      toast.error("Some fields exceed character limit");
+      return;
+    }
+
+    // Check username availability
+    if (isUsernameInvalid()) {
+      toast.error("Please choose a different username");
+      return;
+    }
 
     setIsButtonDisabled(true);
     const formData = new FormData();
@@ -53,19 +187,6 @@ const EditProfile = () => {
         formData.append(key, value);
       }
     }
-
-// formData.append("name", userData.name);
-// formData.append("username", userData.username);
-// formData.append("bio", userData.bio);
-
-// If profilePic is being removed
-if (userData.profilePic === null || userData.profilePic === "null") {
-  formData.append("removeProfilePic", true); // ✅ send a signal to remove
-} else {
-  formData.append("profilePic", userData.profilePic);
-}
-
-    
 
     try {
       const res = await axios.patch(
@@ -86,97 +207,32 @@ if (userData.profilePic === null || userData.profilePic === "null") {
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Error updating user");
+    } finally {
+      setIsButtonDisabled(false);
     }
   };
 
-// const handleUpdateProfile = async () => {
-//   // if (!userData.name || !userData.username) {
-//   //   toast.error("Name and username are required");
-//   //   return;
-//   // }
+  // Get username input styling
+  const getUsernameInputStyling = () => {
+    if (usernameStatus.isChecking) return "border-yellow-400";
+    if (usernameStatus.hasChecked) {
+      return usernameStatus.isAvailable ? "border-green-500" : "border-red-500";
+    }
+    return inputNumChar.username > LIMITS.username ? "border-red-500" : "";
+  };
 
-//   setIsButtonDisabled(true);
-//   const formData = new FormData();
-
-//   // Append required fields
-//   formData.append("name", userData.name);
-//   formData.append("username", userData.username);
-//   formData.append("bio", userData.bio || "");
-
-//   // Case 1: If user wants to remove the profile picture
-//   if (userData.profilePic === null) {
-//     formData.append("profilePic", "null"); // 👈 backend expects "null" string
-//   }
-
-//   // Case 2: If user selected a new image (File object)
-//   else if (userData.profilePic instanceof File) {
-//     formData.append("profilePic", userData.profilePic);
-//   }
-
-//   try {
-//     const res = await axios.patch(
-//       `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
-//       formData,
-//       {
-//         headers: {
-//           "Content-Type": "multipart/form-data",
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     if (res.status === 200) {
-//       toast.success(res.data.message);
-
-//       // Update Redux store with fresh user data
-//       dispatch(updateUser({
-//         ...res.data.user,
-//         id: userId,
-//         email,
-//         followers,
-//         following,
-//         token,
-//       }));
-
-//       navigate(`/@${res.data.user.username}`);
-//     }
-//   } catch (err) {
-//     toast.error(err.response?.data?.message || "Error updating user");
-//   }
-// };
-
-// const handleRemoveProfilePic = async () => {
-//   const formData = new FormData();
-
-//   formData.append("profilePic", "null"); // signal to remove
-//   formData.append("name", userData.name);
-//   formData.append("username", userData.username);
-//   formData.append("bio", userData.bio); // optional
-
-//   try {
-//     const res = await axios.patch(
-//       `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
-//       formData,
-//       {
-//         headers: {
-//           "Content-Type": "multipart/form-data",
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     if (res.status === 200) {
-//       setIsButtonDisabled(false)
-//       toast.success("Profile picture removed");
-//       dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
-//       setUserData((prev) => ({ ...prev, profilePic: null }));
-//     }
-//   } catch (err) {
-//     toast.error("Failed to remove profile picture");
-//   }
-// };
-
-
+  // Get username status icon
+  const getUsernameStatusIcon = () => {
+    if (usernameStatus.isChecking) {
+      return <div className="animate-spin h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full"></div>;
+    }
+    if (usernameStatus.hasChecked) {
+      return usernameStatus.isAvailable 
+        ? <span className="text-green-500">✓</span>
+        : <span className="text-red-500">✗</span>;
+    }
+    return null;
+  };
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 space-y-6">
@@ -221,29 +277,12 @@ if (userData.profilePic === null || userData.profilePic === "null") {
             onClick={() => {
               setIsButtonDisabled(false);
               setUserData((prev) => ({ ...prev, profilePic: null }));
-      //         dispatch(updateUser({
-      //   ...res.data.user,
-      //   id: userId,
-      //   email,
-      //   followers,
-      //   following,
-      //   token,
-      // }));
-      // dispatch(updateUser(userData))
             }}
             variant="destructive"
             size="sm"
           >
             Remove
           </Button>
-          {/* <Button
-  className="cursor-pointer"
-  onClick={handleRemoveProfilePic}
-  variant="destructive"
-  size="sm"
->
-  Remove
-</Button> */}
         </div>
 
         <p className="text-xs text-gray-500 text-center">
@@ -260,21 +299,54 @@ if (userData.profilePic === null || userData.profilePic === "null") {
           id="name"
           name="name"
           placeholder="Your name"
+          className={inputNumChar.name > LIMITS.name ? "border-red-500" : ""}
         />
-        <p className="text-xs text-gray-500 text-right">0/50</p>
+        <div className="flex justify-between items-center">
+          <p className={`text-xs ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.name > LIMITS.name ? "Name is too long!" : ""}
+          </p>
+          <p className={`text-xs text-right ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.name}/{LIMITS.name}
+          </p>
+        </div>
       </div>
 
       {/* Username Input */}
       <div className="space-y-2">
         <Label htmlFor="username">Username*</Label>
-        <Input
-          onChange={handleInputChange}
-          value={userData.username}
-          id="username"
-          name="username"
-          placeholder="Add..."
-        />
-        <p className="text-xs text-gray-500 text-right">0/4</p>
+        <div className="relative">
+          <Input
+            onChange={handleInputChange}
+            value={userData.username}
+            id="username"
+            name="username"
+            placeholder="Add..."
+            className={getUsernameInputStyling()}
+          />
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            {getUsernameStatusIcon()}
+          </div>
+        </div>
+        
+        {/* Username Status Messages */}
+        {usernameStatus.isChecking && (
+          <p className="text-xs text-yellow-600">Checking availability...</p>
+        )}
+        
+        {usernameStatus.hasChecked && (
+          <p className={`text-xs ${usernameStatus.isAvailable ? "text-green-600" : "text-red-500"}`}>
+            {usernameStatus.message}
+          </p>
+        )}
+
+        <div className="flex justify-between items-center">
+          <p className={`text-xs ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.username > LIMITS.username ? "Username is too long!" : ""}
+          </p>
+          <p className={`text-xs text-right ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.username}/{LIMITS.username}
+          </p>
+        </div>
       </div>
 
       {/* Bio Input */}
@@ -287,13 +359,21 @@ if (userData.profilePic === null || userData.profilePic === "null") {
           name="bio"
           placeholder="Write a short bio..."
           rows={3}
+          className={inputNumChar.bio > LIMITS.bio ? "border-red-500" : ""}
         />
-        <p className="text-xs text-gray-500 text-right">0/160</p>
+        <div className="flex justify-between items-center">
+          <p className={`text-xs ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.bio > LIMITS.bio ? "Bio is too long!" : ""}
+          </p>
+          <p className={`text-xs text-right ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}>
+            {inputNumChar.bio}/{LIMITS.bio}
+          </p>
+        </div>
       </div>
 
       {/* Info Text */}
       <div className="border-t pt-4 text-sm text-gray-600">
-        Personalize with images and more to paint more of a vivid portrait of yourself than your ‘Short bio.’
+         Go beyond the short bio—add photos and details to make your profile truly yours.
       </div>
 
       {/* Buttons */}
@@ -302,9 +382,13 @@ if (userData.profilePic === null || userData.profilePic === "null") {
           Cancel
         </Button>
         <Button
-          disabled={isButtonDisabled}
+          disabled={isButtonDisabled || hasExceededLimit() || isUsernameInvalid()}
           onClick={handleUpdateProfile}
-          className={isButtonDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+          className={
+            isButtonDisabled || hasExceededLimit() || isUsernameInvalid()
+              ? "opacity-50 cursor-not-allowed" 
+              : "cursor-pointer"
+          }
         >
           Save
         </Button>

@@ -11,9 +11,8 @@ import EditProfile from "./react-components/EditProfile";
 import SearchedBlog from "./react-components/SearchedBlog";
 import TagPage from "./pages/TagPage";
 import AboutPage from "./pages/AboutPage";
-import UserBlogs from "./react-components/UserBlogs";
-import UserList from "./react-components/UserList";
-import BlogList from "./react-components/BlogList";
+import UserProfileBlogList from "./react-components/UserProfileBlogList";
+import SidebarBlogList from "./react-components/SidebarBlogList";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
@@ -67,15 +66,31 @@ function App() {
               index
               element={
                 <ProtectedRoute>
-                  <UserBlogs />
+                  <UserProfileBlogList />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="list"
+              path="saved-blogs"
               element={
                 <ProtectedRoute>
-                  <UserList />
+                  <UserProfileBlogList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="liked-blogs"
+              element={
+                <ProtectedRoute>
+                  <UserProfileBlogList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="draft-blogs"
+              element={
+                <ProtectedRoute>
+                  <UserProfileBlogList />
                 </ProtectedRoute>
               }
             />
@@ -93,7 +108,7 @@ function App() {
             path="/:username/bloglist/liked"
             element={
               <ProtectedRoute>
-                <BlogList type={"liked"} />
+                <SidebarBlogList type={"liked"} />
               </ProtectedRoute>
             }
           />
@@ -101,7 +116,7 @@ function App() {
             path="/:username/bloglist/saved"
             element={
               <ProtectedRoute>
-                <BlogList type={"saved"} />
+                <SidebarBlogList type={"saved"} />
               </ProtectedRoute>
             }
           />

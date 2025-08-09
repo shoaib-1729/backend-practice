@@ -2,7 +2,7 @@ const express = require("express");
 const upload = require("../utils/multer.js");
 const router = express.Router();
 const verifyUser = require("../middlewares/auth.js");
-const { getUser, getUserById, createUser, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator } = require("../controllers/userController.js")
+const { getUser, getUserById, createUser, checkUsernameAvailability, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator } = require("../controllers/userController.js")
 
 // get users
 router.get("/users", getUser);
@@ -18,6 +18,9 @@ router.post("/signin", loginUser);
 
 // update users
 router.patch("/users/:id", verifyUser, upload.single("profilePic"), updateUser);
+
+// routes/userRoutes.js me add karo
+router.get("/users/check-username/:username", checkUsernameAvailability);
 
 // delete users
 router.delete("/users/:id", verifyUser, deleteUser);

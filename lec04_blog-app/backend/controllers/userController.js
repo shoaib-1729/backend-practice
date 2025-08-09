@@ -382,6 +382,99 @@ async function loginUser(req, res) {
     }
 }
 
+// Check Username Availability
+async function checkUsernameAvailability(req, res) {
+    try {
+        const { username } = req.params;
+        const { currentUserId } = req.query;
+
+        // Basic validation
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required",
+            });
+        }
+
+        // Username validation rules - Only alphanumeric
+        const usernameRegex = /^[a-zA-Z0-9_]+$/;
+
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({
+                success: false,
+                available: false,
+                message: "Username can only contain letters and numbers",
+            });
+        }
+
+        if (username.length < 3) {
+            return res.status(400).json({
+                success: false,
+                available: false,
+                message: "Username must be at least 3 characters long",
+            });
+        }
+
+        if (username.length > 30) {
+            return res.status(400).json({
+                success: false,
+                available: false,
+                message: "Username must be less than 30 characters",
+            });
+        }
+
+        // Check if username exists (excluding current user if editing)
+        // Case insensitive
+        const query = { username: { $regex: new RegExp(`^${username}$`, 'i') } };
+        // edge case: jab user khud ka hi username edit kar raha hai toh uske exclude karke baakiyo se match karo
+        if (currentUserId) {
+            query._id = { $ne: currentUserId };
+        }
+
+        const existingUser = await User.findOne(query);
+
+        if (existingUser) {
+            return res.status(200).json({
+                success: true,
+                available: false,
+                message: "Username is already taken",
+            });
+        }
+
+        // Check for reserved usernames (optional)
+        const reservedUsernames = [
+            'admin', 'api', 'www', 'com', 'mail', 'ftp', 'localhost', 'root',
+            'support', 'help', 'blog', 'news', 'shop', 'store', 'app',
+            'mobile', 'about', 'contact', 'privacy', 'terms', 'login',
+            'signup', 'register', 'profile', 'settings', 'dashboard'
+        ];
+
+        if (reservedUsernames.includes(username.toLowerCase())) {
+            return res.status(200).json({
+                success: true,
+                available: false,
+                message: "This username is reserved and cannot be used",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            available: true,
+            message: "Username is available! ✓",
+        });
+
+    } catch (error) {
+        console.log("Username check error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Error checking username availability",
+            error: error.message,
+        });
+    }
+}
+
+
+
 async function updateUser(req, res) {
     try {
         const { id: userId } = req.params;
@@ -627,6 +720,7 @@ module.exports = {
     getUser,
     getUserById,
     createUser,
+    checkUsernameAvailability,
     updateUser,
     deleteUser,
     loginUser,

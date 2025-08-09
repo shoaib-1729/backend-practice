@@ -1,7 +1,7 @@
 const express = require("express");
 const verifyUser = require("../middlewares/auth.js");
 const {
-    getBlog,
+    getBlogById,
     getBlogs,
     createBlog,
     updateBlog,
@@ -26,7 +26,7 @@ const router = express.Router();
 router.get("/blogs", getBlogs);
 
 // get particular blog (with id)
-router.get("/blogs/:id", getBlog);
+router.get("/blogs/:id", getBlogById);
 
 // create blogs
 // verify user => create blog

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/shadcn-components/ui/button";
 import { createPortal } from "react-dom";
@@ -17,6 +18,7 @@ const Navbar = () => {
   const avatarRef = useRef();
   const popupRef = useRef();
   const dispatch = useDispatch();
+  const location = useLocation();
 
   const { token, name, username, profilePic } = useSelector((state) => state.user);
 
@@ -37,10 +39,10 @@ const Navbar = () => {
   }
 
   useEffect(() => {
-    if (window.location.pathname === "/") {
+    if (location.pathname === "/") {
       setSearchQuery("");
     }
-  }, [window.location.pathname]);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (avatarRef.current) {
@@ -66,6 +68,11 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // mobile hamburger menu set false on route change
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname])
 
   return (
     <nav className="border-b drop-shadow-sm bg-white z-50 sticky top-0">
@@ -107,49 +114,29 @@ const Navbar = () => {
       <i className="fi fi-ts-file-edit text-base" /> Write
     </button>
 
-          {token ?
+          {token &&
            (
              <div
               ref={avatarRef}
               onClick={() => setShowPopup((prev) => !prev)}
               className="relative w-10 h-10 group cursor-pointer"
             >
-              {/* <img
-                src={
-                  profilePic
-                    ? profilePic
-                    : `https://api.dicebear.com/9.x/initials/svg?seed=${name}`
-                }
-                alt="avatar"
-                className="w-full h-full rounded-full object-cover border border-gray-300 shadow-sm"
-              /> */}
 
               <img
   src={
     profilePic
-      ? `${profilePic}?t=${new Date().getTime()}`  // 👈 this busts the cache
+      ? profilePic
       : `https://api.dicebear.com/9.x/initials/svg?seed=${name}`
   }
   alt="avatar"
   className="w-full h-full rounded-full object-cover border border-gray-300 shadow-sm"
 />
+
+{/* overlay div */}
               <div className="absolute inset-0 bg-gray-300/15 group-hover:bg-gray-400/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200" />
             </div>
-           ) : ( 
-            <div className="flex items-center gap-3">
-               <Link to="/signin">
-                 <Button variant="outline" className="rounded-full px-5 py-2 text-sm font-medium cursor-pointer">
-                   Sign In
-                 </Button>
-               </Link>
-               <Link to="/signup">
-                 <Button className="rounded-full bg-black text-white px-5 py-2 text-sm font-medium hover:bg-gray-800 cursor-pointer">
-                   Sign Up
-                 </Button>
-               </Link>
-             </div>
            )}
-         </div> 
+         </div>
 
         {/* Mobile Menu Toggle */}
         <div className="md:hidden">
@@ -171,6 +158,7 @@ const Navbar = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (searchQuery.trim() && e.code === "Enter") {
+                  setMenuOpen((prev) => !prev)
                   const encodedQuery = searchQuery.trim().split(" ").join("+");
                   navigate(`/search-query?q=${encodedQuery}`);
                 }
