@@ -58,11 +58,20 @@ async function getBlog(req, res) {
                     path: "user",
                     select: "name email"
                 }
-            }).populate({
-                path: "creator",
-                select: "name email followers username"
+
             })
-            .lean()
+            .populate({
+                path: "creator",
+                select: "+profilePic name email username followers"
+            })
+
+        // .populate({
+        //     path: "creator",
+        //     select: "name email profilePic followers username"
+        // })
+        .lean()
+
+        console.log(blog)
 
         async function populateReplies(comments) {
             for (const comment of comments) {
@@ -489,14 +498,14 @@ async function likeBlog(req, res) {
                     path: "likedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 })
                 .populate({
                     path: "savedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 });
 
@@ -523,14 +532,14 @@ async function likeBlog(req, res) {
                     path: "likedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 })
                 .populate({
                     path: "savedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 });
 
@@ -583,14 +592,14 @@ async function saveBlog(req, res) {
                     path: "savedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 })
                 .populate({
                     path: "likedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 });
 
@@ -615,14 +624,14 @@ async function saveBlog(req, res) {
                     path: "savedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 })
                 .populate({
                     path: "likedBlogs",
                     populate: {
                         path: "creator",
-                        select: "name username email"
+                        select: "name username profilePic"
                     }
                 });
 

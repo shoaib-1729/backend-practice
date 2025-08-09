@@ -1,5 +1,6 @@
 const { generateToken } = require("../utils/generateToken.js");
 const transporter = require("../utils/mailTransporter.js");
+require("dotenv").config();
 
 
 async function sendVerificationEmail(user) {

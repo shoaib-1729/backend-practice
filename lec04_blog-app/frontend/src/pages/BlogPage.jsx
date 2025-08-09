@@ -18,8 +18,8 @@ import { formatDate } from "../utils/formatDate";
 import Comment from "../react-components/Comment";
 import { setIsOpen } from "../utils/commentSlice";
 import { handleSaveBlog, handleFollowCreator } from "../utils/helperFunc";
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { updateUser } from "../utils/userSlice";
 
 const BlogPage = () => {
@@ -51,25 +51,25 @@ const BlogPage = () => {
     6: "text-sm",
   };
 
-const cleanHTML = (html) => {
-  if (typeof html !== "string") return "";
-  try {
-    const parsed = JSON.parse(`"${html}"`);
-    return parsed
-      .replace(/\n/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/\u200B/g, "")
-      .trim();
-  } catch (err) {
-    return html
-      .replace(/\\"/g, '"')       // unescape quotes
-      .replace(/\\/g, '')         // remove stray backslashes
-      .replace(/\n/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/\u200B/g, "")
-      .trim();
-  }
-};
+  const cleanHTML = (html) => {
+    if (typeof html !== "string") return "";
+    try {
+      const parsed = JSON.parse(`"${html}"`);
+      return parsed
+        .replace(/\n/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\u200B/g, "")
+        .trim();
+    } catch (err) {
+      return html
+        .replace(/\\"/g, '"') // unescape quotes
+        .replace(/\\/g, "") // remove stray backslashes
+        .replace(/\n/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\u200B/g, "")
+        .trim();
+    }
+  };
 
   const countTotalComments = (comments) => {
     let count = 0;
@@ -96,13 +96,13 @@ const cleanHTML = (html) => {
     ));
   };
 
-const renderCodeBlock = (code) => (
-  <div className="mb-6">
-    <SyntaxHighlighter language="javascript" style={vscDarkPlus}>
-      {code}
-    </SyntaxHighlighter>
-  </div>
-);
+  const renderCodeBlock = (code) => (
+    <div className="mb-6">
+      <SyntaxHighlighter language="javascript" style={vscDarkPlus}>
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
 
   async function fetchBlog() {
     try {
@@ -130,9 +130,9 @@ const renderCodeBlock = (code) => (
         );
         setIsLiked((prev) => !prev);
         dispatch(changeLikes(userId));
-        console.log(res.data.user)
+        console.log(res.data.user);
         // update user
-        dispatch(updateUser(res.data.user))
+        dispatch(updateUser(res.data.user));
         toast.success(res.data.message);
       }
     } catch (err) {
@@ -165,9 +165,9 @@ const renderCodeBlock = (code) => (
         <div key={blog._id} className="space-y-8">
           {/* Title */}
           <header className="space-y-6">
-            <h1 
-            // className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight"
-            className="text-2xl md:text-5xl font-extrabold text-gray-900 leading-snug"
+            <h1
+              // className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight"
+              className="text-2xl md:text-5xl font-extrabold text-gray-900 leading-snug"
             >
               {blog.title}
             </h1>
@@ -193,8 +193,8 @@ const renderCodeBlock = (code) => (
               <div className="w-14 h-14">
                 <img
                   src={
-                    profilePic
-                      ? profilePic
+                    blog?.creator?.profilePic
+                      ? blog?.creator?.profilePic
                       : `https://api.dicebear.com/9.x/initials/svg?seed=${blog.creator.name}`
                   }
                   alt="Author"
@@ -308,7 +308,9 @@ const renderCodeBlock = (code) => (
               <TooltipTrigger>
                 <div className="flex items-center space-x-2 cursor-pointer">
                   <i
-                    onClick={() => handleSaveBlog( blog._id, token, setIsSaved, dispatch)}
+                    onClick={() =>
+                      handleSaveBlog(blog._id, token, setIsSaved, dispatch)
+                    }
                     className={`fi ${
                       isSaved ? "fi-sr-bookmark" : "fi-rr-bookmark"
                     } text-xl hover:text-blue-500`}

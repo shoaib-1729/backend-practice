@@ -387,16 +387,19 @@ async function updateUser(req, res) {
         const { id: userId } = req.params;
         const { name, username, bio, profilePic } = req.body;
 
-        console.log(req.body);
+        console.log("body", req.body);
         const userImage = req.file;
-        console.log(userImage);
+        // console.log(userImage);
 
         // find user
         const user = await User.findById(userId);
 
+
         // agar user image ko delete karna chahe toh pehle hi pakad lo
         if (profilePic === "null" || profilePic === null) {
+
             if (user.profilePicId) {
+                console.log("hello2")
                 await cloudinaryDestroyImage(user.profilePicId);
                 user.profilePic = null;
                 user.profilePicId = null;
@@ -455,6 +458,91 @@ async function updateUser(req, res) {
         });
     }
 }
+
+
+// async function updateUser(req, res) {
+//     try {
+//         const { id: userId } = req.params;
+//         const { name, username, bio, profilePic } = req.body;
+//         const userImage = req.file;
+
+//         console.log("Incoming body:", req.body);
+//         console.log("Incoming file:", userImage);
+
+//         // Find the user first
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "User not found",
+//             });
+//         }
+
+//         // Validation: name and username are required
+//         if (!name || !username) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Name and username are required",
+//             });
+//         }
+
+//         // If profilePic is "null" string or null, remove existing image
+//         if (profilePic === "null" || profilePic === null) {
+//             if (user.profilePicId) {
+//                 await cloudinaryDestroyImage(user.profilePicId);
+//                 user.profilePic = null;
+//                 user.profilePicId = null;
+//             }
+//         }
+
+//         // If a new image is uploaded
+//         if (userImage) {
+//             const { secure_url, public_id } = await cloudinaryImageUpload(
+//                 `data:image/jpeg;base64,${userImage.buffer.toString("base64")}`
+//             );
+//             user.profilePic = secure_url;
+//             user.profilePicId = public_id;
+//         }
+
+//         // Username check only if it's changed
+//         if (username !== user.username) {
+//             const existingUser = await User.findOne({ username });
+//             if (existingUser) {
+//                 return res.status(400).json({
+//                     success: false,
+//                     message: "Username already taken",
+//                 });
+//             }
+//             user.username = username;
+//         }
+
+//         // Update other fields
+//         user.name = name;
+//         user.bio = bio;
+
+//         // Save updated user
+//         await user.save();
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "User updated successfully",
+//             user: {
+//                 name: user.name,
+//                 username: user.username,
+//                 bio: user.bio,
+//                 profilePic: user.profilePic,
+//             },
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             success: false,
+//             message: "Error updating user",
+//             error: error.message,
+//         });
+//     }
+// }
+
+
 
 async function deleteUser(req, res) {
     try {

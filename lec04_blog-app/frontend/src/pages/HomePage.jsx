@@ -110,8 +110,8 @@ const HomePage = () => {
                         >
                           <img
                             src={
-                              blog.creator?.profilePic
-                                ? blog.creator.profilePic
+                              blog?.creator?.profilePic
+                                ? blog?.creator?.profilePic
                                 : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
                             }
                             alt="avatar"
@@ -182,8 +182,8 @@ const HomePage = () => {
                       >
                         <img
                           src={
-                            blog.creator?.profilePic
-                              ? blog.creator.profilePic
+                            blog?.creator?.profilePic
+                              ? blog?.creator.profilePic
                               : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
                           }
                           alt="avatar"

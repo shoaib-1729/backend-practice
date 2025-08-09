@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import EditorjsList from "@editorjs/list";
+import Checklist from "@editorjs/checklist";
 import CodeTool from "@editorjs/code";
 import Marker from "@editorjs/marker";
 import Embed from "@editorjs/embed";
@@ -107,7 +108,7 @@ const AddBlog = () => {
       setBlogData((prev) => {
         const updatedTag = [...prev.tag, newTag];
         // True value
-        // console.log("✅ Inside setBlogData: ", updatedTag); 
+        // console.log("✅ Inside setBlogData: ", updatedTag);
         return {
           ...prev,
           tag: updatedTag,
@@ -129,7 +130,7 @@ const AddBlog = () => {
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-        formData.append(key, value);
+        return formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));
@@ -203,7 +204,7 @@ const AddBlog = () => {
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-        formData.append(key, value);
+        return formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));
@@ -261,6 +262,10 @@ const AddBlog = () => {
           class: EditorjsList,
           inlineToolbar: true,
         },
+      //    checklist: {
+      //   class: Checklist,
+      //   inlineToolbar: true,
+      // },
         image: {
           class: ImageTool,
           config: {
@@ -306,6 +311,7 @@ const AddBlog = () => {
       },
     });
   };
+
 
   useEffect(() => {
     if (editorjsRef.current === null) {

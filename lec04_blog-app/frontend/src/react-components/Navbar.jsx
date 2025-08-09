@@ -114,7 +114,7 @@ const Navbar = () => {
               onClick={() => setShowPopup((prev) => !prev)}
               className="relative w-10 h-10 group cursor-pointer"
             >
-              <img
+              {/* <img
                 src={
                   profilePic
                     ? profilePic
@@ -122,7 +122,17 @@ const Navbar = () => {
                 }
                 alt="avatar"
                 className="w-full h-full rounded-full object-cover border border-gray-300 shadow-sm"
-              />
+              /> */}
+
+              <img
+  src={
+    profilePic
+      ? `${profilePic}?t=${new Date().getTime()}`  // 👈 this busts the cache
+      : `https://api.dicebear.com/9.x/initials/svg?seed=${name}`
+  }
+  alt="avatar"
+  className="w-full h-full rounded-full object-cover border border-gray-300 shadow-sm"
+/>
               <div className="absolute inset-0 bg-gray-300/15 group-hover:bg-gray-400/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200" />
             </div>
            ) : ( 
