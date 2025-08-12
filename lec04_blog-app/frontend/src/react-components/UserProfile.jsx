@@ -1,7 +1,14 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, NavLink, Outlet, useNavigate, useParams, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  Outlet,
+  useNavigate,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { handleFollowCreator } from "../utils/helperFunc";
 import toast from "react-hot-toast";
@@ -22,24 +29,37 @@ const UserProfile = () => {
     const fetchUserProfile = async () => {
       try {
         const newName = username.split("@")[1];
-        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/${newName}`);
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/${newName}`
+        );
         setUserData(res.data.user);
       } catch (err) {
-         const errorMessage =
-                err?.response?.data?.message ||
-                "Something went wrong. Please try again.";
-              toast.error(errorMessage);
+        const errorMessage =
+          err?.response?.data?.message ||
+          "Something went wrong. Please try again.";
+        toast.error(errorMessage);
       }
     };
     fetchUserProfile();
   }, [username]);
 
   useEffect(() => {
-    if (userData?.followers) {
-      const isFollower = userData.followers.some((f) => f._id === userId);
-      setIsFollowCreator(isFollower);
-    }
-  }, [userData]);
+  // 1. Check follower
+  if (userData?.followers) {
+    const isFollower = userData.followers.some((f) => f._id === userId);
+    setIsFollowCreator(isFollower);
+  }
+
+  // 2. Redirect if trying to access someone else's draft blogs
+  if (
+    userData?._id !== userId && !userData?.showDraftBlogs && location.pathname === `/${username}/draft-blogs`
+   || userData?._id !== userId && !userData?.showLikedBlogs && location.pathname === `/${username}/liked-blogs`
+    || userData?._id !== userId && !userData?.showSavedBlogs && location.pathname === `/${username}/saved-blogs`
+  ) {
+    navigate(`/${username}`);
+  }
+}, [location.pathname, userData, userId, username, navigate]);
+
 
   if (!userData)
     return (
@@ -48,14 +68,11 @@ const UserProfile = () => {
       </h1>
     );
 
-  if (location.pathname === `/${username}/draft-blogs` && userData._id !== userId) {
-    return navigate(`/${username}`);
-  }
+ 
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-6 lg:pt-10 pb-20">
-        
         {/* Mobile Profile Header - Only visible on mobile */}
         <div className="mb-6 lg:hidden">
           <div className="p-6 text-center">
@@ -72,7 +89,9 @@ const UserProfile = () => {
 
             {/* Name + Followers */}
             <div className="mb-4">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{userData?.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                {userData?.name}
+              </h1>
               <p className="text-base text-gray-600 font-medium">
                 {userData?.followers?.length} followers
               </p>
@@ -100,7 +119,12 @@ const UserProfile = () => {
             ) : (
               <button
                 onClick={() =>
-                  handleFollowCreator(userData?._id, token, setIsFollowCreator, dispatch)
+                  handleFollowCreator(
+                    userData?._id,
+                    token,
+                    setIsFollowCreator,
+                    dispatch
+                  )
                 }
                 className="w-4/5 bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-200 text-base font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
               >
@@ -112,7 +136,6 @@ const UserProfile = () => {
 
         {/* Desktop Layout */}
         <div className="hidden lg:flex lg:gap-8">
-          
           {/* Left Column - Content */}
           <div className="flex-1 max-w-3xl">
             {/* Navigation Tabs */}
@@ -129,29 +152,36 @@ const UserProfile = () => {
                 Stories
               </NavLink>
 
-              <NavLink
-                to={`/${username}/saved-blogs`}
-                className={({ isActive }) =>
-                  isActive
-                    ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
-                    : "pb-3 text-sm text-gray-500 hover:text-black transition"
-                }
-              >
-                Saved Blogs
-              </NavLink>
+              {/* saved blog tab */}
+              {(userData._id === userId || userData?.showSavedBlogs) && (
+                <NavLink
+                  to={`/${username}/saved-blogs`}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
+                      : "pb-3 text-sm text-gray-500 hover:text-black transition"
+                  }
+                >
+                  Saved Blogs
+                </NavLink>
+              )}
 
-              <NavLink
-                to={`/${username}/liked-blogs`}
-                className={({ isActive }) =>
-                  isActive
-                    ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
-                    : "pb-3 text-sm text-gray-500 hover:text-black transition"
-                }
-              >
-                Liked Blogs
-              </NavLink>
+              {/* liked blog tab */}
+              {(userData._id === userId || userData?.showLikedBlogs) && (
+                <NavLink
+                  to={`/${username}/liked-blogs`}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
+                      : "pb-3 text-sm text-gray-500 hover:text-black transition"
+                  }
+                >
+                  Liked Blogs
+                </NavLink>
+              )}
 
-              {userData._id === userId && (
+              {/* draft blog tab */}
+              {(userData._id === userId || userData?.showDraftBlogs) && (
                 <NavLink
                   to={`/${username}/draft-blogs`}
                   className={({ isActive }) =>
@@ -164,6 +194,7 @@ const UserProfile = () => {
                 </NavLink>
               )}
 
+              {/* about tab */}
               <NavLink
                 to="about"
                 className={({ isActive }) =>
@@ -221,7 +252,12 @@ const UserProfile = () => {
                 ) : (
                   <button
                     onClick={() =>
-                      handleFollowCreator(userData?._id, token, setIsFollowCreator, dispatch)
+                      handleFollowCreator(
+                        userData?._id,
+                        token,
+                        setIsFollowCreator,
+                        dispatch
+                      )
                     }
                     className="w-full bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition text-sm font-medium"
                   >
@@ -279,29 +315,36 @@ const UserProfile = () => {
                 Stories
               </NavLink>
 
-              <NavLink
-                to={`/${username}/saved-blogs`}
-                className={({ isActive }) =>
-                  isActive
-                    ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
-                    : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
-                }
-              >
-                Saved
-              </NavLink>
+              {/* saved blog tab */}
+              {(userData._id === userId || userData?.showSavedBlogs) && (
+                <NavLink
+                  to={`/${username}/saved-blogs`}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
+                      : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
+                  }
+                >
+                  Saved
+                </NavLink>
+              )}
 
-              <NavLink
-                to={`/${username}/liked-blogs`}
-                className={({ isActive }) =>
-                  isActive
-                    ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
-                    : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
-                }
-              >
-                Liked
-              </NavLink>
+              {/* liked blog tab */}
+              {(userData._id === userId || userData?.showLikedBlogs) && (
+                <NavLink
+                  to={`/${username}/liked-blogs`}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
+                      : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
+                  }
+                >
+                  Liked
+                </NavLink>
+              )}
 
-              {userData._id === userId && (
+              {/* draft blog tab */}
+              {(userData._id === userId || userData?.showDraftBlogs) && (
                 <NavLink
                   to={`/${username}/draft-blogs`}
                   className={({ isActive }) =>
@@ -314,6 +357,7 @@ const UserProfile = () => {
                 </NavLink>
               )}
 
+              {/* about tab */}
               <NavLink
                 to="about"
                 className={({ isActive }) =>
@@ -337,7 +381,9 @@ const UserProfile = () => {
           {/* Mobile: Following List - Cleaner design */}
           {userData?.following?.length > 0 && (
             <div className="mt-10 pt-8 border-t border-gray-100">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Following</h2>
+              <h2 className="text-xl font-bold mb-6 text-gray-900">
+                Following
+              </h2>
               <div className="grid grid-cols-2 gap-4">
                 {userData.following.slice(0, 6).map((f) => (
                   <Link
@@ -350,7 +396,9 @@ const UserProfile = () => {
                       alt="avatar"
                       className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
                     />
-                    <span className="text-sm font-medium text-gray-800 truncate flex-1">{f.name}</span>
+                    <span className="text-sm font-medium text-gray-800 truncate flex-1">
+                      {f.name}
+                    </span>
                   </Link>
                 ))}
               </div>

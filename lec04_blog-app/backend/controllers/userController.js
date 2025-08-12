@@ -34,13 +34,32 @@ async function getUserById(req, res) {
         const { username } = req.params;
 
         const user = await User.findOne({ username })
-            .populate("blogs following likedBlogs savedBlogs")
+            .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic"
+                }
+            })
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic"
+                }
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic"
+                }
+            })
             .populate({
                 path: "followers following",
-                select: "name username email",
+                select: "name username email"
             })
             .select("-email -__v");
-
         // get the users
         return res.json({
             success: true,
