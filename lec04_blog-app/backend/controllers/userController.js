@@ -716,6 +716,59 @@ async function followCreator(req, res) {
     }
 }
 
+async function userSettings(req, res) {
+    try {
+        const { username } = req.params;
+        const { showLiked, showDraft, showSaved } = req.body;
+
+        console.log("body", req.body);
+
+        // find user
+        const user = await User.findOne({ username })
+        console.log("user1", user);
+
+        // update
+        user.showLikedBlogs = showLiked
+        user.showDraftBlogs = showDraft
+        user.showSavedBlogs = showSaved
+
+        await user.save();
+
+        console.log("user2", user);
+
+        if (!user) {
+            return res.status(400).json({
+                success: true,
+                message: "User does not exists",
+
+            });
+        }
+
+
+
+        // success message
+        return res.status(200).json({
+            success: true,
+            message: "Settings saved successfully",
+            user: {
+                name: user.name,
+                username: user.username,
+                showLikedBlogs: user.showLikedBlogs,
+                showDraftBlogs: user.showDraftBlogs,
+                showSavedBlogs: user.showSavedBlogs,
+
+            }
+
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "Error saving settings",
+            error: error.message,
+        });
+    }
+}
+
 module.exports = {
     getUser,
     getUserById,
@@ -727,4 +780,5 @@ module.exports = {
     verifyEmail,
     googleAuth,
     followCreator,
+    userSettings,
 };

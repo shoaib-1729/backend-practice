@@ -225,9 +225,11 @@ const Navbar = () => {
                 <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer"> <i className="fi fi-ts-user-pen"></i> Edit Profile</li>
               </Link>
 
+<Link to={"/user-setting"} onClick={() => setShowPopup(false)}>
               <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                 <i className="fi fi-rr-user-gear"></i> User Setting
               </li>
+              </Link>
               <li>
                 <p
                   onClick={handleLogout}

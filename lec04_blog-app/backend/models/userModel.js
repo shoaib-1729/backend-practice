@@ -65,6 +65,18 @@ const userSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Blog"
     }],
+    showSavedBlogs: {
+        type: Boolean,
+        default: false
+    },
+    showLikedBlogs: {
+        type: Boolean,
+        default: true
+    },
+    showDraftBlogs: {
+        type: Boolean,
+        default: false
+    },
 })
 
 // compile model using schema

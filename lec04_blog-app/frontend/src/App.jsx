@@ -13,6 +13,7 @@ import TagPage from "./pages/TagPage";
 import AboutPage from "./pages/AboutPage";
 import UserProfileBlogList from "./react-components/UserProfileBlogList";
 import SidebarBlogList from "./react-components/SidebarBlogList";
+import SettingPage from "./pages/SettingPage";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
@@ -128,6 +129,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+           <Route
+              path="/user-setting"
+              element={
+                <ProtectedRoute>
+                  <SettingPage />
+                </ProtectedRoute>
+              }
+            />
           <Route
             path="/search-query"
             element={

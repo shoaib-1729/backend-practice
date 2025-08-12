@@ -2,7 +2,7 @@ const express = require("express");
 const upload = require("../utils/multer.js");
 const router = express.Router();
 const verifyUser = require("../middlewares/auth.js");
-const { getUser, getUserById, createUser, checkUsernameAvailability, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator } = require("../controllers/userController.js")
+const { getUser, getUserById, createUser, checkUsernameAvailability, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator, userSettings } = require("../controllers/userController.js")
 
 // get users
 router.get("/users", getUser);
@@ -33,6 +33,9 @@ router.post("/google-auth", googleAuth)
 
 // follow blog creator 
 router.patch("/follow/:creatorId", verifyUser, followCreator)
+
+// user settings
+router.post("/users/:username/settings", verifyUser, userSettings)
 
 
 

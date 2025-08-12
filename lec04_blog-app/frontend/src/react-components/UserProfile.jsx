@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, NavLink, Outlet, useNavigate, useParams, useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { handleFollowCreator } from "../utils/helperFunc";
+import toast from "react-hot-toast";
 
 const UserProfile = () => {
   const { username } = useParams();
@@ -15,6 +16,8 @@ const UserProfile = () => {
   const { token, id: userId, profilePic } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
+  // console.log(userData)
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -22,7 +25,10 @@ const UserProfile = () => {
         const res = await axios.get(`${import.meta.env.VITE_BASE_URL}/users/${newName}`);
         setUserData(res.data.user);
       } catch (err) {
-        console.error(err);
+         const errorMessage =
+                err?.response?.data?.message ||
+                "Something went wrong. Please try again.";
+              toast.error(errorMessage);
       }
     };
     fetchUserProfile();
@@ -120,7 +126,7 @@ const UserProfile = () => {
                     : "pb-3 text-sm text-gray-500 hover:text-black transition"
                 }
               >
-                Home
+                Stories
               </NavLink>
 
               <NavLink
@@ -270,7 +276,7 @@ const UserProfile = () => {
                     : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
                 }
               >
-                Home
+                Stories
               </NavLink>
 
               <NavLink
