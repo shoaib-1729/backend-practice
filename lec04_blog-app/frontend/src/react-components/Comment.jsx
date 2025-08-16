@@ -24,7 +24,7 @@ const Comment = () => {
 
   const dispatch = useDispatch();
 
-  const { token, id: userId, profilePic } = useSelector((state) => state.user);
+  const { token, id: userId } = useSelector((state) => state.user);
   const { _id: id, comments, creator:{_id: creatorId}} = useSelector((state) => state.selectedBlog);
 
   async function handleComment() {
@@ -90,7 +90,6 @@ const Comment = () => {
                   currentEditComment={currentEditComment}
                   setCurrentEditComment={setCurrentEditComment}
                   creatorId={creatorId}
-                  profilePic={profilePic}
       />
     </div>
   );
@@ -112,7 +111,6 @@ const DisplayComments = (
     currentEditComment,
     setCurrentEditComment,
     creatorId,
-    profilePic
   }
 ) => {
 
@@ -268,9 +266,9 @@ const DisplayComments = (
       {/* Avatar */}
       <img
        src={
-                  profilePic
-                    ? profilePic
-                    : `https://api.dicebear.com/9.x/initials/svg?seed=${comment.user.name}`
+                  comment?.user?.profilePic
+                    ? comment?.user?.profilePic
+                    : `https://api.dicebear.com/9.x/initials/svg?seed=${comment?.user?.name}`
                 }
         alt="avatar"
         className="w-8 h-8 rounded-full"
@@ -327,7 +325,7 @@ const DisplayComments = (
             />
             <Button
               onClick={() => handleReply(comment._id)}
-              className="mt-2 bg-black  text-white text-xs"
+              className="mt-2 bg-black  text-white text-xs cursor-pointer"
             >
               Reply
             </Button>
@@ -349,7 +347,6 @@ const DisplayComments = (
     currentEditComment={currentEditComment}
                   setCurrentEditComment={setCurrentEditComment}
                   creatorId={creatorId}
-                  profilePic={profilePic}
             />
           </div>
         )}

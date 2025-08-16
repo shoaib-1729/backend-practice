@@ -72,7 +72,6 @@ router.get("/search-query", fetchSearchedBlog)
 // searched blog
 router.get("/tag/:tagName", fetchTaggedBlog)
 
-
 // save blogs
 router.patch("/save-blog/:id", verifyUser, saveBlog)
 

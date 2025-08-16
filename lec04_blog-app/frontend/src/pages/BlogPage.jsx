@@ -18,6 +18,7 @@ import { formatDate } from "../utils/formatDate";
 import Comment from "../react-components/Comment";
 import { setIsOpen } from "../utils/commentSlice";
 import { handleSaveBlog, handleFollowCreator } from "../utils/helperFunc";
+import DeleteBlogConfirmation from "../react-components/DeleteBlogConfirmation";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { updateUser } from "../utils/userSlice";
@@ -33,7 +34,7 @@ const BlogPage = () => {
     token,
     email,
     id: userId,
-    profilePic,
+    // profilePic,
   } = useSelector((state) => state.user);
   const { likes, comments, content, blogId } = useSelector(
     (state) => state.selectedBlog
@@ -112,8 +113,11 @@ const BlogPage = () => {
       setBlog(blog);
       dispatch(addSelectedBlog(blog));
 
-      if (blog.likes.includes(userId)) setIsLiked(true);
+      // check if current user liked the blog
+      if (blog.likes?.includes(userId)) setIsLiked(true);
+      // check if blog is saved by current user
       if (blog.savedBy?.includes(userId)) setIsSaved(true);
+      // check if user follows creator
       if (blog.creator?.followers?.includes(userId)) setIsFollowCreator(true);
     } catch (err) {
       console.error("Error fetching blog:", err);
@@ -136,6 +140,7 @@ const BlogPage = () => {
         toast.success(res.data.message);
       }
     } catch (err) {
+      setIsLiked((prev) => !prev);
       console.error("Error liking blog:", err);
     }
   }
@@ -321,6 +326,13 @@ const BlogPage = () => {
                 <p>Save</p>
               </TooltipContent>
             </Tooltip>
+            {/* Delete */}
+            <DeleteBlogConfirmation
+              blog={blog}
+              token={token}
+              dispatch={dispatch}
+              userId={userId}
+            />
 
             <div className="flex items-center space-x-3 text-sm text-gray-500">
               <span>{formatDate(blog.createdAt)}</span>

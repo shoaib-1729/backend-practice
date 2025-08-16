@@ -44,7 +44,7 @@ async function addComment(req, res) {
             .then((comment) => {
                 return comment.populate({
                     path: "user",
-                    select: "name email"
+                    select: "name email profilePic"
                 })
             })
 

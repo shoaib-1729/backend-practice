@@ -130,7 +130,7 @@ const AddBlog = () => {
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-        return formData.append(key, value);
+         formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));
@@ -204,7 +204,7 @@ const AddBlog = () => {
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-        return formData.append(key, value);
+         formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));

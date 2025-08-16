@@ -259,7 +259,7 @@ const UserProfile = () => {
                         dispatch
                       )
                     }
-                    className="w-full bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition text-sm font-medium"
+                    className="w-full bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition text-sm font-medium cursor-pointer"
                   >
                     {isFollowCreator ? "Following" : "Follow"}
                   </button>

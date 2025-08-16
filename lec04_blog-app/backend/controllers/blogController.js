@@ -31,7 +31,8 @@ async function getBlogs(req, res) {
                 select: "name email",
             })
             .skip(skip)
-            .limit(limit);
+            .limit(limit)
+            .sort({ createdAt: -1 });
 
         return res.json({
             success: true,
@@ -55,6 +56,10 @@ async function getBlogById(req, res) {
         // draft false ->  only accessed by blog author, authorization will be required
         const blog = await Blog.findOne({ blogId: id })
             .populate({
+                path: "creator",
+                select: "name username email profilePic followers",
+            })
+            .populate({
                 path: "comments",
                 // populate user inside comments (nested populate)
                 // populating user because username is required for displaying above the comment
@@ -63,17 +68,7 @@ async function getBlogById(req, res) {
                     select: "name email",
                 },
             })
-            .populate({
-                path: "creator",
-                select: "+profilePic name email username followers",
-            })
-
-        // .populate({
-        //     path: "creator",
-        //     select: "name email profilePic followers username"
-        // })
-        // sprt by most recently created
-        .lean()
+            .lean()
             .sort({ createdAt: -1 });
 
         console.log(blog);
@@ -266,117 +261,150 @@ async function createBlog(req, res) {
     }
 }
 
-// update blog  controller
+
+// update blog controller
 async function updateBlog(req, res) {
     try {
         // update blog
         const { title, description } = req.body;
-
         const draft = req.body.draft === "true" ? true : false;
+        
+        console.log("Request body:", req.body);
+        console.log("Files:", req.files);
 
-        console.log(draft);
-        const tag = JSON.parse(req.body.tag);
-
-        const content = JSON.parse(req.body.content);
-        const existingImages = JSON.parse(req.body.existingImages);
+        // Add validation and error handling for JSON parsing
+        let tag, content, existingImages;
+        
+        try {
+            tag = req.body.tag ? JSON.parse(req.body.tag) : [];
+            content = req.body.content ? JSON.parse(req.body.content) : { blocks: [] };
+            existingImages = req.body.existingImages ? JSON.parse(req.body.existingImages) : [];
+        } catch (parseError) {
+            console.error("JSON Parse Error:", parseError);
+            return res.status(400).json({
+                success: false,
+                message: "Invalid JSON data in request",
+                error: parseError.message,
+            });
+        }
 
         // multer
-        const { image, images } = req.files;
-        // console.log(image, images);
+        const { image, images } = req.files || {};
 
         // extract id from params
         const { id } = req.params;
 
-        // blog by id
+        // blog by id - use blogId field for lookup
         const blog = await Blog.findOne({ blogId: id });
-
-        // creator id
         const creator = req.user;
 
         // validation
-        // if blog does not exits?
         if (!blog) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
-                message: "Blog does not exists",
+                message: "Blog does not exist",
             });
         }
 
-        // check the user is valid to update blog?
-        if (blog.creator != creator) {
-            return res.status(400).json({
-                success: false,
-                message: "You are not authorized for this action",
-            });
+        // Safer image deletion logic
+        let imagesToDelete = [];
+        
+        if (blog.content && blog.content.blocks) {
+            imagesToDelete = blog.content.blocks
+                .filter((block) => block.type === "image" && block.data && block.data.file)
+                .filter((block) => {
+                    // Check if this image exists in existingImages
+                    const imageExists = existingImages.find(
+                        (existing) => existing.url === block.data.file.url
+                    );
+                    return !imageExists;
+                })
+                .map((block) => block.data.file.imageId)
+                .filter((imageId) => imageId); // Filter out undefined
         }
 
-        // image nikaalo joh cloudinary se delete karni hai
-        let imagesToDelete = blog.content.blocks
-            .filter((block) => block.type == "image")
-            .filter(
-                (block) => !existingImages.find(({ url }) => url == block.data.file.url)
-            )
-            .map((block) => block.data.file.imageId);
-
-        // delete kardo abb
+        // delete images from cloudinary
         if (imagesToDelete.length > 0) {
-            await Promise.all(imagesToDelete.map((id) => cloudinaryDestroyImage(id)));
+            try {
+                await Promise.all(
+                    imagesToDelete.map((id) => cloudinaryDestroyImage(id))
+                );
+            } catch (deleteError) {
+                console.error("Error deleting images:", deleteError);
+                // Continue with update even if image deletion fails
+            }
         }
 
-        // joh images add hui hai unko add karwao (same logic add image in blog content wala)
-        // image upload cloudinary pr
-        // images -> content images
-        // agar images hai toh add karo
-        if (images) {
+        // ✅ Add new images to content blocks
+        if (images && images.length > 0) {
             let imageIndex = 0;
+            
             for (let i = 0; i < content.blocks.length; i++) {
                 const block = content.blocks[i];
+                
+                if (
+                    block.type === "image" && 
+                    block.data && 
+                    block.data.file && 
+                    block.data.file.image && 
+                    imageIndex < images.length
+                ) {
+                    try {
+                        const { secure_url, public_id } = await cloudinaryImageUpload(
+                            `data:image/jpeg;base64,${images[imageIndex].buffer.toString("base64")}`
+                        );
 
-                if (block.type === "image" && block.data.file.image) {
-                    const { secure_url, public_id } = await cloudinaryImageUpload(
-                        `data:image/jpeg;base64,${images[imageIndex].buffer.toString(
-              "base64"
-            )}`
-                    );
-
-                    // ✅ Correct fix
-                    block.data.file.url = secure_url;
-                    block.data.file.imageId = public_id;
-
-                    imageIndex++;
+                        block.data.file.url = secure_url;
+                        block.data.file.imageId = public_id;
+                        
+                        imageIndex++;
+                    } catch (uploadError) {
+                        console.error("Error uploading image:", uploadError);
+                        return res.status(500).json({
+                            success: false,
+                            message: "Error uploading images",
+                            error: uploadError.message,
+                        });
+                    }
                 }
             }
         }
 
-        // image change -> file otherwise undefined
-        if (image) {
-            // old image haat do cloudinary se
-            await cloudinaryDestroyImage(blog.imageId);
-            // new image upload kardo cloudinary par
-            let { secure_url, public_id } = await cloudinaryImageUpload(
-                `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
-            );
-            // update image and imageId from DB
-            blog.image = secure_url;
-            blog.imageId = public_id;
+        // ✅ Handle main image update
+        if (image && image.length > 0) {
+            try {
+                // Delete old main image
+                if (blog.imageId) {
+                    await cloudinaryDestroyImage(blog.imageId);
+                }
+                
+                // Upload new main image
+                const { secure_url, public_id } = await cloudinaryImageUpload(
+                    `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
+                );
+                
+                blog.image = secure_url;
+                blog.imageId = public_id;
+            } catch (imageError) {
+                console.error("Error updating main image:", imageError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Error updating main image",
+                    error: imageError.message,
+                });
+            }
         }
 
-        // set other values
+        // Update blog fields
         blog.title = title;
         blog.description = description;
         blog.content = content;
         blog.tag = tag;
         blog.draft = draft;
 
-        // set only if user send it
-        // if (typeof draft !== "undefined") {
-        //     blog.draft = draft;
-        // }
-
         // save updated blog in DB
         const updatedBlog = await blog.save();
 
-        // agar draft true hai yeh dikhaao
         if (draft) {
             return res.status(200).json({
                 success: true,
@@ -384,36 +412,36 @@ async function updateBlog(req, res) {
             });
         }
 
+        const updatedUser = await User.findById(creator).select('-password');
+
+
         return res.status(200).json({
             success: true,
             message: "Blog updated successfully...",
             blog: updatedBlog,
+            user: updatedUser,
         });
     } catch (err) {
-        console.log(err);
+        console.error("Update blog error:", err);
         return res.status(500).json({
             success: false,
-            message: "Error updating blogs",
+            message: "Error updating blog",
             error: err.message,
         });
     }
 }
 
+
+
 // delete blog controller
 async function deleteBlog(req, res) {
     try {
         // blog id
-        const { id } = req.params;
-
-        // Check if the id is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ error: "Invalid ID format" });
-        }
-
+        const { id: blogId } = req.params;
         // find blog by id
-        const blog = await Blog.findById(id);
-        const creator = req.user;
-
+        const blog = await Blog.findById(blogId);
+        const userId = req.user;
+        
         // validation
         // blog id valid?
         if (!blog) {
@@ -422,26 +450,79 @@ async function deleteBlog(req, res) {
                 message: "Blog does not exits",
             });
         }
+        
         // check user deleting the blog is creator or not?
-        if (blog.creator != creator) {
+        if (blog.creator != userId) {
             return res.status(400).json({
                 success: false,
                 message: "You are not authorized for this action",
             });
         }
-
+        
         // delete blog
-        await Blog.findByIdAndDelete(id);
-
+        await Blog.findByIdAndDelete(blogId);
+        
         // user se bhi delete karo
-        await User.findByIdAndUpdate(creator, { $pull: { blogs: id } });
+        await User.findByIdAndUpdate(userId, { $pull: { blogs: blogId } });
+        
+        // user se saved blog delete karo
+        await User.updateMany({ savedBlogs: blogId }, { $pull: { savedBlogs: blogId } });
+        
+        // user se liked blog delete karo
+        await User.updateMany({ likedBlogs: blogId }, { $pull: { likedBlogs: blogId } });
+        
+        // comment delete karo iss blog se
+        await Comment.deleteMany({ _id: { $in: blog.comments } });
+        
+        // cloudinary se main image delete karo
+        if (blog.imageId) {
+            try {
+                await cloudinaryDestroyImage(blog.imageId);
+            } catch (cloudinaryError) {
+                console.error('Error deleting main image from Cloudinary:', cloudinaryError);
+            }
+        }
+        
+        // cloudinary se content images bhi delete karo
+        if (blog.content && blog.content.blocks) {
+            const contentImages = blog.content.blocks
+                .filter((block) => block.type === "image" && block.data && block.data.file && block.data.file.imageId)
+                .map((block) => block.data.file.imageId);
+                
+            if (contentImages.length > 0) {
+                try {
+                    // Promise.all ke andar await nahi lagana hai, sirf functions pass karne hain
+                    await Promise.all(
+                        contentImages.map((imageId) => cloudinaryDestroyImage(imageId))
+                    );
+                } catch (cloudinaryError) {
+                    console.error('Error deleting content images from Cloudinary:', cloudinaryError);
+                }
+            }
+        }
 
-        // cloudinary se bhi hata do
-        await cloudinaryDestroyImage(blog.imageId);
+        // Updated user data fetch karo aur return karo
+        const updatedUser = await User.findById(userId)
+         .populate({
+                    path: "likedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username profilePic",
+                    },
+                })
+                .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username profilePic",
+                    },
+                });
 
+        
         return res.status(200).json({
             success: true,
             message: "Blog deleted successfully...",
+            user: updatedUser,
         });
     } catch (err) {
         return res.status(500).json({
@@ -451,6 +532,7 @@ async function deleteBlog(req, res) {
         });
     }
 }
+
 
 // like blog controller
 async function likeBlog(req, res) {
@@ -470,17 +552,24 @@ async function likeBlog(req, res) {
         const userId = req.user;
 
         // validation
-        // blog id valid?
         if (!blog) {
             return res.status(400).json({
                 success: false,
                 message: "Blog does not exits",
             });
         }
+
         // user id exists in like array -> dislike else like
         if (!blog.likes.includes(userId)) {
+            // like blog logic
             // push user id to like array
-            await Blog.findByIdAndUpdate(id, { $push: { likes: userId } });
+            const updatedBlog = await Blog.findByIdAndUpdate(
+                id, { $push: { likes: userId } }, { new: true }
+            ).populate({
+                path: "creator",
+                select: "name username email profilePic followers",
+            });
+            // Don't populate likes - just store IDs
 
             // user model mei bhi push karo
             const updatedUser = await User.findByIdAndUpdate(
@@ -506,14 +595,19 @@ async function likeBlog(req, res) {
                 success: true,
                 message: "Blog liked successfully...",
                 isLiked: true,
-                blog,
+                blog: updatedBlog,
                 user: updatedUser,
             });
         } else {
             // dislike blog logic
-            // pull user id to like array
-            await Blog.findByIdAndUpdate(id, { $pull: { likes: userId } });
-            // await User.findByIdAndUpdate(userId, { $pull: { likedBlogs: id } })
+            // pull user id from like array
+            const updatedBlog = await Blog.findByIdAndUpdate(
+                id, { $pull: { likes: userId } }, { new: true }
+            ).populate({
+                path: "creator",
+                select: "name username email profilePic followers",
+            });
+            // Don't populate likes - just store IDs
 
             // user se bhi pull karo
             const updatedUser = await User.findByIdAndUpdate(
@@ -539,6 +633,7 @@ async function likeBlog(req, res) {
                 success: true,
                 message: "Blog disliked successfully...",
                 isLiked: false,
+                blog: updatedBlog,
                 user: updatedUser,
             });
         }
@@ -694,6 +789,28 @@ async function fetchTaggedBlog(req, res) {
 
         const { exclude } = req.query;
 
+        const pageNo = Number(req.query.pageNo);
+        const limit = Number(req.query.limit);
+        const skip = (pageNo - 1) * limit;
+
+        const totalBlogs = await Blog.countDocuments({
+            tag: {
+                $in: [tagName],
+            },
+            blogId: { $ne: exclude },
+        }, { draft: false });
+
+        const hasMoreBlogs = totalBlogs > skip + limit;
+
+        const blogs = await Blog.find({
+                tag: {
+                    $in: [tagName],
+                },
+                // blogId: { $ne: exclude }
+            }, { draft: false })
+            .skip(skip)
+            .limit(limit);
+
         if (exclude) {
             const blogs = await Blog.find({
                     tag: {
@@ -703,13 +820,6 @@ async function fetchTaggedBlog(req, res) {
                 }, { draft: false })
                 .skip(skip)
                 .limit(limit);
-
-            const totalBlogs = await Blog.countDocuments({
-                tag: {
-                    $in: [tagName],
-                },
-                blogId: { $ne: exclude },
-            }, { draft: false });
 
             return res.status(200).json({
                 success: true,
@@ -725,27 +835,6 @@ async function fetchTaggedBlog(req, res) {
         //         { tag: { $regex: word, $options: "i" } },
         //     ]
         // }));
-
-        const pageNo = Number(req.query.pageNo);
-        const limit = Number(req.query.limit);
-        const skip = (pageNo - 1) * limit;
-
-        const blogs = await Blog.find({
-                tag: {
-                    $in: [tagName],
-                },
-                // blogId: { $ne: exclude }
-            }, { draft: false })
-            .skip(skip)
-            .limit(limit);
-
-        const totalBlogs = await Blog.countDocuments({
-            tag: {
-                $in: [tagName],
-            },
-            // blogId: { $ne: exclude }
-        }, { draft: false });
-        const hasMoreBlogs = totalBlogs > skip + limit;
 
         return res.status(200).json({
             success: true,
