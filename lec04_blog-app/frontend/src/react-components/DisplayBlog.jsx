@@ -64,7 +64,7 @@ const DisplayBlog = ({ data }) => {
                   <div className="flex items-center space-x-4 text-sm text-gray-500 min-w-0 flex-1">
                     <div className="flex items-center space-x-1">
                       <i className="fi fi-rr-social-network text-xs"></i>
-                      <span>{blog?.likes?.length}</span>
+                      <span>{blog?.likedBy?.length}</span>
                     </div>
 
                     <div className="flex items-center space-x-1">

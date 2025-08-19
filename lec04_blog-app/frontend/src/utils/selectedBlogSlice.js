@@ -21,14 +21,14 @@ const selectedBlogSlice = createSlice({
             // action.payload -> userID (for liking/unliking)
             // like array -> list of userId's who liked the particular blog
 
-            const alreadyLiked = state.likes.includes(userId);
+            const alreadyLiked = state.likedBy.includes(userId);
 
             if (alreadyLiked) {
                 // Unlike
-                state.likes = state.likes.filter((like) => like !== userId);
+                state.likedBy = state.likedBy.filter((like) => like !== userId);
             } else {
                 // Like
-                state.likes = [...state.likes, userId];
+                state.likedBy = [...state.likedBy, userId];
             }
 
             return state;
@@ -49,17 +49,17 @@ const selectedBlogSlice = createSlice({
                 return;
             }
 
-            if (!Array.isArray(comment.likes)) {
-                comment.likes = [];
+            if (!Array.isArray(comment.likedBy)) {
+                comment.likedBy = [];
             }
-            const alreadyLiked = comment.likes.includes(userId);
+            const alreadyLiked = comment.likedBy.includes(userId);
 
             if (alreadyLiked) {
                 // Unlike
-                comment.likes = comment.likes.filter((like) => like !== userId);
+                comment.likedBy = comment.likedBy.filter((like) => like !== userId);
             } else {
                 // Like
-                comment.likes = [...comment.likes, userId];
+                comment.likedBy = [...comment.likedBy, userId];
             }
         },
 

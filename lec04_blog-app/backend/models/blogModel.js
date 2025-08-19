@@ -39,7 +39,7 @@ const blogSchema = new mongoose.Schema({
         required: true
     },
     // blog -> likes
-    likes: [{
+    likedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }],

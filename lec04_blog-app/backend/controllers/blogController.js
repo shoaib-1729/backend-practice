@@ -27,7 +27,7 @@ async function getBlogs(req, res) {
                 select: "name username email profilePic followers",
             })
             .populate({
-                path: "likes",
+                path: "likedBy",
                 select: "name email",
             })
             .skip(skip)
@@ -268,13 +268,13 @@ async function updateBlog(req, res) {
         // update blog
         const { title, description } = req.body;
         const draft = req.body.draft === "true" ? true : false;
-        
+
         console.log("Request body:", req.body);
         console.log("Files:", req.files);
 
         // Add validation and error handling for JSON parsing
         let tag, content, existingImages;
-        
+
         try {
             tag = req.body.tag ? JSON.parse(req.body.tag) : [];
             content = req.body.content ? JSON.parse(req.body.content) : { blocks: [] };
@@ -308,7 +308,7 @@ async function updateBlog(req, res) {
 
         // Safer image deletion logic
         let imagesToDelete = [];
-        
+
         if (blog.content && blog.content.blocks) {
             imagesToDelete = blog.content.blocks
                 .filter((block) => block.type === "image" && block.data && block.data.file)
@@ -338,15 +338,15 @@ async function updateBlog(req, res) {
         // ✅ Add new images to content blocks
         if (images && images.length > 0) {
             let imageIndex = 0;
-            
+
             for (let i = 0; i < content.blocks.length; i++) {
                 const block = content.blocks[i];
-                
+
                 if (
-                    block.type === "image" && 
-                    block.data && 
-                    block.data.file && 
-                    block.data.file.image && 
+                    block.type === "image" &&
+                    block.data &&
+                    block.data.file &&
+                    block.data.file.image &&
                     imageIndex < images.length
                 ) {
                     try {
@@ -356,7 +356,7 @@ async function updateBlog(req, res) {
 
                         block.data.file.url = secure_url;
                         block.data.file.imageId = public_id;
-                        
+
                         imageIndex++;
                     } catch (uploadError) {
                         console.error("Error uploading image:", uploadError);
@@ -377,12 +377,12 @@ async function updateBlog(req, res) {
                 if (blog.imageId) {
                     await cloudinaryDestroyImage(blog.imageId);
                 }
-                
+
                 // Upload new main image
                 const { secure_url, public_id } = await cloudinaryImageUpload(
                     `data:image/jpeg;base64,${image[0].buffer.toString("base64")}`
                 );
-                
+
                 blog.image = secure_url;
                 blog.imageId = public_id;
             } catch (imageError) {
@@ -441,7 +441,7 @@ async function deleteBlog(req, res) {
         // find blog by id
         const blog = await Blog.findById(blogId);
         const userId = req.user;
-        
+
         // validation
         // blog id valid?
         if (!blog) {
@@ -450,7 +450,7 @@ async function deleteBlog(req, res) {
                 message: "Blog does not exits",
             });
         }
-        
+
         // check user deleting the blog is creator or not?
         if (blog.creator != userId) {
             return res.status(400).json({
@@ -458,22 +458,22 @@ async function deleteBlog(req, res) {
                 message: "You are not authorized for this action",
             });
         }
-        
+
         // delete blog
         await Blog.findByIdAndDelete(blogId);
-        
+
         // user se bhi delete karo
         await User.findByIdAndUpdate(userId, { $pull: { blogs: blogId } });
-        
+
         // user se saved blog delete karo
         await User.updateMany({ savedBlogs: blogId }, { $pull: { savedBlogs: blogId } });
-        
+
         // user se liked blog delete karo
         await User.updateMany({ likedBlogs: blogId }, { $pull: { likedBlogs: blogId } });
-        
+
         // comment delete karo iss blog se
         await Comment.deleteMany({ _id: { $in: blog.comments } });
-        
+
         // cloudinary se main image delete karo
         if (blog.imageId) {
             try {
@@ -482,13 +482,13 @@ async function deleteBlog(req, res) {
                 console.error('Error deleting main image from Cloudinary:', cloudinaryError);
             }
         }
-        
+
         // cloudinary se content images bhi delete karo
         if (blog.content && blog.content.blocks) {
             const contentImages = blog.content.blocks
                 .filter((block) => block.type === "image" && block.data && block.data.file && block.data.file.imageId)
                 .map((block) => block.data.file.imageId);
-                
+
             if (contentImages.length > 0) {
                 try {
                     // Promise.all ke andar await nahi lagana hai, sirf functions pass karne hain
@@ -503,22 +503,22 @@ async function deleteBlog(req, res) {
 
         // Updated user data fetch karo aur return karo
         const updatedUser = await User.findById(userId)
-         .populate({
-                    path: "likedBlogs",
-                    populate: {
-                        path: "creator",
-                        select: "name username profilePic",
-                    },
-                })
-                .populate({
-                    path: "savedBlogs",
-                    populate: {
-                        path: "creator",
-                        select: "name username profilePic",
-                    },
-                });
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            });
 
-        
+
         return res.status(200).json({
             success: true,
             message: "Blog deleted successfully...",
@@ -548,6 +548,7 @@ async function likeBlog(req, res) {
                 message: "Blog does not exist or is a draft",
             });
         }
+
         // creator refers to the authenticated user (not the one creating the blog)
         const userId = req.user;
 
@@ -560,11 +561,11 @@ async function likeBlog(req, res) {
         }
 
         // user id exists in like array -> dislike else like
-        if (!blog.likes.includes(userId)) {
+        if (!blog.likedBy.includes(userId)) {
             // like blog logic
             // push user id to like array
             const updatedBlog = await Blog.findByIdAndUpdate(
-                id, { $push: { likes: userId } }, { new: true }
+                id, { $push: { likedBy: userId } }, { new: true }
             ).populate({
                 path: "creator",
                 select: "name username email profilePic followers",
@@ -602,7 +603,7 @@ async function likeBlog(req, res) {
             // dislike blog logic
             // pull user id from like array
             const updatedBlog = await Blog.findByIdAndUpdate(
-                id, { $pull: { likes: userId } }, { new: true }
+                id, { $pull: { likedBy: userId } }, { new: true }
             ).populate({
                 path: "creator",
                 select: "name username email profilePic followers",

@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-import { updateUser } from "./userSlice";
+import { logout, updateUser } from "./userSlice";
 import axios from "axios";
 
 export async function handleSaveBlog(blogId, token, setIsSaved, dispatch) {
@@ -37,6 +37,27 @@ export async function handleDeleteBlog(blogId, token, dispatch) {
         }
     } catch (err) {
         console.error("Error saving blog:", err);
+        toast.error(err.response.data.message);
+    }
+}
+export async function handleDeleteUser(token, dispatch) {
+    try {
+        if (token) {
+            const res = await axios.delete(
+                `${import.meta.env.VITE_BASE_URL}/users`, { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            console.log("pehle", res);
+
+            if (res.status == 200) {
+                toast.success(res.data.message);
+                console.log(res.data.user);
+                // logout user
+                dispatch(logout())
+            }
+        }
+    } catch (err) {
+        console.error("Error deleting user:", err);
         toast.error(err.response.data.message);
     }
 }

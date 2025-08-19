@@ -1,4 +1,6 @@
 const User = require("../models/userModel.js");
+const Blog = require("../models/blogModel.js");
+const Comment = require("../models/commentModel.js");
 const bcrypt = require("bcrypt");
 const { generateToken, validToken } = require("../utils/generateToken.js");
 const sendVerificationMail = require("../utils/emailService.js");
@@ -571,96 +573,62 @@ async function updateUser(req, res) {
     }
 }
 
-
-// async function updateUser(req, res) {
-//     try {
-//         const { id: userId } = req.params;
-//         const { name, username, bio, profilePic } = req.body;
-//         const userImage = req.file;
-
-//         console.log("Incoming body:", req.body);
-//         console.log("Incoming file:", userImage);
-
-//         // Find the user first
-//         const user = await User.findById(userId);
-//         if (!user) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: "User not found",
-//             });
-//         }
-
-//         // Validation: name and username are required
-//         if (!name || !username) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Name and username are required",
-//             });
-//         }
-
-//         // If profilePic is "null" string or null, remove existing image
-//         if (profilePic === "null" || profilePic === null) {
-//             if (user.profilePicId) {
-//                 await cloudinaryDestroyImage(user.profilePicId);
-//                 user.profilePic = null;
-//                 user.profilePicId = null;
-//             }
-//         }
-
-//         // If a new image is uploaded
-//         if (userImage) {
-//             const { secure_url, public_id } = await cloudinaryImageUpload(
-//                 `data:image/jpeg;base64,${userImage.buffer.toString("base64")}`
-//             );
-//             user.profilePic = secure_url;
-//             user.profilePicId = public_id;
-//         }
-
-//         // Username check only if it's changed
-//         if (username !== user.username) {
-//             const existingUser = await User.findOne({ username });
-//             if (existingUser) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     message: "Username already taken",
-//                 });
-//             }
-//             user.username = username;
-//         }
-
-//         // Update other fields
-//         user.name = name;
-//         user.bio = bio;
-
-//         // Save updated user
-//         await user.save();
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "User updated successfully",
-//             user: {
-//                 name: user.name,
-//                 username: user.username,
-//                 bio: user.bio,
-//                 profilePic: user.profilePic,
-//             },
-//         });
-//     } catch (error) {
-//         return res.status(500).json({
-//             success: false,
-//             message: "Error updating user",
-//             error: error.message,
-//         });
-//     }
-// }
-
-
-
+// delete user controller
 async function deleteUser(req, res) {
     try {
-        // find by id and delete
-        await User.findByIdAndDelete(req.params.id);
-        // success message
+        const userId = req.user;
+        const user = await User.findById(userId);
+
+        // pehle blogs fetch karo
+        const blogs = await Blog.find({ _id: { $in: user.blogs } });
+
+        // cloudinary images delete karo
+        for (const blog of blogs) {
+            // main image
+            if (blog.imageId) {
+                try {
+                    await cloudinaryDestroyImage(blog.imageId);
+                } catch (cloudinaryError) {
+                    console.error('Error deleting main image from Cloudinary:', cloudinaryError);
+                }
+            }
+
+            // content images
+            if (blog.content.blocks) {
+                const contentImages = blog.content.blocks
+                    .filter((block) => block.type === "image" && block.data.file.imageId)
+                    .map((block) => block.data.file.imageId);
+
+                if (contentImages.length > 0) {
+                    try {
+                        await Promise.all(contentImages.map((id) => cloudinaryDestroyImage(id)));
+                    } catch (cloudinaryError) {
+                        console.error('Error deleting content images from Cloudinary:', cloudinaryError);
+                    }
+                }
+            }
+        }
+
+        // ab DB se blogs delete karo
+        await Blog.deleteMany({ _id: { $in: user.blogs } });
+
+        // likedBy / savedBy clean up
+        await Blog.updateMany({ likedBy: userId }, { $pull: { likedBy: userId } });
+        await Blog.updateMany({ savedBy: userId }, { $pull: { savedBy: userId } });
+
+        // followers / following clean up
+        await User.updateMany({ followers: userId }, { $pull: { followers: userId } });
+        await User.updateMany({ following: userId }, { $pull: { following: userId } });
+
+        // user ke comments delete karo
+        await Comment.deleteMany({ user: userId });
+
+
+        // finally user delete
+        await User.findByIdAndDelete(userId);
+        // delete user profile pic
+        await cloudinaryDestroyImage(user.profilePicId);
+
         return res.status(200).json({
             success: true,
             message: "User deleted successfully",
@@ -673,6 +641,7 @@ async function deleteUser(req, res) {
         });
     }
 }
+
 
 async function followCreator(req, res) {
     try {

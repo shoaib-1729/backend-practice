@@ -203,7 +203,7 @@ const EditProfile = () => {
       if (res.status === 200) {
         toast.success(res.data.message);
         dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
-        navigate(`/@${res.data.user.username}`);
+        navigate(-1);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Error updating user");
@@ -378,7 +378,7 @@ const EditProfile = () => {
 
       {/* Buttons */}
       <div className="flex justify-end space-x-2">
-        <Button onClick={() => navigate(-1)} variant="outline">
+        <Button className="cursor-pointer" onClick={() => navigate(-1)} variant="outline">
           Cancel
         </Button>
         <Button

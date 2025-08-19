@@ -18,7 +18,7 @@ import { formatDate } from "../utils/formatDate";
 import Comment from "../react-components/Comment";
 import { setIsOpen } from "../utils/commentSlice";
 import { handleSaveBlog, handleFollowCreator } from "../utils/helperFunc";
-import DeleteBlogConfirmation from "../react-components/DeleteBlogConfirmation";
+import DeleteConfirmation from "../react-components/DeleteConfirmation";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { updateUser } from "../utils/userSlice";
@@ -36,7 +36,7 @@ const BlogPage = () => {
     id: userId,
     // profilePic,
   } = useSelector((state) => state.user);
-  const { likes, comments, content, blogId } = useSelector(
+  const { likedBy, comments, content, blogId } = useSelector(
     (state) => state.selectedBlog
   );
   const { isOpen } = useSelector((state) => state.comment);
@@ -114,7 +114,7 @@ const BlogPage = () => {
       dispatch(addSelectedBlog(blog));
 
       // check if current user liked the blog
-      if (blog.likes?.includes(userId)) setIsLiked(true);
+      if (blog.likedBy?.includes(userId)) setIsLiked(true);
       // check if blog is saved by current user
       if (blog.savedBy?.includes(userId)) setIsSaved(true);
       // check if user follows creator
@@ -283,7 +283,7 @@ const BlogPage = () => {
                     } text-xl hover:text-blue-500`}
                   ></i>
                   <span className="text-sm text-gray-700 font-medium">
-                    {likes?.length}
+                    {likedBy?.length}
                   </span>
                 </div>
               </TooltipTrigger>
@@ -327,12 +327,10 @@ const BlogPage = () => {
               </TooltipContent>
             </Tooltip>
             {/* Delete */}
-            <DeleteBlogConfirmation
-              blog={blog}
-              token={token}
-              dispatch={dispatch}
-              userId={userId}
-            />
+      <DeleteConfirmation
+        type="blog"
+        item={blog}
+      />
 
             <div className="flex items-center space-x-3 text-sm text-gray-500">
               <span>{formatDate(blog.createdAt)}</span>

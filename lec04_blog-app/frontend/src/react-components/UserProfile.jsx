@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { handleFollowCreator } from "../utils/helperFunc";
+import DeleteConfirmation from "./DeleteConfirmation"; // Import the reusable component
 import toast from "react-hot-toast";
 
 const UserProfile = () => {
@@ -18,12 +19,12 @@ const UserProfile = () => {
   const location = useLocation();
   const [isFollowCreator, setIsFollowCreator] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [showDeleteDropdown, setShowDeleteDropdown] = useState(false);
   const navigate = useNavigate();
 
   const { token, id: userId, profilePic } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
-  // console.log(userData)
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -44,22 +45,21 @@ const UserProfile = () => {
   }, [username]);
 
   useEffect(() => {
-  // 1. Check follower
-  if (userData?.followers) {
-    const isFollower = userData.followers.some((f) => f._id === userId);
-    setIsFollowCreator(isFollower);
-  }
+    // 1. Check follower
+    if (userData?.followers) {
+      const isFollower = userData.followers.some((f) => f._id === userId);
+      setIsFollowCreator(isFollower);
+    }
 
-  // 2. Redirect if trying to access someone else's draft blogs
-  if (
-    userData?._id !== userId && !userData?.showDraftBlogs && location.pathname === `/${username}/draft-blogs`
-   || userData?._id !== userId && !userData?.showLikedBlogs && location.pathname === `/${username}/liked-blogs`
-    || userData?._id !== userId && !userData?.showSavedBlogs && location.pathname === `/${username}/saved-blogs`
-  ) {
-    navigate(`/${username}`);
-  }
-}, [location.pathname, userData, userId, username, navigate]);
-
+    // 2. Redirect if trying to access someone else's draft blogs
+    if (
+      userData?._id !== userId && !userData?.showDraftBlogs && location.pathname === `/${username}/draft-blogs`
+     || userData?._id !== userId && !userData?.showLikedBlogs && location.pathname === `/${username}/liked-blogs`
+      || userData?._id !== userId && !userData?.showSavedBlogs && location.pathname === `/${username}/saved-blogs`
+    ) {
+      navigate(`/${username}`);
+    }
+  }, [location.pathname, userData, userId, username, navigate]);
 
   if (!userData)
     return (
@@ -68,14 +68,46 @@ const UserProfile = () => {
       </h1>
     );
 
- 
-
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 pt-6 lg:pt-10 pb-20">
         {/* Mobile Profile Header - Only visible on mobile */}
         <div className="mb-6 lg:hidden">
-          <div className="p-6 text-center">
+          <div className="p-6 text-center relative">
+            {/* Settings/Options Button for Mobile - Top Right */}
+            {userData?._id === userId && (
+              <div className="absolute top-4 right-4">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowDeleteDropdown(!showDeleteDropdown)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <i className="fi fi-rr-menu-dots text-gray-600 text-lg cursor-pointer"></i>
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  {showDeleteDropdown && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                      <Link
+                        to="/edit-profile"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => setShowDeleteDropdown(false)}
+                      >
+                        <i className="fi fi-rr-edit mr-3 text-gray-500"></i>
+                        Edit Profile
+                      </Link>
+                      <div className="border-t border-gray-100 my-1"></div>
+                      <DeleteConfirmation
+                        type="user"
+                        item={userData}
+                        setShowDeleteDropdown={setShowDeleteDropdown}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Profile Image */}
             <img
               src={
@@ -113,6 +145,7 @@ const UserProfile = () => {
               <Link
                 to="/edit-profile"
                 className="block w-4/5 mx-auto bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-200 text-base font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                 onClick={() => setShowDeleteDropdown(false)}
               >
                 Edit Profile
               </Link>
@@ -215,7 +248,41 @@ const UserProfile = () => {
 
           {/* Right Column - Desktop Sidebar */}
           <aside className="w-80 sticky top-6 self-start">
-            <div className="bg-gray-50 rounded-xl p-6">
+            <div className="bg-gray-50 rounded-xl p-6 relative">
+              {/* Settings/Options Button for Desktop - Top Right */}
+              {userData?._id === userId && (
+                <div className="absolute top-4 right-4">
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowDeleteDropdown(!showDeleteDropdown)}
+                      className="p-1.5 rounded-full hover:bg-gray-200 transition-colors"
+                    >
+                      <i className="fi fi-rr-menu-dots text-gray-600 text-sm cursor-pointer"></i>
+                    </button>
+                    
+                    {/* Dropdown Menu */}
+                    {showDeleteDropdown && (
+                      <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                        <Link
+                          to="/edit-profile"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                          onClick={() => setShowDeleteDropdown(false)}
+                        >
+                          <i className="fi fi-rr-edit mr-3 text-gray-500"></i>
+                          Edit Profile
+                        </Link>
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <DeleteConfirmation
+                          type="user"
+                          item={userData}
+                          setShowDeleteDropdown={setShowDeleteDropdown}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="text-center mb-6">
                 <img
                   src={
@@ -246,6 +313,7 @@ const UserProfile = () => {
                   <Link
                     to="/edit-profile"
                     className="block bg-black text-white px-6 py-2.5 rounded-full hover:bg-gray-800 transition text-sm font-medium"
+                    onClick={() => setShowDeleteDropdown(false)}
                   >
                     Edit Profile
                   </Link>
@@ -288,7 +356,7 @@ const UserProfile = () => {
                             </span>
                           </Link>
                         </div>
-                        <i className="fi fi-rr-menu-dots text-gray-400 text-sm cursor-pointer opacity-0 group-hover:opacity-100 transition"></i>
+                        <i className="fi fi-rr-menu-dots text-gray-400 text-sm opacity-0 group-hover:opacity-100 transition cursor-pointer"></i>
                       </div>
                     ))}
                   </div>

@@ -295,12 +295,12 @@ const DisplayComments = (
           >
             <i
               className={`fi ${
-                comment.likes.includes(userId)
+                comment.likedBy.includes(userId)
                   ? "fi-sr-thumbs-up"
                   : "fi-rr-social-network"
               } text-base`}
             ></i>
-            <span>{comment.likes.length}</span>
+            <span>{comment.likedBy.length}</span>
           </button>
 
           <button

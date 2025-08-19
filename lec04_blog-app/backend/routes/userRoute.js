@@ -19,11 +19,11 @@ router.post("/signin", loginUser);
 // update users
 router.patch("/users/:id", verifyUser, upload.single("profilePic"), updateUser);
 
+// delete user
+router.delete("/users/", verifyUser, deleteUser);
+
 // routes/userRoutes.js me add karo
 router.get("/users/check-username/:username", checkUsernameAvailability);
-
-// delete users
-router.delete("/users/:id", verifyUser, deleteUser);
 
 // verify user
 router.get("/verify-email/:verificationToken", verifyEmail)
