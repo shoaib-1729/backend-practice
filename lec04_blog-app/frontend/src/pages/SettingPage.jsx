@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const SettingPage = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const { token, username, showLikedBlogs, showSavedBlogs, showDraftBlogs} = useSelector((state) => state.user);
+  const { token, id: userId, username, showLikedBlogs, showSavedBlogs, showDraftBlogs} = useSelector((state) => state.user);
 
   const [settingsData, setSettingsData] = useState({
     showDraft: showDraftBlogs,
@@ -31,6 +31,16 @@ const SettingPage = () => {
       [key]: !prev[key],
     }));
   };
+
+
+ // Add this function inside your SettingPage component
+const handleResetPassword = () => {
+  // Navigate to reset password page
+  navigate(`/reset-password/${userId}`);
+};
+
+
+
 
   //   console.log(userData);
 
@@ -73,6 +83,7 @@ const SettingPage = () => {
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6">
       <h1 className="text-xl sm:text-2xl font-semibold mb-6 border-b pb-2">
+        <i class="fi fi-rr-settings mr-2"></i>
         Settings
       </h1>
 
@@ -162,6 +173,27 @@ const SettingPage = () => {
           Save Changes
         </button>
       </div>
+
+{/* Reset Password Section */}
+<div className="mt-8 pt-6 border-t">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h2 className="text-base sm:text-lg font-medium flex items-center gap-2">
+        <i class="fi fi-sr-lock"></i>
+        Password & Security
+      </h2>
+      <p className="text-sm text-gray-500 mt-1">
+        Change your password to keep your account secure.
+      </p>
+    </div>
+    <button
+      onClick={handleResetPassword}
+      className="px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 flex items-center gap-2 justify-center sm:justify-start cursor-pointer"
+    >
+      Reset Password
+    </button>
+  </div>
+</div>
     </div>
   );
 };

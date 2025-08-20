@@ -21,13 +21,11 @@ async function getUser(req, res) {
             users,
         });
     } catch (error) {
-        return res
-            .status(500)
-            .json({
-                success: false,
-                message: "Error fetching users",
-                error: error.message,
-            });
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching users",
+            error: error.message,
+        });
     }
 }
 
@@ -40,26 +38,26 @@ async function getUserById(req, res) {
                 path: "blogs",
                 populate: {
                     path: "creator",
-                    select: "name username profilePic"
-                }
+                    select: "name username profilePic",
+                },
             })
             .populate({
                 path: "likedBlogs",
                 populate: {
                     path: "creator",
-                    select: "name username profilePic"
-                }
+                    select: "name username profilePic",
+                },
             })
             .populate({
                 path: "savedBlogs",
                 populate: {
                     path: "creator",
-                    select: "name username profilePic"
-                }
+                    select: "name username profilePic",
+                },
             })
             .populate({
                 path: "followers following",
-                select: "name username email"
+                select: "name username email",
             })
             .select("-email -__v");
         // get the users
@@ -69,16 +67,15 @@ async function getUserById(req, res) {
             user,
         });
     } catch (error) {
-        return res
-            .status(500)
-            .json({
-                success: false,
-                message: "Error fetching users",
-                error: error.message,
-            });
+        return res.status(500).json({
+            success: false,
+            message: "Error fetching users",
+            error: error.message,
+        });
     }
 }
 
+// signup
 async function createUser(req, res) {
     try {
         const { name, email, password } = req.body;
@@ -154,13 +151,11 @@ async function createUser(req, res) {
         });
     } catch (error) {
         // Error handling for DB operation
-        return res
-            .status(500)
-            .json({
-                success: false,
-                message: "Error creating user",
-                error: error.message,
-            });
+        return res.status(500).json({
+            success: false,
+            message: "Error creating user",
+            error: error.message,
+        });
     }
 }
 
@@ -446,7 +441,7 @@ async function checkUsernameAvailability(req, res) {
 
         // Check if username exists (excluding current user if editing)
         // Case insensitive
-        const query = { username: { $regex: new RegExp(`^${username}$`, 'i') } };
+        const query = { username: { $regex: new RegExp(`^${username}$`, "i") } };
         // edge case: jab user khud ka hi username edit kar raha hai toh uske exclude karke baakiyo se match karo
         if (currentUserId) {
             query._id = { $ne: currentUserId };
@@ -464,10 +459,32 @@ async function checkUsernameAvailability(req, res) {
 
         // Check for reserved usernames (optional)
         const reservedUsernames = [
-            'admin', 'api', 'www', 'com', 'mail', 'ftp', 'localhost', 'root',
-            'support', 'help', 'blog', 'news', 'shop', 'store', 'app',
-            'mobile', 'about', 'contact', 'privacy', 'terms', 'login',
-            'signup', 'register', 'profile', 'settings', 'dashboard'
+            "admin",
+            "api",
+            "www",
+            "com",
+            "mail",
+            "ftp",
+            "localhost",
+            "root",
+            "support",
+            "help",
+            "blog",
+            "news",
+            "shop",
+            "store",
+            "app",
+            "mobile",
+            "about",
+            "contact",
+            "privacy",
+            "terms",
+            "login",
+            "signup",
+            "register",
+            "profile",
+            "settings",
+            "dashboard",
         ];
 
         if (reservedUsernames.includes(username.toLowerCase())) {
@@ -483,7 +500,6 @@ async function checkUsernameAvailability(req, res) {
             available: true,
             message: "Username is available! ✓",
         });
-
     } catch (error) {
         console.log("Username check error:", error);
         return res.status(500).json({
@@ -493,8 +509,6 @@ async function checkUsernameAvailability(req, res) {
         });
     }
 }
-
-
 
 async function updateUser(req, res) {
     try {
@@ -508,12 +522,10 @@ async function updateUser(req, res) {
         // find user
         const user = await User.findById(userId);
 
-
         // agar user image ko delete karna chahe toh pehle hi pakad lo
         if (profilePic === "null" || profilePic === null) {
-
             if (user.profilePicId) {
-                console.log("hello2")
+                console.log("hello2");
                 await cloudinaryDestroyImage(user.profilePicId);
                 user.profilePic = null;
                 user.profilePicId = null;
@@ -589,7 +601,10 @@ async function deleteUser(req, res) {
                 try {
                     await cloudinaryDestroyImage(blog.imageId);
                 } catch (cloudinaryError) {
-                    console.error('Error deleting main image from Cloudinary:', cloudinaryError);
+                    console.error(
+                        "Error deleting main image from Cloudinary:",
+                        cloudinaryError
+                    );
                 }
             }
 
@@ -601,9 +616,14 @@ async function deleteUser(req, res) {
 
                 if (contentImages.length > 0) {
                     try {
-                        await Promise.all(contentImages.map((id) => cloudinaryDestroyImage(id)));
+                        await Promise.all(
+                            contentImages.map((id) => cloudinaryDestroyImage(id))
+                        );
                     } catch (cloudinaryError) {
-                        console.error('Error deleting content images from Cloudinary:', cloudinaryError);
+                        console.error(
+                            "Error deleting content images from Cloudinary:",
+                            cloudinaryError
+                        );
                     }
                 }
             }
@@ -623,7 +643,6 @@ async function deleteUser(req, res) {
         // user ke comments delete karo
         await Comment.deleteMany({ user: userId });
 
-
         // finally user delete
         await User.findByIdAndDelete(userId);
         // delete user profile pic
@@ -641,7 +660,6 @@ async function deleteUser(req, res) {
         });
     }
 }
-
 
 async function followCreator(req, res) {
     try {
@@ -712,13 +730,13 @@ async function userSettings(req, res) {
         console.log("body", req.body);
 
         // find user
-        const user = await User.findOne({ username })
+        const user = await User.findOne({ username });
         console.log("user1", user);
 
         // update
-        user.showLikedBlogs = showLiked
-        user.showDraftBlogs = showDraft
-        user.showSavedBlogs = showSaved
+        user.showLikedBlogs = showLiked;
+        user.showDraftBlogs = showDraft;
+        user.showSavedBlogs = showSaved;
 
         await user.save();
 
@@ -728,11 +746,8 @@ async function userSettings(req, res) {
             return res.status(400).json({
                 success: true,
                 message: "User does not exists",
-
             });
         }
-
-
 
         // success message
         return res.status(200).json({
@@ -744,9 +759,7 @@ async function userSettings(req, res) {
                 showLikedBlogs: user.showLikedBlogs,
                 showDraftBlogs: user.showDraftBlogs,
                 showSavedBlogs: user.showSavedBlogs,
-
-            }
-
+            },
         });
     } catch (error) {
         return res.status(500).json({
@@ -756,6 +769,91 @@ async function userSettings(req, res) {
         });
     }
 }
+
+// reset user password
+async function resetUserPassword(req, res) {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        const { id: userId } = req.params;
+
+        // 1. Basic validation - req.body empty check
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+            });
+        }
+
+        // 2. Find user
+        const user = await User.findById(userId).select("+password");
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid User",
+            });
+        }
+
+        // 3. Google auth check
+        if (user.isGoogleAuth) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot reset password for Google authenticated users",
+            });
+        }
+
+        // 4. Check current password
+        const isSamePassword = await bcrypt.compare(currentPassword, user.password);
+        if (!isSamePassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Incorrect Current Password",
+            });
+        }
+
+        // 5. New password !== confirm password
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New Password and Confirm Password do not match",
+            });
+        }
+
+        // 6. New password !== confirm password
+        if (currentPassword === newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "New Password should be different than the Current Password",
+            });
+        }
+
+        // 7. Password strength check
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
+        if (!passwordRegex.test(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be 6-20 characters long, include at least one uppercase, one lowercase, one number, and one special character."
+            });
+        }
+
+        // 8. Hash & update
+        const hashedPass = await bcrypt.hash(newPassword, 10);
+        await User.findByIdAndUpdate(userId, { password: hashedPass }, { new: true });
+
+        return res.status(200).json({
+            success: true,
+            message: "Password has been reset successfully",
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error resetting password",
+            error: error.message,
+        });
+    }
+}
+
+
 
 module.exports = {
     getUser,
@@ -769,4 +867,5 @@ module.exports = {
     googleAuth,
     followCreator,
     userSettings,
+    resetUserPassword,
 };

@@ -14,23 +14,40 @@ import AboutPage from "./pages/AboutPage";
 import UserProfileBlogList from "./react-components/UserProfileBlogList";
 import SidebarBlogList from "./react-components/SidebarBlogList";
 import SettingPage from "./pages/SettingPage";
+import ResetPassword from "./react-components/ResetPassword";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
   const location = useLocation();
 
+  // Function to check if navbar should be hidden
+  const shouldHideNavbar = () => {
+    const hiddenRoutes = ["/add-blog", "/signin", "/signup"];
+    const pathname = location.pathname;
+    
+    // Check exact matches
+    if (hiddenRoutes.includes(pathname)) {
+      return true;
+    }
+    
+    // Check if path starts with /reset-password
+    if (pathname.startsWith("/reset-password")) {
+      return true;
+    }
+    
+    return false;
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar stays at the top */}
-      {/* add-blog, signin, signup routes par navbar matt dikhao */}
-      {!["/add-blog", "/signin", "/signup"].includes(location.pathname) && (
-        <Navbar />
-      )}
+      {/* add-blog, signin, signup, reset-password routes par navbar matt dikhao */}
+      {!shouldHideNavbar() && <Navbar />}
 
       {/* Main content will take the remaining space */}
       <div className="flex-1">
         <Routes>
-          <Route path="/" element={<HomePage /> } />
+          <Route path="/" element={<HomePage />} />
           <Route
             path="/add-blog"
             element={
@@ -39,6 +56,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/edit/:id"
             element={
@@ -54,6 +72,14 @@ function App() {
           <Route
             path="/verify-user/:verificationToken"
             element={<VerifyUser />}
+          />
+          <Route
+            path="/reset-password/:id"
+            element={
+              <ProtectedRoute>
+                <ResetPassword />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/:username"
@@ -105,7 +131,7 @@ function App() {
             />
           </Route>
           
-                      <Route
+          <Route
             path="/:username/bloglist/liked"
             element={
               <ProtectedRoute>
@@ -129,14 +155,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-           <Route
-              path="/user-setting"
-              element={
-                <ProtectedRoute>
-                  <SettingPage />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/user-setting"
+            element={
+              <ProtectedRoute>
+                <SettingPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/search-query"
             element={
