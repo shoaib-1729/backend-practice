@@ -1,83 +1,91 @@
 const mongoose = require("mongoose");
-// user schema 
+// user schema
 const userSchema = mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
     },
     username: {
         type: String,
         required: true,
         unique: true,
-
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     bio: {
-        type: String
+        type: String,
     },
     password: {
         type: String,
         required: true,
         unique: true,
-        select: false
+        select: false,
+    },
+    isTempPassword: {
+        type: Boolean,
+        default: false,
+        select: false,
+    },
+    tempPasswordExpiry: {
+        type: Date,
+        default: null,
+        select: false,
     },
     // blogs -> user author
     blogs: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Blog"
-    }],
+        ref: "Blog",
+    }, ],
     isVerified: {
         type: Boolean,
         default: false,
-        select: false
+        select: false,
     },
     isGoogleAuth: {
         type: Boolean,
         default: false,
-        select: false
-
+        select: false,
     },
     profilePic: {
         type: String,
-        default: null
+        default: null,
     },
     profilePicId: {
         type: String,
-        default: null
+        default: null,
     },
     followers: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    }],
+        ref: "User",
+    }, ],
     following: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
-    }],
+        ref: "User",
+    }, ],
     likedBlogs: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Blog"
-    }],
+        ref: "Blog",
+    }, ],
     savedBlogs: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Blog"
-    }],
+        ref: "Blog",
+    }, ],
     showSavedBlogs: {
         type: Boolean,
-        default: false
+        default: false,
     },
     showLikedBlogs: {
         type: Boolean,
-        default: true
+        default: true,
     },
     showDraftBlogs: {
         type: Boolean,
-        default: false
+        default: false,
     },
-})
+});
 
 // compile model using schema
 const User = mongoose.model("User", userSchema);

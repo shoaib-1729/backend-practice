@@ -163,6 +163,18 @@ const AuthForm = ({ type }) => {
             {type === "signup" ? "Register" : "Sign In"}
           </Button>
 
+          {/* forget password */}
+          {type === "signin" && (
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 bg-transparent border-none cursor-pointer hover:underline decoration-1 underline-offset-2 transition-all duration-200 ease-in-out p-1 rounded font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-30"
+              onClick={() => navigate("/forget-password")}
+            >
+              <i className="fi fi-rr-lock text-xs"></i>
+              Forgot Password?
+            </button>
+          )}
+
           {/* google auth wali cheez yah aayegi */}
           {/* or separator */}
           <div className="flex items-center gap-2 my-3">

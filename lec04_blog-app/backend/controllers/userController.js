@@ -3,7 +3,10 @@ const Blog = require("../models/blogModel.js");
 const Comment = require("../models/commentModel.js");
 const bcrypt = require("bcrypt");
 const { generateToken, validToken } = require("../utils/generateToken.js");
-const sendVerificationMail = require("../utils/emailService.js");
+const {
+    sendVerificationMail,
+    sendForgetPasswordEmail,
+} = require("../utils/emailService.js");
 const { getAuth } = require("firebase-admin/auth");
 const { v4: uuidv4 } = require("uuid");
 const {
@@ -93,12 +96,34 @@ async function createUser(req, res) {
                 message: "Please enter the email",
             });
         }
+
         if (!password) {
             return res.status(400).json({
                 success: false,
                 message: "Please enter the password",
             });
         }
+
+
+        // email and passwprd validation
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid email address",
+            });
+        }
+
+        // Password strength validation
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be 6-20 characters long, include uppercase, lowercase, number, and special character.",
+            });
+        }
+
         // check if user exits already in DB
         const checkExistingUser = await User.findOne({ email }).select(
             "name bio email followers following password isVerified isGoogleAuth"
@@ -238,10 +263,14 @@ async function googleAuth(req, res) {
             }
         }
 
+        // username generation for google users 
+        const username = email.split("@")[0] + uuidv4().substring(0, 6);
+
         // user nhi hai toh banao
         let newUser = await User.create({
             name,
             email,
+            username,
             isVerified: true,
             isGoogleAuth: true,
         });
@@ -282,6 +311,16 @@ async function loginUser(req, res) {
             message: "Please enter the email",
         });
     }
+
+    // email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({
+            success: false,
+            message: "Please enter a valid email address",
+        });
+    }
+
     if (!password) {
         return res.status(400).json({
             success: false,
@@ -293,7 +332,7 @@ async function loginUser(req, res) {
         // check if user exits already in DB
         const checkExistingUser = await User.findOne({ email })
             .select(
-                "name email bio blogs followers following username password profilePic isVerified isGoogleAuth likedBlogs savedBlogs"
+                "name email bio blogs followers following username password profilePic isVerified isGoogleAuth likedBlogs savedBlogs isTempPassword tempPasswordExpiry"
             )
             .populate({
                 path: "blogs",
@@ -323,7 +362,7 @@ async function loginUser(req, res) {
         if (!checkExistingUser) {
             return res.status(400).json({
                 success: false,
-                message: "User does not exists",
+                message: "Invalid email or password",
             });
         }
 
@@ -333,9 +372,15 @@ async function loginUser(req, res) {
                 message: 'You\'ve already signed up with Google. Please use "Continue with Google" to sign in.',
             });
         }
+        // Add after finding user (line ~55)
+        if (!checkExistingUser.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Please verify your email before logging in",
+            });
+        }
         // user exists in DB -> verify password
         // if not same -> early return
-
         // to compare actual password of user & hashed password in DB -> use bcrypt
         const verifyPass = await bcrypt.compare(
             password,
@@ -346,22 +391,49 @@ async function loginUser(req, res) {
         if (!verifyPass) {
             return res.status(400).json({
                 success: false,
-                message: "Incorrect Password",
-            });
-        }
-
-        if (!checkExistingUser.isVerified) {
-            await sendVerificationMail(checkExistingUser);
-
-            return res.status(400).json({
-                success: false,
-                message: "Please verify your email",
+                message: "Incorrect password",
             });
         }
 
         // todo: password validation
         // #, a, A, 1, 6-20 chars
 
+        // If it's a temporary password
+        if (checkExistingUser.isTempPassword) {
+            if (Date.now() > checkExistingUser.tempPasswordExpiry) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Temporary password expired. Please request a new one.",
+                });
+            }
+
+            // generate token -> user login hone par
+            const token = generateToken({
+                id: checkExistingUser._id,
+                email: checkExistingUser.email,
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Login success with temporary password. Please reset immediately.",
+                user: {
+                    id: checkExistingUser._id,
+                    name: checkExistingUser.name,
+                    email: checkExistingUser.email,
+                    profilePic: checkExistingUser.profilePic,
+                    username: checkExistingUser.username,
+                    bio: checkExistingUser.bio,
+                    followers: checkExistingUser.followers,
+                    following: checkExistingUser.following,
+                    blogs: checkExistingUser.blogs,
+                    likedBlogs: checkExistingUser.likedBlogs,
+                    savedBlogs: checkExistingUser.savedBlogs,
+                    token,
+                },
+            });
+        }
+
+        // login using password set by the user
         // generate token -> user login hone par
         const token = generateToken({
             id: checkExistingUser._id,
@@ -515,7 +587,6 @@ async function updateUser(req, res) {
         const { id: userId } = req.params;
         const { name, username, bio, profilePic } = req.body;
 
-        console.log("body", req.body);
         const userImage = req.file;
         // console.log(userImage);
 
@@ -525,7 +596,6 @@ async function updateUser(req, res) {
         // agar user image ko delete karna chahe toh pehle hi pakad lo
         if (profilePic === "null" || profilePic === null) {
             if (user.profilePicId) {
-                console.log("hello2");
                 await cloudinaryDestroyImage(user.profilePicId);
                 user.profilePic = null;
                 user.profilePicId = null;
@@ -731,7 +801,13 @@ async function userSettings(req, res) {
 
         // find user
         const user = await User.findOne({ username });
-        console.log("user1", user);
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User does not exists",
+            });
+        }
 
         // update
         user.showLikedBlogs = showLiked;
@@ -739,15 +815,6 @@ async function userSettings(req, res) {
         user.showSavedBlogs = showSaved;
 
         await user.save();
-
-        console.log("user2", user);
-
-        if (!user) {
-            return res.status(400).json({
-                success: true,
-                message: "User does not exists",
-            });
-        }
 
         // success message
         return res.status(200).json({
@@ -776,7 +843,7 @@ async function resetUserPassword(req, res) {
         const { currentPassword, newPassword, confirmPassword } = req.body;
         const { id: userId } = req.params;
 
-        // 1. Basic validation - req.body empty check
+        //  Basic validation - req.body empty check
         if (!currentPassword || !newPassword || !confirmPassword) {
             return res.status(400).json({
                 success: false,
@@ -784,7 +851,7 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 2. Find user
+        //  Find user
         const user = await User.findById(userId).select("+password");
         if (!user) {
             return res.status(400).json({
@@ -793,7 +860,7 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 3. Google auth check
+        // Google auth check
         if (user.isGoogleAuth) {
             return res.status(400).json({
                 success: false,
@@ -801,7 +868,7 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 4. Check current password
+        // Check current password
         const isSamePassword = await bcrypt.compare(currentPassword, user.password);
         if (!isSamePassword) {
             return res.status(400).json({
@@ -810,7 +877,7 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 5. New password !== confirm password
+        // New password !== confirm password
         if (newPassword !== confirmPassword) {
             return res.status(400).json({
                 success: false,
@@ -818,7 +885,7 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 6. New password !== confirm password
+        // New password !== confirm password
         if (currentPassword === newPassword) {
             return res.status(400).json({
                 success: false,
@@ -826,18 +893,24 @@ async function resetUserPassword(req, res) {
             });
         }
 
-        // 7. Password strength check
+        //  Password strength check
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,20}$/;
         if (!passwordRegex.test(newPassword)) {
             return res.status(400).json({
                 success: false,
-                message: "Password must be 6-20 characters long, include at least one uppercase, one lowercase, one number, and one special character."
+                message: "Password must be 6-20 characters long, include at least one uppercase, one lowercase, one number, and one special character.",
             });
         }
 
-        // 8. Hash & update
+        // Hash & update
         const hashedPass = await bcrypt.hash(newPassword, 10);
-        await User.findByIdAndUpdate(userId, { password: hashedPass }, { new: true });
+        await User.findByIdAndUpdate(
+            userId, {
+                password: hashedPass,
+                isTempPassword: false,
+                tempPasswordExpiry: null,
+            }, { new: true }
+        );
 
         return res.status(200).json({
             success: true,
@@ -853,7 +926,81 @@ async function resetUserPassword(req, res) {
     }
 }
 
+// forget user password
+async function forgetUserPassword(req, res) {
+    try {
+        const { email } = req.body;
 
+        // Basic validation - req.body empty check
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is empty",
+            });
+        }
+
+        // email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter a valid email address",
+            });
+        }
+
+        // Find user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: "We've sent password reset instructions to your email if it's registered with us.",
+            });
+        }
+
+        // Google auth check
+        if (user.isGoogleAuth) {
+            return res.status(400).json({
+                success: false,
+                message: "You are already authenticated via Google",
+            });
+        }
+
+        // not verified email
+        if (!user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: "Please verify your email first",
+            });
+        }
+
+        // abb mail bhej do
+        const randPassword = await sendForgetPasswordEmail(user);
+
+        // hash the password
+        const hashedPassword = await bcrypt.hash(randPassword, 10);
+
+        // update
+        await User.findOneAndUpdate({ email }, {
+            password: hashedPassword,
+            isTempPassword: true,
+            tempPasswordExpiry: Date.now() + 5 * 60 * 1000,
+        });
+
+        // console.log(randPassword)
+
+        return res.status(200).json({
+            success: true,
+            message: "Temporary password sent to your email. Please reset after login.",
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: "Error generating temporary password",
+            error: error.message,
+        });
+    }
+}
 
 module.exports = {
     getUser,
@@ -868,4 +1015,5 @@ module.exports = {
     followCreator,
     userSettings,
     resetUserPassword,
+    forgetUserPassword,
 };

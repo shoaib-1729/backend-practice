@@ -2,7 +2,7 @@ const express = require("express");
 const upload = require("../utils/multer.js");
 const router = express.Router();
 const verifyUser = require("../middlewares/auth.js");
-const { getUser, getUserById, createUser, checkUsernameAvailability, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator, userSettings, resetUserPassword } = require("../controllers/userController.js")
+const { getUser, getUserById, createUser, checkUsernameAvailability, updateUser, deleteUser, loginUser, verifyEmail, googleAuth, followCreator, userSettings, resetUserPassword, forgetUserPassword } = require("../controllers/userController.js")
 
 // get users
 router.get("/users", getUser);
@@ -18,7 +18,10 @@ router.post("/signin", loginUser);
 
 
 // reset password
-router.put("/users/reset-password/:id", verifyUser, resetUserPassword);
+router.put("/auth/reset-password/:id", verifyUser, resetUserPassword);
+
+// forget password
+router.put("/auth/forget-password", forgetUserPassword);
 
 // update users
 router.patch("/users/:id", verifyUser, upload.single("profilePic"), updateUser);

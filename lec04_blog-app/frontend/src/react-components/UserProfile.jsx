@@ -129,6 +129,11 @@ const UserProfile = () => {
               </p>
             </div>
 
+            {/* Username */}
+            <p className="text-base text-gray-600 font-mono mt-1">
+    {userData?.username}
+  </p>
+
             {/* Bio */}
             {userData?.bio ? (
               <p className="text-sm text-gray-600 leading-relaxed max-w-sm mx-auto mb-6">

@@ -1,5 +1,6 @@
 const { generateToken } = require("../utils/generateToken.js");
 const transporter = require("../utils/mailTransporter.js");
+const randomPasswordGenerator = require("./randomPasswordGenerator.js");
 require("dotenv").config();
 
 
@@ -24,4 +25,25 @@ async function sendVerificationEmail(user) {
     });
 }
 
-module.exports = sendVerificationEmail;
+async function sendForgetPasswordEmail(user) {
+    const { email } = user;
+
+    const randPass = randomPasswordGenerator()
+
+    // send email
+    await transporter.sendMail({
+        from: process.env.MAIL_USER,
+        to: email,
+        subject: "Your New Temporary Password",
+        text: "Check your email for new password",
+        html: `
+     <h1>Here is your temporary password: ${randPass}</h1>
+            <p>Please change it after login..</p>
+            <p>This link will expire in 5 minutes.</p>
+      `,
+    });
+
+    return randPass;
+}
+
+module.exports = { sendVerificationEmail, sendForgetPasswordEmail };

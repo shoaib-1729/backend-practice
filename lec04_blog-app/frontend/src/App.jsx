@@ -15,6 +15,7 @@ import UserProfileBlogList from "./react-components/UserProfileBlogList";
 import SidebarBlogList from "./react-components/SidebarBlogList";
 import SettingPage from "./pages/SettingPage";
 import ResetPassword from "./react-components/ResetPassword";
+import ForgetPassword from "./react-components/ForgetPassword";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
@@ -30,8 +31,8 @@ function App() {
       return true;
     }
     
-    // Check if path starts with /reset-password
-    if (pathname.startsWith("/reset-password")) {
+    // Check if path starts with /reset-password or /forget-password
+    if (pathname.startsWith("/reset-password") || pathname.startsWith("/forget-password") ) {
       return true;
     }
     
@@ -79,6 +80,12 @@ function App() {
               <ProtectedRoute>
                 <ResetPassword />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/forget-password"
+            element={
+                <ForgetPassword />
             }
           />
           <Route
