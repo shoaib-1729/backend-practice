@@ -3,6 +3,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+let isInitialized = false;
+
 try {
     const serviceAccountString = process.env.FIREBASE_ADMIN_CONFIG;
 
@@ -13,17 +15,35 @@ try {
     // Parse the stringified JSON from .env
     const serviceAccount = JSON.parse(serviceAccountString);
 
-    // Initialize Firebase Admin with proper key formatting
+    // Handle private key formatting
+    let privateKey = serviceAccount.private_key;
+    if (privateKey) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+    } else {
+        throw new Error("private_key is missing from service account");
+    }
+
+    // Initialize Firebase Admin
     admin.initializeApp({
         credential: admin.credential.cert({
-            ...serviceAccount,
-            private_key: serviceAccount.private_key.replace(/\\n/g, '\n'),
-        }),
+            projectId: serviceAccount.project_id,
+            clientEmail: serviceAccount.client_email,
+            privateKey: privateKey
+        })
     });
 
+    isInitialized = true;
 
 } catch (error) {
-    console.error("🔥 Firebase Admin Init Error:", error.message);
+    console.error("Firebase Admin Init Error:", error.message);
+
+    if (error instanceof SyntaxError) {
+        console.error("JSON parse error - invalid JSON format");
+    }
 }
 
-module.exports = admin;
+// Export a function to check if Firebase is initialized
+module.exports = {
+    admin,
+    isInitialized: () => isInitialized
+};

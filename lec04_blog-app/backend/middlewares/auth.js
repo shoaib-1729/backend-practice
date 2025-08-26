@@ -1,60 +1,87 @@
 const { validToken } = require("../utils/generateToken")
 
 async function verifyUser(req, res, next) {
-    // try-catch mei error handling karo  -> server chalta rehna chahiye 
     try {
-        // token verify
-        // extract token from headers
-        let token = req.headers.authorization.split(" ")[1];
-        // console.log("Token:", token);
-
-        // if token is not there -> early return
-        if (!token) {
-            res.status(400).json({
+        // Check if authorization header exists
+        if (!req.headers.authorization) {
+            return res.status(401).json({
                 "success": false,
-                "message": "Please Sign in"
+                "message": "Authorization header missing"
             })
         }
 
-        // if token is there -> check token validity
+        // Extract token from headers
+        const authHeader = req.headers.authorization;
+        console.log("Auth Header:", authHeader);
+
+        // Check if header has Bearer format
+        if (!authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({
+                "success": false,
+                "message": "Invalid token format. Use Bearer <token>"
+            })
+        }
+
+        const token = authHeader.split(" ")[1];
+        console.log("Extracted Token:", token);
+        console.log("Token Length:", token.length);
+
+        // Check if token exists after split
+        if (!token) {
+            return res.status(401).json({
+                "success": false,
+                "message": "Token not provided"
+            })
+        }
+
         try {
-            const userData = validToken(token)
-                // if userData not there -> early return
+            // Debug: Log before validToken call
+            console.log("Calling validToken with:", token.substring(0, 20) + "...");
+
+            const userData = validToken(token);
+            console.log("validToken returned:", userData);
+
+            // Check userData
             if (!userData) {
-                res.status(400).json({
+                return res.status(401).json({
                     "success": false,
-                    "message": "Please Sign in"
+                    "message": "Invalid or expired token"
                 })
             }
 
-            // set user id extracted via token to custom request property
+            // Check if userData has required properties
+            if (!userData.id) {
+                console.log("userData structure:", JSON.stringify(userData, null, 2));
+                return res.status(401).json({
+                    "success": false,
+                    "message": "Invalid token payload - missing user ID"
+                })
+            }
+
+            // Set user data to request
             req.user = userData.id;
+            console.log("User ID set to req.user:", req.user);
 
-            // if token valid -> call controller
-            next()
+            // Call next middleware
+            next();
 
-        } catch (err) {
-            res.status(500).json({
+        } catch (tokenError) {
+            console.error("Token validation error:", tokenError);
+            return res.status(401).json({
                 "success": false,
-                "message": "Error verifying user",
-                "error": err.message
+                "message": "Token validation failed",
+                "error": tokenError.message
             })
-
         }
+
     } catch (error) {
-        res.status(500).json({
+        console.error("Middleware error:", error);
+        return res.status(500).json({
             "success": false,
-            "message": "Token missing",
+            "message": "Internal server error in auth middleware",
             "error": error.message
         })
     }
-
-
-
-    // pass control to next function
-    // valid user -> next, otherwise -> early return
-    // next();
-
 }
 
 module.exports = verifyUser;

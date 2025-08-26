@@ -10,8 +10,6 @@ async function sendVerificationEmail(user) {
     // generate JWT token
     const verificationToken = generateToken({ id: _id, email });
 
-    console.log(email)
-
     // send email
     await transporter.sendMail({
         from: process.env.MAIL_USER,

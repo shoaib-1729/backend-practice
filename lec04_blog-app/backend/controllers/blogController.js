@@ -61,17 +61,18 @@ async function getBlogById(req, res) {
             })
             .populate({
                 path: "comments",
+                //  select: "likedBy",
                 // populate user inside comments (nested populate)
                 // populating user because username is required for displaying above the comment
                 populate: {
-                    path: "user",
-                    select: "name email",
+                    path: "user likedBy",
+                    select: "name email profilePic",
                 },
             })
             .lean()
             .sort({ createdAt: -1 });
 
-        console.log(blog);
+        // console.log(blog);
 
         async function populateReplies(comments) {
             for (const comment of comments) {
@@ -127,7 +128,7 @@ async function createBlog(req, res) {
         const tag = JSON.parse(req.body.tag);
 
         // console.log(tag);
-        console.log(draft);
+        // console.log(draft);
 
         const { image, images } = req.files;
 
@@ -269,8 +270,8 @@ async function updateBlog(req, res) {
         const { title, description } = req.body;
         const draft = req.body.draft === "true" ? true : false;
 
-        console.log("Request body:", req.body);
-        console.log("Files:", req.files);
+        // console.log("Request body:", req.body);
+        // console.log("Files:", req.files);
 
         // Add validation and error handling for JSON parsing
         let tag, content, existingImages;

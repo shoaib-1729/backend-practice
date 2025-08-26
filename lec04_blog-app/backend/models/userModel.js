@@ -20,8 +20,11 @@ const userSchema = mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        unique: true,
+        // required: true,
+        required: function() {
+            return !this.isGoogleAuth; // google se aaye users ke liye password required nahi
+        },
+        // unique: true,
         select: false,
     },
     isTempPassword: {

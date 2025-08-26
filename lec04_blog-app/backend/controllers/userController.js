@@ -7,7 +7,7 @@ const {
     sendVerificationMail,
     sendForgetPasswordEmail,
 } = require("../utils/emailService.js");
-const { getAuth } = require("firebase-admin/auth");
+const { admin, isInitialized } = require("../config/firebase-admin.js");
 const { v4: uuidv4 } = require("uuid");
 const {
     cloudinaryImageUpload,
@@ -60,9 +60,8 @@ async function getUserById(req, res) {
             })
             .populate({
                 path: "followers following",
-                select: "name username email",
-            })
-            .select("-email -__v");
+                select: "name username email profilePic",
+            });
         // get the users
         return res.json({
             success: true,
@@ -103,7 +102,6 @@ async function createUser(req, res) {
                 message: "Please enter the password",
             });
         }
-
 
         // email and passwprd validation
         // Email format validation
@@ -184,123 +182,7 @@ async function createUser(req, res) {
     }
 }
 
-async function verifyEmail(req, res) {
-    try {
-        const { verificationToken } = req.params;
-
-        const verifyToken = validToken(verificationToken);
-
-        if (!verifyToken) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid Token/Email expired",
-            });
-        }
-        const { id } = verifyToken;
-
-        const user = await User.findByIdAndUpdate(
-            id, { isVerified: true }, { new: true }
-        );
-
-        if (!user) {
-            return res.status(400).json({
-                success: false,
-                message: "User Not Exists",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: "Email verified successfully",
-        });
-    } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Please try again",
-            error: err.message,
-        });
-    }
-}
-
-// google auth
-async function googleAuth(req, res) {
-    try {
-        const { accessToken } = req.body;
-
-        // check token validity
-        const response = await getAuth().verifyIdToken(accessToken);
-
-        // user ka data nikalo
-        const { name, email } = response;
-
-        // user exists karta hai
-        const user = await User.findOne({ email });
-
-        // handle validations
-        if (user) {
-            if (user.isGoogleAuth) {
-                // already registered via google auth
-                let token = generateToken({
-                    email: user.email,
-                    id: user._id,
-                });
-
-                return res.status(200).json({
-                    success: true,
-                    message: "Logged in successfully",
-                    user: {
-                        id: user._id,
-                        name: user.name,
-                        email: user.email,
-                        token,
-                    },
-                });
-            } else {
-                return res.status(400).json({
-                    success: true,
-                    message: "This email is already registered using a password. Please log in using the login form.",
-                });
-            }
-        }
-
-        // username generation for google users 
-        const username = email.split("@")[0] + uuidv4().substring(0, 6);
-
-        // user nhi hai toh banao
-        let newUser = await User.create({
-            name,
-            email,
-            username,
-            isVerified: true,
-            isGoogleAuth: true,
-        });
-
-        // generate token
-        let token = generateToken({
-            email: newUser.email,
-            id: newUser._id,
-        });
-
-        return res.status(200).json({
-            success: true,
-            message: "Registration successful! You’ve signed up using your Google account.",
-            user: {
-                id: newUser._id,
-                name: newUser.name,
-                email: newUser.email,
-                token,
-            },
-        });
-    } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Please try again",
-            error: err.message,
-        });
-    }
-}
-
-// login
+// signin
 async function loginUser(req, res) {
     const { email, password } = req.body;
 
@@ -466,6 +348,172 @@ async function loginUser(req, res) {
             success: false,
             message: "Error logging user",
             error: error.message,
+        });
+    }
+}
+
+async function verifyEmail(req, res) {
+    try {
+        const { verificationToken } = req.params;
+
+        const verifyToken = validToken(verificationToken);
+
+        if (!verifyToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Token/Email expired",
+            });
+        }
+        const { id } = verifyToken;
+
+        const user = await User.findByIdAndUpdate(
+            id, { isVerified: true }, { new: true }
+        );
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "User Not Exists",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Email verified successfully",
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Please try again",
+            error: err.message,
+        });
+    }
+}
+
+// google auth
+async function googleAuth(req, res) {
+    try {
+        if (!isInitialized()) {
+            return res.status(500).json({
+                success: false,
+                message: "Server configuration error. Please try again later.",
+            });
+        }
+
+        const { accessToken } = req.body;
+
+        if (!accessToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Access token is required",
+            });
+        }
+
+        // Verify the token using Firebase Admin
+        const decodedToken = await admin.auth().verifyIdToken(accessToken);
+
+        // The correct way to extract user info:
+        const userName =
+            decodedToken.name ||
+            decodedToken.given_name + " " + decodedToken.family_name;
+        const userEmail = decodedToken.email;
+
+        // user exists karta hai
+        const user = await User.findOne({ email: userEmail })
+            .select(
+                "name bio email username followers following password isVerified isGoogleAuth blogs savedBlogs likedBlogs"
+            )
+            .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            })
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            });
+
+        // handle validations
+        if (user) {
+            if (user.isGoogleAuth) {
+                // already registered via google auth
+                let token = generateToken({
+                    email: user.email,
+                    id: user._id,
+                });
+
+                return res.status(200).json({
+                    success: true,
+                    message: "Logged in successfully",
+                    user: {
+                        id: user._id,
+                        name: user.name,
+                        email: user.email,
+                        username: user.username,
+                        profilePic: user.profilePic,
+                        bio: user.bio,
+                        followers: user.followers,
+                        following: user.following,
+                        blogs: user.blogs,
+                        likedBlogs: user.likedBlogs,
+                        savedBlogs: user.savedBlogs,
+                        token,
+                    },
+                });
+            } else {
+                return res.status(400).json({
+                    success: false, // Changed to false for error
+                    message: "This email is already registered using a password. Please log in using the login form.",
+                });
+            }
+        }
+
+        // username generation for google users
+        const username = userEmail.split("@")[0] + uuidv4().substring(0, 6);
+
+        let newUser = await User.create({
+            name: userName,
+            email: userEmail,
+            username,
+            isVerified: true,
+            isGoogleAuth: true,
+        });
+
+        // generate token
+        let token = generateToken({
+            email: newUser.email,
+            id: newUser._id,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Registration successful! You've signed up using your Google account.",
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                username: newUser.username,
+                token,
+            },
+        });
+    } catch (err) {
+        console.error("Google Auth Error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Please try again",
+            error: err.message,
         });
     }
 }
@@ -766,10 +814,36 @@ async function followCreator(req, res) {
             action = "unfollowed";
         }
 
-        // 🟢 Fetch updated user
+        // Fetch updated user
         const updatedUser = await User.findById(userId)
-            .select("-password -__v -email")
-            .populate("following", "name username");
+            .select(
+                "name email bio blogs followers following username profilePic likedBlogs savedBlog"
+            )
+            .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            })
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username email",
+                },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
+            });
 
         // dynamic message
         const message =

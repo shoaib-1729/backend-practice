@@ -38,7 +38,7 @@ router.get("/verify-email/:verificationToken", verifyEmail)
 // google auth route
 router.post("/google-auth", googleAuth)
 
-// follow blog creator 
+// follow blog creator
 router.patch("/follow/:creatorId", verifyUser, followCreator)
 
 // user settings
