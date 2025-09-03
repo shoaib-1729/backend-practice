@@ -20,7 +20,8 @@ import { setIsOpen } from "../utils/commentSlice";
 import { handleSaveBlog, handleFollowCreator } from "../utils/helperFunc";
 import DeleteConfirmation from "../react-components/DeleteConfirmation";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+// Light theme
+import { prism } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { updateUser } from "../utils/userSlice";
 
 const BlogPage = () => {
@@ -97,14 +98,118 @@ const BlogPage = () => {
     ));
   };
 
-  const renderCodeBlock = (code) => (
-    <div className="mb-6">
-      <SyntaxHighlighter language="javascript" style={vscDarkPlus}>
+  // Enhanced code block renderer with language detection
+const detectLanguage = (code) => {
+  if (!code || typeof code !== 'string') return 'text';
+  
+  const codeToCheck = code.toLowerCase().trim();
+  
+  // JavaScript/TypeScript patterns
+  if (codeToCheck.includes('function') || 
+      codeToCheck.includes('const ') || 
+      codeToCheck.includes('let ') ||
+      codeToCheck.includes('var ') ||
+      codeToCheck.includes('=>') ||
+      codeToCheck.includes('console.log') ||
+      codeToCheck.includes('import ') && codeToCheck.includes('from')) {
+    return 'javascript';
+  }
+  
+  // Python patterns
+  if (codeToCheck.includes('def ') || 
+      codeToCheck.includes('import ') && !codeToCheck.includes('from') ||
+      codeToCheck.includes('print(') ||
+      codeToCheck.includes('if __name__') ||
+      /^\s*(class|def)\s+\w+/m.test(codeToCheck)) {
+    return 'python';
+  }
+  
+  // HTML patterns
+  if (codeToCheck.includes('<html') || 
+      codeToCheck.includes('<div') ||
+      codeToCheck.includes('<head>') ||
+      codeToCheck.includes('<!doctype')) {
+    return 'html';
+  }
+  
+  // CSS patterns
+  if (codeToCheck.includes('{') && codeToCheck.includes('}') && 
+      (codeToCheck.includes(':') || 
+       codeToCheck.includes('.') || 
+       codeToCheck.includes('#') ||
+       codeToCheck.includes('@media'))) {
+    return 'css';
+  }
+  
+  // Java patterns
+  if (codeToCheck.includes('public class') || 
+      codeToCheck.includes('public static void main') ||
+      codeToCheck.includes('System.out.println')) {
+    return 'java';
+  }
+  
+  // C/C++ patterns
+  if (codeToCheck.includes('#include') || 
+      codeToCheck.includes('int main()') ||
+      codeToCheck.includes('printf(')) {
+    return 'c';
+  }
+  
+  // JSON pattern
+  if (codeToCheck.startsWith('{') && codeToCheck.endsWith('}') && 
+      codeToCheck.includes(':') && codeToCheck.includes('"')) {
+    return 'json';
+  }
+  
+  // SQL patterns
+  if (codeToCheck.includes('select ') || 
+      codeToCheck.includes('insert into') ||
+      codeToCheck.includes('create table') ||
+      codeToCheck.includes('update ')) {
+    return 'sql';
+  }
+  
+  // Default fallback
+  return 'text';
+};
+
+const renderCodeBlock = (code, specifiedLanguage = null) => {
+  if (!code) return null;
+  
+  // Priority: specified language > auto-detected > fallback
+  const detectedLanguage = detectLanguage(code);
+  const language = specifiedLanguage || detectedLanguage;
+  
+  return (
+    <div className="mb-6 rounded-xl overflow-hidden border border-gray-200">
+      {/* Language indicator */}
+      <div className="bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 border-b border-gray-200">
+        {language === 'text' ? 'Code' : language.toUpperCase()}
+      </div>
+      
+      <SyntaxHighlighter 
+        language={language}
+        style={prism}
+        showLineNumbers={true}
+        wrapLines={true}
+        customStyle={{
+          margin: 0,
+          padding: '16px 20px',
+          backgroundColor: '#f8f9fa',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+          color: '#333',
+          border: 'none'
+        }}
+      >
         {code}
       </SyntaxHighlighter>
     </div>
   );
+};
 
+// fetch blog using id
   async function fetchBlog() {
     try {
       const {

@@ -40,6 +40,7 @@ const AuthForm = ({ type }) => {
       }
 
       const idToken = await userData.getIdToken();
+      console.log("access token",idToken)
 
       // yeh data backend ko bhejna hoga
       const res = await axios.post(
@@ -48,6 +49,7 @@ const AuthForm = ({ type }) => {
           accessToken: idToken,
         }
       );
+
 
       dispatch(login(res.data.user));
 

@@ -16,31 +16,49 @@ import SidebarBlogList from "./react-components/SidebarBlogList";
 import SettingPage from "./pages/SettingPage";
 import ResetPassword from "./react-components/ResetPassword";
 import ForgetPassword from "./react-components/ForgetPassword";
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
+// import { useTheme } from "./hooks/useTheme";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
   const location = useLocation();
 
+const { mode } = useSelector((state) => state.theme);
+
   // Function to check if navbar should be hidden
   const shouldHideNavbar = () => {
     const hiddenRoutes = ["/add-blog", "/signin", "/signup"];
     const pathname = location.pathname;
-    
+
     // Check exact matches
     if (hiddenRoutes.includes(pathname)) {
       return true;
     }
-    
+
     // Check if path starts with /reset-password or /forget-password
-    if (pathname.startsWith("/reset-password") || pathname.startsWith("/forget-password") ) {
+    if (
+      pathname.startsWith("/reset-password") ||
+      pathname.startsWith("/forget-password")
+    ) {
       return true;
     }
-    
+
     return false;
   };
 
+ useEffect(() => {
+  const html = document.documentElement;
+  if (mode === "dark") {
+    html.classList.add("dark");
+  } else {
+    html.classList.remove("dark");
+  }
+  localStorage.setItem("theme", mode);
+}, [mode]);
+
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white text-black dark:bg-black dark:text-white">
       {/* Navbar stays at the top */}
       {/* add-blog, signin, signup, reset-password routes par navbar matt dikhao */}
       {!shouldHideNavbar() && <Navbar />}
@@ -82,12 +100,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/forget-password"
-            element={
-                <ForgetPassword />
-            }
-          />
+          <Route path="/forget-password" element={<ForgetPassword />} />
           <Route
             path="/:username"
             element={
@@ -137,7 +150,7 @@ function App() {
               }
             />
           </Route>
-          
+
           <Route
             path="/:username/bloglist/liked"
             element={

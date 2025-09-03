@@ -13,7 +13,7 @@ const HomePage = () => {
   const { token, username, savedBlogs, likedBlogs } = useSelector(
     (state) => state.user
   );
-  console.log(savedBlogs);
+  // console.log(savedBlogs);
 
   const { data, hasMoreBlogs } = usePagination(
     "blogs",
@@ -27,8 +27,9 @@ const HomePage = () => {
   // saare tag nikaalo savedBlogs mei se, duplicate hata do
   const recommendedTags = Array.from(
     new Set(
-      (savedBlogs || [])
-        .filter((blog) => blog?.tag) // null/undefined blog skip karo
+      (data || savedBlogs || likedBlogs || [])
+        .filter((blog) => blog?.tag)
+        // null/undefined blog skip karo
         .flatMap((blog) => blog.tag)
     )
   );
@@ -75,17 +76,92 @@ const HomePage = () => {
           </div>
 
           {/* Saved Blogs */}
-          <div>
-            <h2 className="text-md font-semibold text-gray-800 mb-4">
-              Your Saved Blogs
-            </h2>
+          {savedBlogs?.length > 0 && (
+            <div>
+              <h2 className="text-md font-semibold text-gray-800 mb-4">
+                Your Saved Blogs
+              </h2>
 
-            {savedBlogs?.length === 0 ? (
-              <p className="text-gray-500 text-sm">No saved blogs yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {(savedBlogs || []).slice(0, 3).map((blog) =>
-                  blog ? (
+              {savedBlogs?.length === 0 ? (
+                <p className="text-gray-500 text-sm">No saved blogs yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {(savedBlogs || [])?.slice(0, 3).map((blog) =>
+                    blog ? (
+                      <div
+                        key={blog._id}
+                        className="flex items-start gap-3 hover:bg-gray-50 p-2 rounded-md transition"
+                      >
+                        {/* Thumbnail */}
+                        {blog.image && (
+                          <Link to={`/blog/${blog.blogId}`}>
+                            <img
+                              src={blog.image}
+                              alt={blog.title}
+                              className="w-16 h-16 rounded-md object-cover"
+                            />
+                          </Link>
+                        )}
+
+                        {/* Blog Info */}
+                        <div className="flex flex-col justify-between flex-1">
+                          {/* Creator info */}
+                          <Link
+                            to={`/@${blog?.creator?.username}`}
+                            className="flex items-center gap-2 text-sm text-gray-700 hover:underline font-medium"
+                          >
+                            <img
+                              src={
+                                blog?.creator?.profilePic
+                                  ? blog?.creator?.profilePic
+                                  : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
+                              }
+                              alt="avatar"
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
+                            {blog?.creator?.name}
+                          </Link>
+
+                          {/* Blog title and meta */}
+                          <Link to={`/blog/${blog.blogId}`} className="mt-1">
+                            <h3 className="text-sm font-extrabold text-gray-900 leading-snug">
+                              {blog.title}
+                            </h3>
+
+                            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                              <span className="text-yellow-500">★</span>
+                              <span>{formatDate(blog.createdAt)}</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+
+                  {/* view all */}
+                  <Link
+                    to={`/@${username}/bloglist/saved`}
+                    className="text-sm font-semibold text-gray-500 hover:underline mt-2 block"
+                  >
+                    See All ({savedBlogs?.length})
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Liked Blogs */}
+          {likedBlogs?.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-md font-semibold text-gray-800 mb-4">
+                Your Liked Blogs
+              </h2>
+
+              {likedBlogs?.length === 0 ? (
+                <p className="text-gray-500 text-sm">No liked blogs yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {likedBlogs?.slice(0, 3).map((blog) => (
                     <div
                       key={blog._id}
                       className="flex items-start gap-3 hover:bg-gray-50 p-2 rounded-md transition"
@@ -111,7 +187,7 @@ const HomePage = () => {
                           <img
                             src={
                               blog?.creator?.profilePic
-                                ? blog?.creator?.profilePic
+                                ? blog?.creator.profilePic
                                 : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
                             }
                             alt="avatar"
@@ -133,90 +209,19 @@ const HomePage = () => {
                         </Link>
                       </div>
                     </div>
-                  ) : null
-                )}
+                  ))}
 
-                {/* view all */}
-                <Link
-                  to={`/@${username}/bloglist/saved`}
-                  className="text-sm font-semibold text-gray-500 hover:underline mt-2 block"
-                >
-                  See All ({savedBlogs?.length})
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Liked Blogs */}
-          <div className="mt-10">
-            <h2 className="text-md font-semibold text-gray-800 mb-4">
-              Your Liked Blogs
-            </h2>
-
-            {likedBlogs?.length === 0 ? (
-              <p className="text-gray-500 text-sm">No liked blogs yet.</p>
-            ) : (
-              <div className="space-y-4">
-                {likedBlogs.slice(0, 3).map((blog) => (
-                  <div
-                    key={blog._id}
-                    className="flex items-start gap-3 hover:bg-gray-50 p-2 rounded-md transition"
+                  {/* view all  */}
+                  <Link
+                    to={`/@${username}/bloglist/liked`}
+                    className="text-sm font-semibold text-gray-500 hover:underline mt-2 block"
                   >
-                    {/* Thumbnail */}
-                    {blog.image && (
-                      <Link to={`/blog/${blog.blogId}`}>
-                        <img
-                          src={blog.image}
-                          alt={blog.title}
-                          className="w-16 h-16 rounded-md object-cover"
-                        />
-                      </Link>
-                    )}
-
-                    {/* Blog Info */}
-                    <div className="flex flex-col justify-between flex-1">
-                      {/* Creator info */}
-                      <Link
-                        to={`/@${blog?.creator?.username}`}
-                        className="flex items-center gap-2 text-sm text-gray-700 hover:underline font-medium"
-                      >
-                        <img
-                          src={
-                            blog?.creator?.profilePic
-                              ? blog?.creator.profilePic
-                              : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
-                          }
-                          alt="avatar"
-                          className="w-5 h-5 rounded-full object-cover"
-                        />
-                        {blog?.creator?.name}
-                      </Link>
-
-                      {/* Blog title and meta */}
-                      <Link to={`/blog/${blog.blogId}`} className="mt-1">
-                        <h3 className="text-sm font-extrabold text-gray-900 leading-snug">
-                          {blog.title}
-                        </h3>
-
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                          <span className="text-yellow-500">★</span>
-                          <span>{formatDate(blog.createdAt)}</span>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-
-                {/* view all  */}
-                <Link
-                  to={`/@${username}/bloglist/liked`}
-                  className="text-sm font-semibold text-gray-500 hover:underline mt-2 block"
-                >
-                  See All ({likedBlogs?.length})
-                </Link>
-              </div>
-            )}
-          </div>
+                    See All ({likedBlogs?.length})
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
         </aside>
       </div>
     </div>

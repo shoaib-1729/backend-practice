@@ -60,10 +60,6 @@ const AddBlog = () => {
     }
   };
 
-  // useEffect(() => {
-  //   console.log("🎯 Tag updated:", blogData.tag);
-  // }, [blogData.tag]);
-
   useEffect(() => {
     if (id) {
       setBlogData({
@@ -216,7 +212,8 @@ const AddBlog = () => {
       }
     });
 
-    console.log(blogData)
+    // console.log(blogData)
+
 
     try {
       e.preventDefault();

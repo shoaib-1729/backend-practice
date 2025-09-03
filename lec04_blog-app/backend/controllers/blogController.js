@@ -743,29 +743,134 @@ async function saveBlog(req, res) {
     }
 }
 
+// async function fetchSearchedBlog(req, res) {
+//     try {
+//         const { q } = req.query;
+
+//         const words = q.split(" ");
+
+//         const regexQueries = words.map((word) => ({
+//             $or: [
+//                 { title: { $regex: word, $options: "i" } },
+//                 { description: { $regex: word, $options: "i" } },
+//                 { tag: { $regex: word, $options: "i" } },
+//             ],
+//         }));
+
+//         const pageNo = Number(req.query.pageNo);
+//         const limit = Number(req.query.limit);
+//         const skip = (pageNo - 1) * limit;
+
+//         const blogs = await Blog.find({ $or: regexQueries }, { draft: false })
+//             .skip(skip)
+//             .limit(limit);
+
+//         const totalBlogs = await Blog.countDocuments({ $or: regexQueries }, { draft: false });
+//         const hasMoreBlogs = totalBlogs > skip + limit;
+
+//         return res.status(200).json({
+//             success: true,
+//             message: "Blog fetched successfully",
+//             blogs,
+//             blogCount: totalBlogs,
+//             hasMoreBlogs,
+//         });
+//     } catch (err) {
+//         return res.status(500).json({
+//             success: false,
+//             message: "Error searching blog",
+//             error: err.message,
+//         });
+//     }
+// }
+
 async function fetchSearchedBlog(req, res) {
     try {
         const { q } = req.query;
-
-        const words = q.split(" ");
-
-        const regexQueries = words.map((word) => ({
-            $or: [
-                { title: { $regex: word, $options: "i" } },
-                { description: { $regex: word, $options: "i" } },
-                { tag: { $regex: word, $options: "i" } },
-            ],
-        }));
+        const searchTerm = q.trim();
 
         const pageNo = Number(req.query.pageNo);
         const limit = Number(req.query.limit);
         const skip = (pageNo - 1) * limit;
 
-        const blogs = await Blog.find({ $or: regexQueries }, { draft: false })
-            .skip(skip)
-            .limit(limit);
+        const blogs = await Blog.aggregate([
+            // First lookup creator data
+            {
+                $lookup: {
+                    from: "users", // User collection name (usually 'users')
+                    localField: "creator",
+                    foreignField: "_id",
+                    as: "creatorData"
+                }
+            },
+            { $unwind: "$creatorData" },
 
-        const totalBlogs = await Blog.countDocuments({ $or: regexQueries }, { draft: false });
+            // Then filter based on search term
+            {
+                $match: {
+                    $and: [
+                        { draft: false },
+                        {
+                            $or: [
+                                { title: { $regex: searchTerm, $options: "i" } },
+                                { description: { $regex: searchTerm, $options: "i" } },
+                                { tag: { $in: [new RegExp(searchTerm, "i")] } },
+                                { "creatorData.name": { $regex: searchTerm, $options: "i" } },
+                                { "creatorData.username": { $regex: searchTerm, $options: "i" } }
+                            ]
+                        }
+                    ]
+                }
+            },
+
+            // Rename creatorData back to creator for consistency
+            {
+                $addFields: {
+                    creator: {
+                        _id: "$creatorData._id",
+                        name: "$creatorData.name",
+                        username: "$creatorData.username",
+                        profilePic: "$creatorData.profilePic"
+                    }
+                }
+            },
+            { $unset: "creatorData" }, // Remove temporary field
+
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+        ]);
+
+        // Count total matching documents
+        const totalBlogsAggregate = await Blog.aggregate([{
+                $lookup: {
+                    from: "users",
+                    localField: "creator",
+                    foreignField: "_id",
+                    as: "creatorData"
+                }
+            },
+            { $unwind: "$creatorData" },
+            {
+                $match: {
+                    $and: [
+                        { draft: false },
+                        {
+                            $or: [
+                                { title: { $regex: searchTerm, $options: "i" } },
+                                { description: { $regex: searchTerm, $options: "i" } },
+                                { tag: { $in: [new RegExp(searchTerm, "i")] } },
+                                { "creatorData.name": { $regex: searchTerm, $options: "i" } },
+                                { "creatorData.username": { $regex: searchTerm, $options: "i" } }
+                            ]
+                        }
+                    ]
+                }
+            },
+            { $count: "total" }
+        ]);
+
+        const totalBlogs = totalBlogsAggregate[0].total || 0;
         const hasMoreBlogs = totalBlogs > skip + limit;
 
         return res.status(200).json({
@@ -783,6 +888,9 @@ async function fetchSearchedBlog(req, res) {
         });
     }
 }
+
+
+
 
 // tag search controller
 async function fetchTaggedBlog(req, res) {

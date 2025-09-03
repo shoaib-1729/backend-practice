@@ -22,14 +22,14 @@ const UserProfile = () => {
   const [showDeleteDropdown, setShowDeleteDropdown] = useState(false);
   const navigate = useNavigate();
 
-  const { token, id: userId, profilePic } = useSelector((state) => state.user);
+  const { token, id: userId, profilePic, savedBlogs, likedBlogs, bio} = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const newName = username.split("@")[1];
+        const newName = username?.split("@")[1];
         const res = await axios.get(
           `${import.meta.env.VITE_BASE_URL}/users/${newName}`
         );
@@ -141,7 +141,7 @@ const UserProfile = () => {
               </p>
             ) : (
               <p className="text-sm text-gray-400 italic mb-6">
-                No bio added yet.
+              You can edit your profile to add your bio.
               </p>
             )}
 
@@ -191,7 +191,7 @@ const UserProfile = () => {
               </NavLink>
 
               {/* saved blog tab */}
-              {(userData._id === userId || userData?.showSavedBlogs) && (
+              {savedBlogs?.length > 0 && (userData._id === userId || userData?.showSavedBlogs) && (
                 <NavLink
                   to={`/${username}/saved-blogs`}
                   className={({ isActive }) =>
@@ -205,7 +205,7 @@ const UserProfile = () => {
               )}
 
               {/* liked blog tab */}
-              {(userData._id === userId || userData?.showLikedBlogs) && (
+              {likedBlogs?.length > 0 && (userData._id === userId || userData?.showLikedBlogs) && (
                 <NavLink
                   to={`/${username}/liked-blogs`}
                   className={({ isActive }) =>
@@ -309,7 +309,7 @@ const UserProfile = () => {
                   </p>
                 ) : (
                   <p className="text-sm text-gray-400 italic mb-4">
-                    No bio added yet.
+                    You can edit your profile to add your bio.
                   </p>
                 )}
 
@@ -389,7 +389,7 @@ const UserProfile = () => {
               </NavLink>
 
               {/* saved blog tab */}
-              {(userData._id === userId || userData?.showSavedBlogs) && (
+              {savedBlogs?.length > 0 && (userData._id === userId || userData?.showSavedBlogs) && (
                 <NavLink
                   to={`/${username}/saved-blogs`}
                   className={({ isActive }) =>
@@ -403,7 +403,7 @@ const UserProfile = () => {
               )}
 
               {/* liked blog tab */}
-              {(userData._id === userId || userData?.showLikedBlogs) && (
+              {likedBlogs?.length > 0 && (userData._id === userId || userData?.showLikedBlogs) && (
                 <NavLink
                   to={`/${username}/liked-blogs`}
                   className={({ isActive }) =>
@@ -431,7 +431,7 @@ const UserProfile = () => {
               )}
 
               {/* about tab */}
-              <NavLink
+              {bio && <NavLink
                 to="about"
                 className={({ isActive }) =>
                   isActive
@@ -440,7 +440,7 @@ const UserProfile = () => {
                 }
               >
                 About
-              </NavLink>
+              </NavLink>}
             </div>
           </div>
 
@@ -475,10 +475,10 @@ const UserProfile = () => {
                   </Link>
                 ))}
               </div>
-              {userData.following.length > 6 && (
+              {userData?.following?.length > 6 && (
                 <div className="mt-4 text-center">
                   <span className="text-sm text-gray-500 bg-gray-100 px-4 py-2 rounded-full">
-                    +{userData.following.length - 6} more following
+                    +{userData?.following?.length - 6} more following
                   </span>
                 </div>
               )}

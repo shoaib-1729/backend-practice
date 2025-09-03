@@ -54,35 +54,7 @@ export const usePagination = (
     fetchBlog();
   }, [JSON.stringify(queryParams), pageNo]);
 
-  // useEffect(() => {
-
-  //   async function fetchBlog() {
-  //   try {
-  //     const url =
-  //       path === "tag"
-  //         ? `${import.meta.env.VITE_BASE_URL}/tag/${tagName}`
-  //         : `${import.meta.env.VITE_BASE_URL}/${path}`;
-          
-  //     const res = await axios.get(url, {
-  //       params: { ...queryParams, pageNo, limit },
-  //     });
   
-  //     const blogs = res.data?.blogs;
-  //     if (Array.isArray(blogs)) {
-  //       setData((prev) => [...prev, ...blogs]);
-  //       setHasMoreBlogs(res.data.hasMoreBlogs);
-  //       setBlogCount(res.data.blogCount);
-  //     } else {
-  //       console.error("Unexpected blogs format:", res.data);
-  //       setData([]);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error fetching blog:", err);
-  //     setData([]);
-  //   }
-  // }
-  // fetchBlog()
-  // }, [JSON.stringify(queryParams), pageNo])
 
 
   return { data, blogCount, hasMoreBlogs };

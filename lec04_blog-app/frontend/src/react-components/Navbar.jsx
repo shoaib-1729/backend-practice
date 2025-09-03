@@ -7,6 +7,8 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../../public/logo.svg";
 import { logout } from "../utils/userSlice.js";
 import toast from "react-hot-toast";
+import { toggleTheme } from "../utils/themeSlice.js";
+// import { useTheme } from "../hooks/useTheme.jsx";
 
 const Navbar = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -19,6 +21,10 @@ const Navbar = () => {
   const popupRef = useRef();
   const dispatch = useDispatch();
   const location = useLocation();
+
+  // const { theme, toggleTheme } = useTheme();
+
+  const { mode } = useSelector((state) => state.theme);
 
   const { token, name, username, profilePic } = useSelector(
     (state) => state.user
@@ -77,7 +83,7 @@ const Navbar = () => {
   }, [location.pathname]);
 
   return (
-    <nav className="border-b drop-shadow-sm bg-white z-50 sticky top-0">
+    <nav className="border-b drop-shadow-sm bg-white text-black dark:bg-black dark:text-white z-50 sticky top-0">
       <div className="max-w-[90vw] mx-auto px-4 h-[60px] flex items-center justify-between">
         {/* Left: Logo */}
         <div className="flex items-center gap-4">
@@ -137,6 +143,18 @@ const Navbar = () => {
               <div className="absolute inset-0 bg-gray-300/15 group-hover:bg-gray-400/20 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200" />
             </div>
           )}
+
+          {/* Theme toggle button */}
+          <button
+            onClick={() => dispatch(toggleTheme())}
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"
+          >
+            {mode === "light" ? (
+              <i className="fi fi-br-moon text-lg" />
+            ) : (
+              <i className="fi fi-br-sun text-lg" />
+            )}
+          </button>
         </div>
 
         {/* Mobile Menu Toggle */}

@@ -2,7 +2,7 @@ import { Button } from "@/shadcn-components/ui/button";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsOpen } from "../utils/commentSlice";
-import { addNewComment, setCommentLike, setReplies, setUpdatedComments } from "../utils/selectedBlogSlice";
+import { addNewComment, deleteCommentAndReply, setCommentLike, setReplies, setUpdatedComments } from "../utils/selectedBlogSlice";
 import { useState } from "react";
 import axios from "axios";
 import { formatDate } from "../utils/formatDate";
@@ -147,7 +147,7 @@ const DisplayComments = (
       toast.success(res.data.message);
     } catch (err) {
       console.log(err);
-      toast.error(err.response.data.error);
+      toast.error(err?.response?.data?.message);
     }
   }
 
@@ -191,6 +191,7 @@ const DisplayComments = (
       );
       // TODO: dispatch karna hai
       toast.success(res.data.message);
+      dispatch(deleteCommentAndReply(commentId))
 
     } catch (err) {
       console.log(err);

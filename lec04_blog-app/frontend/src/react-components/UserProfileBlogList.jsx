@@ -19,7 +19,7 @@ const UserProfileBlogList = () => {
       <DisplayBlog data={userData?.blogs.filter((blog) => !blog?.draft)} />
     ) : (
       <p className="text-gray-500 italic">
-        This user hasn’t published any stories yet.
+        Write blog to publish your story.
       </p>
     );
   }

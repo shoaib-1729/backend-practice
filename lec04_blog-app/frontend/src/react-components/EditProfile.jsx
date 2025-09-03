@@ -203,7 +203,7 @@ const EditProfile = () => {
       if (res.status === 200) {
         toast.success(res.data.message);
         dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
-        navigate(-1);
+        navigate(`/@${res.data.user.username}`);
       }
     } catch (err) {
       toast.error(err.response?.data?.message || "Error updating user");
