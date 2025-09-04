@@ -59,7 +59,7 @@ const handleResetPassword = () => {
           },
         }
       );
-      console.log(res);
+      // console.log(res);
 
       //  redirect to home page
       if (res.status == 200) {

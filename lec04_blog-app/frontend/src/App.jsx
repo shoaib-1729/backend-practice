@@ -17,14 +17,11 @@ import SettingPage from "./pages/SettingPage";
 import ResetPassword from "./react-components/ResetPassword";
 import ForgetPassword from "./react-components/ForgetPassword";
 import { useSelector } from "react-redux";
-import { useEffect } from "react";
-// import { useTheme } from "./hooks/useTheme";
 
 function App() {
   console.log(import.meta.env.VITE_BASE_URL);
   const location = useLocation();
 
-const { mode } = useSelector((state) => state.theme);
 
   // Function to check if navbar should be hidden
   const shouldHideNavbar = () => {
@@ -47,18 +44,9 @@ const { mode } = useSelector((state) => state.theme);
     return false;
   };
 
- useEffect(() => {
-  const html = document.documentElement;
-  if (mode === "dark") {
-    html.classList.add("dark");
-  } else {
-    html.classList.remove("dark");
-  }
-  localStorage.setItem("theme", mode);
-}, [mode]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-black dark:bg-black dark:text-white">
+    <div className="min-h-screen flex flex-col theme-bg theme-text">
       {/* Navbar stays at the top */}
       {/* add-blog, signin, signup, reset-password routes par navbar matt dikhao */}
       {!shouldHideNavbar() && <Navbar />}

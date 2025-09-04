@@ -505,6 +505,13 @@ async function deleteBlog(req, res) {
         // Updated user data fetch karo aur return karo
         const updatedUser = await User.findById(userId)
             .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
                 path: "likedBlogs",
                 populate: {
                     path: "creator",
@@ -517,6 +524,10 @@ async function deleteBlog(req, res) {
                     path: "creator",
                     select: "name username profilePic",
                 },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
             });
 
 
@@ -578,6 +589,13 @@ async function likeBlog(req, res) {
                     userId, { $push: { likedBlogs: id } }, { new: true }
                 )
                 .populate({
+                    path: "blogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username profilePic",
+                    },
+                })
+                .populate({
                     path: "likedBlogs",
                     populate: {
                         path: "creator",
@@ -590,6 +608,10 @@ async function likeBlog(req, res) {
                         path: "creator",
                         select: "name username profilePic",
                     },
+                })
+                .populate({
+                    path: "followers following",
+                    select: "name username email profilePic",
                 });
 
             // response message
@@ -677,11 +699,9 @@ async function saveBlog(req, res) {
             await Blog.findByIdAndUpdate(id, { $push: { savedBy: userId } });
             // user model mei bhi push karo
             const updatedUser = await User.findByIdAndUpdate(
-                userId, { $push: { savedBlogs: id } }, { new: true }
-            )
-
-            .populate({
-                    path: "savedBlogs",
+                    userId, { $push: { savedBlogs: id } }, { new: true }
+                ).populate({
+                    path: "blogs",
                     populate: {
                         path: "creator",
                         select: "name username profilePic",
@@ -693,6 +713,17 @@ async function saveBlog(req, res) {
                         path: "creator",
                         select: "name username profilePic",
                     },
+                })
+                .populate({
+                    path: "savedBlogs",
+                    populate: {
+                        path: "creator",
+                        select: "name username profilePic",
+                    },
+                })
+                .populate({
+                    path: "followers following",
+                    select: "name username email profilePic",
                 });
 
             // response message

@@ -219,7 +219,7 @@ const UserProfile = () => {
               )}
 
               {/* draft blog tab */}
-              {(userData._id === userId || userData?.showDraftBlogs) && (
+              {userData._id === userId && (
                 <NavLink
                   to={`/${username}/draft-blogs`}
                   className={({ isActive }) =>

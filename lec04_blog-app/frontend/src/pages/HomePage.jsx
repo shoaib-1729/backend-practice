@@ -13,7 +13,7 @@ const HomePage = () => {
   const { token, username, savedBlogs, likedBlogs } = useSelector(
     (state) => state.user
   );
-  // console.log(savedBlogs);
+ 
 
   const { data, hasMoreBlogs } = usePagination(
     "blogs",
@@ -57,8 +57,9 @@ const HomePage = () => {
         </div>
 
         {/* Sidebar */}
-        <aside className="w-full md:w-1/3 md:pl-8">
-          <div className="mb-10">
+        <aside className="w-full md:w-1/3 md:pl-8 flex flex-col gap-10">
+        {/* Tags */}
+          <div className="order-1 md:order-1">
             <h2 className="text-lg font-semibold mb-4 text-gray-800">
               Recommended Tags
             </h2>
@@ -77,12 +78,12 @@ const HomePage = () => {
 
           {/* Saved Blogs */}
           {savedBlogs?.length > 0 && (
-            <div>
+            <div className="order-3 md:order-2">
               <h2 className="text-md font-semibold text-gray-800 mb-4">
                 Your Saved Blogs
               </h2>
 
-              {savedBlogs?.length === 0 ? (
+            {savedBlogs?.length === 0 ? (
                 <p className="text-gray-500 text-sm">No saved blogs yet.</p>
               ) : (
                 <div className="space-y-4">
@@ -152,7 +153,7 @@ const HomePage = () => {
 
           {/* Liked Blogs */}
           {likedBlogs?.length > 0 && (
-            <div className="mt-10">
+            <div className="order-4 md:order-3">
               <h2 className="text-md font-semibold text-gray-800 mb-4">
                 Your Liked Blogs
               </h2>

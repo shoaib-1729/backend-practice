@@ -45,9 +45,13 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [isUpdateRemoveButtonDisabled, setIsUpdateRemoveButtonDisabled] = useState(false);
+
 
   // Debounced username check
   const debounceTimer = useRef(null);
+
+  const controllerRef = useRef(null);
 
   const checkUsernameAvailability = useCallback(async (usernameToCheck) => {
     if (!usernameToCheck || usernameToCheck === username) {
@@ -158,6 +162,16 @@ const EditProfile = () => {
     }
   };
 
+
+const handleCancel = () => {
+  if (controllerRef.current) {
+    // API cancel
+    controllerRef.current.abort();
+  }
+  // back ya close modal
+  navigate(-1);
+};
+
   const handleUpdateProfile = async () => {
     if (!userData.name || !userData.username) {
       toast.error("Name and username are required");
@@ -177,6 +191,7 @@ const EditProfile = () => {
     }
 
     setIsButtonDisabled(true);
+    setIsUpdateRemoveButtonDisabled(true);
     const formData = new FormData();
 
     for (let key in userData) {
@@ -189,27 +204,68 @@ const EditProfile = () => {
     }
 
     try {
-      const res = await axios.patch(
-        `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  controllerRef.current = new AbortController();
 
-      if (res.status === 200) {
-        toast.success(res.data.message);
-        dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
-        navigate(`/@${res.data.user.username}`);
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Error updating user");
-    } finally {
-      setIsButtonDisabled(false);
+  const res = await axios.patch(
+    `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+      signal: controllerRef.current.signal,
     }
+  );
+
+  if (res.status === 200) {
+    toast.success(res.data.message);
+    dispatch(
+      updateUser({
+        ...res.data.user,
+        id: userId,
+        email,
+        followers,
+        following,
+        token,
+      })
+    );
+    navigate(`/@${res.data.user.username}`);
+  }
+} catch (err) {
+  if (err.name === "CanceledError") {
+    console.log("Update request cancelled");
+  } else {
+    toast.error(err.response?.data?.message || "Error updating user");
+  }
+} finally {
+  setIsButtonDisabled(false);
+  setIsUpdateRemoveButtonDisabled(false);
+
+}
+
+    // try {
+    //   const res = await axios.patch(
+    //     `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
+    //     formData,
+    //     {
+    //       headers: {
+    //         "Content-Type": "multipart/form-data",
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
+
+    //   if (res.status === 200) {
+    //     toast.success(res.data.message);
+    //     dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
+    //     navigate(`/@${res.data.user.username}`);
+    //   }
+    // } catch (err) {
+    //   toast.error(err.response?.data?.message || "Error updating user");
+    // } finally {
+    //   setIsButtonDisabled(false);
+    // }
   };
 
   // Get username input styling
@@ -269,11 +325,23 @@ const EditProfile = () => {
         </div>
 
         <div className="flex space-x-4">
-          <Button onClick={() => fileInputRef.current.click()} variant="outline" size="sm">
+          <Button 
+           disabled={isUpdateRemoveButtonDisabled}
+            className={
+            isUpdateRemoveButtonDisabled
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer"
+          }
+          onClick={() => fileInputRef.current.click()} variant="outline" size="sm">
             Update
           </Button>
           <Button
-            className="cursor-pointer"
+            disabled={isUpdateRemoveButtonDisabled}
+            className={
+            isUpdateRemoveButtonDisabled
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer"
+          }
             onClick={() => {
               setIsButtonDisabled(false);
               setUserData((prev) => ({ ...prev, profilePic: null }));
@@ -378,9 +446,9 @@ const EditProfile = () => {
 
       {/* Buttons */}
       <div className="flex justify-end space-x-2">
-        <Button className="cursor-pointer" onClick={() => navigate(-1)} variant="outline">
-          Cancel
-        </Button>
+      <Button className="cursor-pointer" onClick={handleCancel} variant="outline">
+  Cancel
+</Button>
         <Button
           disabled={isButtonDisabled || hasExceededLimit() || isUsernameInvalid()}
           onClick={handleUpdateProfile}

@@ -43,8 +43,8 @@ const UserProfileBlogList = () => {
   }
 
   if (location.pathname === `/${username}/draft-blogs`) {
-    return userData?.draftBlogs?.length > 0 ? (
-      <DisplayBlog data={userData?.draftBlogs.filter((blog) => blog?.draft)} />
+    return userData?.blogs.filter((blog) => blog?.draft).length > 0 ? (
+      <DisplayBlog data={userData?.blogs.filter((blog) => blog?.draft)} />
     ) : (
       <p className="text-gray-500 italic">No draft blogs to show.</p>
     );

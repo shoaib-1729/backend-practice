@@ -6,7 +6,6 @@ function generateToken(payload) {
         "jsonkakhatarnakwalakey",
         // { expiresIn: '10y' }
     );
-    console.log("Token generated with 7 days expiry");
     return token;
 }
 

@@ -4,7 +4,7 @@ const Comment = require("../models/commentModel.js");
 const bcrypt = require("bcrypt");
 const { generateToken, validToken } = require("../utils/generateToken.js");
 const {
-    sendVerificationMail,
+    sendVerificationEmail,
     sendForgetPasswordEmail,
 } = require("../utils/emailService.js");
 const { admin, isInitialized } = require("../config/firebase-admin.js");
@@ -142,7 +142,7 @@ async function createUser(req, res) {
                     message: "User already registered with this email",
                 });
             } else {
-                await sendVerificationMail(checkExistingUser);
+                await sendVerificationEmail(checkExistingUser);
 
                 // success message
                 return res.status(200).json({
@@ -165,7 +165,7 @@ async function createUser(req, res) {
             username,
         });
 
-        await sendVerificationMail(newUser);
+        await sendVerificationEmail(newUser);
 
         // success message
         return res.status(200).json({
@@ -214,28 +214,32 @@ async function loginUser(req, res) {
         // check if user exits already in DB
         const checkExistingUser = await User.findOne({ email })
             .select(
-                "name email bio blogs followers following username password profilePic isVerified isGoogleAuth likedBlogs savedBlogs isTempPassword tempPasswordExpiry"
+                "name email bio blogs followers following username password profilePic isVerified isGoogleAuth likedBlogs savedBlogs showLikedBlogs showSavedBlogs showDraftBlogs isTempPassword tempPasswordExpiry"
             )
             .populate({
                 path: "blogs",
                 populate: {
                     path: "creator",
-                    select: "name username email",
-                },
-            })
-            .populate({
-                path: "savedBlogs",
-                populate: {
-                    path: "creator",
-                    select: "name username email",
+                    select: "name username profilePic",
                 },
             })
             .populate({
                 path: "likedBlogs",
                 populate: {
                     path: "creator",
-                    select: "name username email",
+                    select: "name username profilePic",
                 },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
             });
 
         // console.log(checkExistingUser)
@@ -310,6 +314,9 @@ async function loginUser(req, res) {
                     blogs: checkExistingUser.blogs,
                     likedBlogs: checkExistingUser.likedBlogs,
                     savedBlogs: checkExistingUser.savedBlogs,
+                    showLikedBlogs: checkExistingUser.showLikedBlogs,
+                    showDraftBlogs: checkExistingUser.showDraftBlogs,
+                    showSavedBlogs: checkExistingUser.showSavedBlogs,
                     token,
                 },
             });
@@ -338,6 +345,9 @@ async function loginUser(req, res) {
                 blogs: checkExistingUser.blogs,
                 likedBlogs: checkExistingUser.likedBlogs,
                 savedBlogs: checkExistingUser.savedBlogs,
+                showLikedBlogs: checkExistingUser.showLikedBlogs,
+                showDraftBlogs: checkExistingUser.showDraftBlogs,
+                showSavedBlogs: checkExistingUser.showSavedBlogs,
                 token,
             },
         });
@@ -427,22 +437,26 @@ async function googleAuth(req, res) {
                 path: "blogs",
                 populate: {
                     path: "creator",
-                    select: "name username email",
-                },
-            })
-            .populate({
-                path: "savedBlogs",
-                populate: {
-                    path: "creator",
-                    select: "name username email",
+                    select: "name username profilePic",
                 },
             })
             .populate({
                 path: "likedBlogs",
                 populate: {
                     path: "creator",
-                    select: "name username email",
+                    select: "name username profilePic",
                 },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
             });
 
         // handle validations
@@ -688,10 +702,18 @@ async function updateUser(req, res) {
             success: true,
             message: "User updated successfully",
             user: {
+                id: user._id,
                 name: user.name,
+                email: user.email,
+                profilePic: user.profilePic,
                 username: user.username,
                 bio: user.bio,
-                profilePic: user.profilePic,
+                followers: user.followers,
+                following: user.following,
+                blogs: user.blogs,
+                likedBlogs: user.likedBlogs,
+                savedBlogs: user.savedBlogs,
+                token,
             },
         });
     } catch (error) {
@@ -866,16 +888,15 @@ async function followCreator(req, res) {
     }
 }
 
+// user setting controller
 async function userSettings(req, res) {
     try {
         const { username } = req.params;
         const { showLiked, showDraft, showSaved } = req.body;
-
-        console.log("body", req.body);
+        // console.log("body", req.body);
 
         // find user
         const user = await User.findOne({ username });
-
         if (!user) {
             return res.status(400).json({
                 success: false,
@@ -883,26 +904,81 @@ async function userSettings(req, res) {
             });
         }
 
-        // update
+        // update user settings
         user.showLikedBlogs = showLiked;
         user.showDraftBlogs = showDraft;
         user.showSavedBlogs = showSaved;
 
+        // Important Logic: Agar showDraft true hai toh saare draft blogs ko publish kardo
+        if (showDraft === true) {
+            // Find all blogs of this user where draft = true
+            const draftBlogs = await Blog.find({
+                creator: user._id,
+                draft: true,
+            });
+
+            // console.log(`Found ${draftBlogs.length} draft blogs for user ${username}`);
+
+            // Update all draft blogs to published (draft = false)
+            if (draftBlogs.length > 0) {
+                await Blog.updateMany({ creator: user._id, draft: true }, { $set: { draft: false } });
+                // console.log(`Published ${draftBlogs.length} draft blogs`);
+            }
+        }
+
         await user.save();
+
+        // find updated user with fresh blog data
+        const updatedUser = await User.findOne({ username })
+            .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
+            });
 
         // success message
         return res.status(200).json({
             success: true,
             message: "Settings saved successfully",
             user: {
-                name: user.name,
-                username: user.username,
-                showLikedBlogs: user.showLikedBlogs,
-                showDraftBlogs: user.showDraftBlogs,
-                showSavedBlogs: user.showSavedBlogs,
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                profilePic: updatedUser.profilePic,
+                username: updatedUser.username,
+                bio: updatedUser.bio,
+                followers: updatedUser.followers,
+                following: updatedUser.following,
+                blogs: updatedUser.blogs,
+                likedBlogs: updatedUser.likedBlogs,
+                savedBlogs: updatedUser.savedBlogs,
+                showLikedBlogs: updatedUser.showLikedBlogs,
+                showDraftBlogs: updatedUser.showDraftBlogs,
+                showSavedBlogs: updatedUser.showSavedBlogs,
             },
         });
     } catch (error) {
+        console.log("Error in userSettings:", error);
         return res.status(500).json({
             success: false,
             message: "Error saving settings",
@@ -1023,7 +1099,11 @@ async function forgetUserPassword(req, res) {
         }
 
         // Find user
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select(
+            "email isVerified isGoogleAuth"
+        );
+
+        console.log(user);
         if (!user) {
             return res.status(200).json({
                 success: true,
@@ -1039,6 +1119,7 @@ async function forgetUserPassword(req, res) {
             });
         }
 
+        console.log(user.isVerified);
         // not verified email
         if (!user.isVerified) {
             return res.status(400).json({

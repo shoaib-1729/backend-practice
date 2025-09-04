@@ -6,6 +6,8 @@ import { useSelector } from "react-redux";
 const DisplayBlog = ({ data }) => {
   const { token } = useSelector((state) => state.user);
 
+
+
   return (
     <div className="space-y-8">
       {data.map((blog) => (
