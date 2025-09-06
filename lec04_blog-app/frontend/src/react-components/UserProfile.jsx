@@ -22,9 +22,16 @@ const UserProfile = () => {
   const [showDeleteDropdown, setShowDeleteDropdown] = useState(false);
   const navigate = useNavigate();
 
-  const { token, id: userId, profilePic, savedBlogs, likedBlogs, bio} = useSelector((state) => state.user);
+  const {
+    token,
+    following,
+    id: userId,
+    profilePic,
+    savedBlogs,
+    likedBlogs,
+    bio,
+  } = useSelector((state) => state.user);
   const dispatch = useDispatch();
-
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -53,9 +60,15 @@ const UserProfile = () => {
 
     // 2. Redirect if trying to access someone else's draft blogs
     if (
-      userData?._id !== userId && !userData?.showDraftBlogs && location.pathname === `/${username}/draft-blogs`
-     || userData?._id !== userId && !userData?.showLikedBlogs && location.pathname === `/${username}/liked-blogs`
-      || userData?._id !== userId && !userData?.showSavedBlogs && location.pathname === `/${username}/saved-blogs`
+      (userData?._id !== userId &&
+        !userData?.showDraftBlogs &&
+        location.pathname === `/${username}/draft-blogs`) ||
+      (userData?._id !== userId &&
+        !userData?.showLikedBlogs &&
+        location.pathname === `/${username}/liked-blogs`) ||
+      (userData?._id !== userId &&
+        !userData?.showSavedBlogs &&
+        location.pathname === `/${username}/saved-blogs`)
     ) {
       navigate(`/${username}`);
     }
@@ -84,7 +97,7 @@ const UserProfile = () => {
                   >
                     <i className="fi fi-rr-menu-dots text-gray-600 text-lg cursor-pointer"></i>
                   </button>
-                  
+
                   {/* Dropdown Menu */}
                   {showDeleteDropdown && (
                     <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
@@ -125,14 +138,14 @@ const UserProfile = () => {
                 {userData?.name}
               </h1>
               <p className="text-base text-gray-600 font-medium">
-                {userData?.followers?.length} followers
+                {following?.length} followers
               </p>
             </div>
 
             {/* Username */}
             <p className="text-base text-gray-600 font-mono mt-1">
-    {userData?.username}
-  </p>
+              {userData?.username}
+            </p>
 
             {/* Bio */}
             {userData?.bio ? (
@@ -141,7 +154,7 @@ const UserProfile = () => {
               </p>
             ) : (
               <p className="text-sm text-gray-400 italic mb-6">
-              You can edit your profile to add your bio.
+                You can edit your profile to add your bio.
               </p>
             )}
 
@@ -150,7 +163,7 @@ const UserProfile = () => {
               <Link
                 to="/edit-profile"
                 className="block w-4/5 mx-auto bg-black text-white px-8 py-3 rounded-full hover:bg-gray-800 transition-all duration-200 text-base font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                 onClick={() => setShowDeleteDropdown(false)}
+                onClick={() => setShowDeleteDropdown(false)}
               >
                 Edit Profile
               </Link>
@@ -191,32 +204,34 @@ const UserProfile = () => {
               </NavLink>
 
               {/* saved blog tab */}
-              {savedBlogs?.length > 0 && (userData._id === userId || userData?.showSavedBlogs) && (
-                <NavLink
-                  to={`/${username}/saved-blogs`}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
-                      : "pb-3 text-sm text-gray-500 hover:text-black transition"
-                  }
-                >
-                  Saved Blogs
-                </NavLink>
-              )}
+              {savedBlogs?.length > 0 &&
+                (userData._id === userId || userData?.showSavedBlogs) && (
+                  <NavLink
+                    to={`/${username}/saved-blogs`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
+                        : "pb-3 text-sm text-gray-500 hover:text-black transition"
+                    }
+                  >
+                    Saved Blogs
+                  </NavLink>
+                )}
 
               {/* liked blog tab */}
-              {likedBlogs?.length > 0 && (userData._id === userId || userData?.showLikedBlogs) && (
-                <NavLink
-                  to={`/${username}/liked-blogs`}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
-                      : "pb-3 text-sm text-gray-500 hover:text-black transition"
-                  }
-                >
-                  Liked Blogs
-                </NavLink>
-              )}
+              {likedBlogs?.length > 0 &&
+                (userData._id === userId || userData?.showLikedBlogs) && (
+                  <NavLink
+                    to={`/${username}/liked-blogs`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "pb-3 text-sm font-medium border-b-2 border-black text-black"
+                        : "pb-3 text-sm text-gray-500 hover:text-black transition"
+                    }
+                  >
+                    Liked Blogs
+                  </NavLink>
+                )}
 
               {/* draft blog tab */}
               {userData._id === userId && (
@@ -264,7 +279,7 @@ const UserProfile = () => {
                     >
                       <i className="fi fi-rr-menu-dots text-gray-600 text-sm cursor-pointer"></i>
                     </button>
-                    
+
                     {/* Dropdown Menu */}
                     {showDeleteDropdown && (
                       <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
@@ -351,7 +366,7 @@ const UserProfile = () => {
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={`https://api.dicebear.com/9.x/initials/svg?seed=${f.name}`}
+                            src={f.profilePic}
                             alt="avatar"
                             className="w-8 h-8 rounded-full object-cover border"
                           />
@@ -389,32 +404,34 @@ const UserProfile = () => {
               </NavLink>
 
               {/* saved blog tab */}
-              {savedBlogs?.length > 0 && (userData._id === userId || userData?.showSavedBlogs) && (
-                <NavLink
-                  to={`/${username}/saved-blogs`}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
-                      : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
-                  }
-                >
-                  Saved
-                </NavLink>
-              )}
+              {savedBlogs?.length > 0 &&
+                (userData._id === userId || userData?.showSavedBlogs) && (
+                  <NavLink
+                    to={`/${username}/saved-blogs`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
+                        : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
+                    }
+                  >
+                    Saved
+                  </NavLink>
+                )}
 
               {/* liked blog tab */}
-              {likedBlogs?.length > 0 && (userData._id === userId || userData?.showLikedBlogs) && (
-                <NavLink
-                  to={`/${username}/liked-blogs`}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
-                      : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
-                  }
-                >
-                  Liked
-                </NavLink>
-              )}
+              {likedBlogs?.length > 0 &&
+                (userData._id === userId || userData?.showLikedBlogs) && (
+                  <NavLink
+                    to={`/${username}/liked-blogs`}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
+                        : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
+                    }
+                  >
+                    Liked
+                  </NavLink>
+                )}
 
               {/* draft blog tab */}
               {(userData._id === userId || userData?.showDraftBlogs) && (
@@ -431,16 +448,18 @@ const UserProfile = () => {
               )}
 
               {/* about tab */}
-              {bio && <NavLink
-                to="about"
-                className={({ isActive }) =>
-                  isActive
-                    ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
-                    : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
-                }
-              >
-                About
-              </NavLink>}
+              {bio && (
+                <NavLink
+                  to="about"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "pb-2 px-1 text-base font-semibold border-b-2 border-black text-black whitespace-nowrap"
+                      : "pb-2 px-1 text-base text-gray-500 hover:text-black whitespace-nowrap transition"
+                  }
+                >
+                  About
+                </NavLink>
+              )}
             </div>
           </div>
 
@@ -465,7 +484,7 @@ const UserProfile = () => {
                     className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 p-4 rounded-xl transition-all duration-200 hover:shadow-md"
                   >
                     <img
-                      src={`https://api.dicebear.com/9.x/initials/svg?seed=${f.name}`}
+                      src={f.profilePic}
                       alt="avatar"
                       className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
                     />

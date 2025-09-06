@@ -1,6 +1,6 @@
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Button } from "@/shadcn-components/ui/button";
 import {
@@ -35,6 +35,7 @@ const BlogPage = () => {
     token,
     email,
     id: userId,
+    following,
     // profilePic,
   } = useSelector((state) => state.user);
   const { likedBy, comments, content, blogId } = useSelector(
@@ -42,6 +43,8 @@ const BlogPage = () => {
   );
   const { isOpen } = useSelector((state) => state.comment);
   const dispatch = useDispatch();
+
+  const controllerRef = useRef();
 
   // Map heading levels to Tailwind classes
   const headingSizeMap = {
@@ -99,135 +102,230 @@ const BlogPage = () => {
   };
 
   // Enhanced code block renderer with language detection
-const detectLanguage = (code) => {
-  if (!code || typeof code !== 'string') return 'text';
-  
-  const codeToCheck = code.toLowerCase().trim();
-  
-  // JavaScript/TypeScript patterns
-  if (codeToCheck.includes('function') || 
-      codeToCheck.includes('const ') || 
-      codeToCheck.includes('let ') ||
-      codeToCheck.includes('var ') ||
-      codeToCheck.includes('=>') ||
-      codeToCheck.includes('console.log') ||
-      codeToCheck.includes('import ') && codeToCheck.includes('from')) {
-    return 'javascript';
-  }
-  
-  // Python patterns
-  if (codeToCheck.includes('def ') || 
-      codeToCheck.includes('import ') && !codeToCheck.includes('from') ||
-      codeToCheck.includes('print(') ||
-      codeToCheck.includes('if __name__') ||
-      /^\s*(class|def)\s+\w+/m.test(codeToCheck)) {
-    return 'python';
-  }
-  
-  // HTML patterns
-  if (codeToCheck.includes('<html') || 
-      codeToCheck.includes('<div') ||
-      codeToCheck.includes('<head>') ||
-      codeToCheck.includes('<!doctype')) {
-    return 'html';
-  }
-  
-  // CSS patterns
-  if (codeToCheck.includes('{') && codeToCheck.includes('}') && 
-      (codeToCheck.includes(':') || 
-       codeToCheck.includes('.') || 
-       codeToCheck.includes('#') ||
-       codeToCheck.includes('@media'))) {
-    return 'css';
-  }
-  
-  // Java patterns
-  if (codeToCheck.includes('public class') || 
-      codeToCheck.includes('public static void main') ||
-      codeToCheck.includes('System.out.println')) {
-    return 'java';
-  }
-  
-  // C/C++ patterns
-  if (codeToCheck.includes('#include') || 
-      codeToCheck.includes('int main()') ||
-      codeToCheck.includes('printf(')) {
-    return 'c';
-  }
-  
-  // JSON pattern
-  if (codeToCheck.startsWith('{') && codeToCheck.endsWith('}') && 
-      codeToCheck.includes(':') && codeToCheck.includes('"')) {
-    return 'json';
-  }
-  
-  // SQL patterns
-  if (codeToCheck.includes('select ') || 
-      codeToCheck.includes('insert into') ||
-      codeToCheck.includes('create table') ||
-      codeToCheck.includes('update ')) {
-    return 'sql';
-  }
-  
-  // Default fallback
-  return 'text';
-};
+  const detectLanguage = (code) => {
+    if (!code || typeof code !== "string") return "text";
 
-const renderCodeBlock = (code, specifiedLanguage = null) => {
-  if (!code) return null;
-  
-  // Priority: specified language > auto-detected > fallback
-  const detectedLanguage = detectLanguage(code);
-  const language = specifiedLanguage || detectedLanguage;
-  
-  return (
-    <div className="mb-6 rounded-xl overflow-hidden border border-gray-200">
-      {/* Language indicator */}
-      <div className="bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 border-b border-gray-200">
-        {language === 'text' ? 'Code' : language.toUpperCase()}
+    const codeToCheck = code.toLowerCase().trim();
+
+    // JavaScript/TypeScript patterns
+    if (
+      codeToCheck.includes("function") ||
+      codeToCheck.includes("const ") ||
+      codeToCheck.includes("let ") ||
+      codeToCheck.includes("var ") ||
+      codeToCheck.includes("=>") ||
+      codeToCheck.includes("console.log") ||
+      (codeToCheck.includes("import ") && codeToCheck.includes("from"))
+    ) {
+      return "javascript";
+    }
+
+    // Python patterns
+    if (
+      codeToCheck.includes("def ") ||
+      (codeToCheck.includes("import ") && !codeToCheck.includes("from")) ||
+      codeToCheck.includes("print(") ||
+      codeToCheck.includes("if __name__") ||
+      /^\s*(class|def)\s+\w+/m.test(codeToCheck)
+    ) {
+      return "python";
+    }
+
+    // HTML patterns
+    if (
+      codeToCheck.includes("<html") ||
+      codeToCheck.includes("<div") ||
+      codeToCheck.includes("<head>") ||
+      codeToCheck.includes("<!doctype")
+    ) {
+      return "html";
+    }
+
+    // CSS patterns
+    if (
+      codeToCheck.includes("{") &&
+      codeToCheck.includes("}") &&
+      (codeToCheck.includes(":") ||
+        codeToCheck.includes(".") ||
+        codeToCheck.includes("#") ||
+        codeToCheck.includes("@media"))
+    ) {
+      return "css";
+    }
+
+    // Java patterns
+    if (
+      codeToCheck.includes("public class") ||
+      codeToCheck.includes("public static void main") ||
+      codeToCheck.includes("System.out.println")
+    ) {
+      return "java";
+    }
+
+    // C/C++ patterns
+    if (
+      codeToCheck.includes("#include") ||
+      codeToCheck.includes("int main()") ||
+      codeToCheck.includes("printf(")
+    ) {
+      return "c";
+    }
+
+    // JSON pattern
+    if (
+      codeToCheck.startsWith("{") &&
+      codeToCheck.endsWith("}") &&
+      codeToCheck.includes(":") &&
+      codeToCheck.includes('"')
+    ) {
+      return "json";
+    }
+
+    // SQL patterns
+    if (
+      codeToCheck.includes("select ") ||
+      codeToCheck.includes("insert into") ||
+      codeToCheck.includes("create table") ||
+      codeToCheck.includes("update ")
+    ) {
+      return "sql";
+    }
+
+    // Default fallback
+    return "text";
+  };
+
+  const renderCodeBlock = (code, specifiedLanguage = null) => {
+    if (!code) return null;
+
+    // Priority: specified language > auto-detected > fallback
+    const detectedLanguage = detectLanguage(code);
+    const language = specifiedLanguage || detectedLanguage;
+
+    return (
+      <div className="mb-6 rounded-xl overflow-hidden border border-gray-200">
+        {/* Language indicator */}
+        <div className="bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600 border-b border-gray-200">
+          {language === "text" ? "Code" : language.toUpperCase()}
+        </div>
+
+        <SyntaxHighlighter
+          language={language}
+          style={prism}
+          showLineNumbers={true}
+          wrapLines={true}
+          customStyle={{
+            margin: 0,
+            padding: "16px 20px",
+            backgroundColor: "#f8f9fa",
+            fontSize: "14px",
+            lineHeight: "1.6",
+            fontFamily:
+              '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+            color: "#333",
+            border: "none",
+          }}
+        >
+          {code}
+        </SyntaxHighlighter>
       </div>
-      
-      <SyntaxHighlighter 
-        language={language}
-        style={prism}
-        showLineNumbers={true}
-        wrapLines={true}
-        customStyle={{
-          margin: 0,
-          padding: '16px 20px',
-          backgroundColor: '#f8f9fa',
-          fontSize: '14px',
-          lineHeight: '1.6',
-          fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
-          color: '#333',
-          border: 'none'
-        }}
-      >
-        {code}
-      </SyntaxHighlighter>
-    </div>
-  );
-};
+    );
+  };
 
-// fetch blog using id
+  // fetch blog using id
+  // async function fetchBlog() {
+  //   try {
+  //     const {
+  //       data: { blog },
+  //     } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs/${id}`);
+  //     setBlog(blog);
+  //     dispatch(addSelectedBlog(blog));
+
+  //     // check if current user liked the blog
+  //     if (blog.likedBy?.includes(userId)) setIsLiked(true);
+  //     // check if blog is saved by current user
+  //     if (blog.savedBy?.includes(userId)) setIsSaved(true);
+  //     // check if user follows creator
+  //     if (blog.creator?.followers?.includes(userId)) setIsFollowCreator(true);
+  //   } catch (err) {
+  //     console.error("Error fetching blog:", err);
+  //   }
+  // }
+
   async function fetchBlog() {
+    // cancel old request if still pending
+    if (controllerRef.current) {
+      controllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    // setLoading(true);
     try {
       const {
         data: { blog },
-      } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs/${id}`);
+      } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs/${id}`, {
+        signal: controller.signal,
+      });
+
       setBlog(blog);
       dispatch(addSelectedBlog(blog));
 
-      // check if current user liked the blog
-      if (blog.likedBy?.includes(userId)) setIsLiked(true);
-      // check if blog is saved by current user
-      if (blog.savedBy?.includes(userId)) setIsSaved(true);
-      // check if user follows creator
-      if (blog.creator?.followers?.includes(userId)) setIsFollowCreator(true);
+      // liked check
+      setIsLiked(blog.likedBy?.includes(userId) || false);
+
+      // saved check
+      setIsSaved(blog.savedBy?.includes(userId) || false);
+
+      // follow check using backend blog data
+      let isFollowing =
+        blog.creator?.followers?.includes(userId) ||
+        blog.creator?.followers?.some(
+          (follower) => follower._id === userId || follower === userId
+        );
+
+      // cross-check with Redux user.following
+      if (following && blog.creator?._id) {
+        const reduxFollow = following.some(
+          (user) => user._id === blog.creator._id || user === blog.creator._id
+        );
+        isFollowing = isFollowing || reduxFollow;
+      }
+
+      setIsFollowCreator(isFollowing);
     } catch (err) {
-      console.error("Error fetching blog:", err);
+      if (axios.isCancel(err)) {
+        console.log("Request cancelled due to navigation/change");
+      } else {
+        console.error("Error fetching blog:", err);
+      }
     }
+    //  finally {
+    //   setLoading(false);
+    // }
   }
+
+  // fetch blog whenever id changes
+  useEffect(() => {
+    fetchBlog();
+
+    return () => {
+      // cancel request on unmount / id change
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+
+      dispatch(setIsOpen(false));
+
+      if (
+        window.location.pathname !== `/edit/${id}` &&
+        window.location.pathname !== `/blog/${id}`
+      ) {
+        dispatch(removeSelectedBlog());
+      }
+    };
+  }, [id]);
 
   async function handleLike() {
     try {
@@ -250,18 +348,18 @@ const renderCodeBlock = (code, specifiedLanguage = null) => {
     }
   }
 
-  useEffect(() => {
-    fetchBlog();
-    return () => {
-      dispatch(setIsOpen(false));
-      if (
-        window.location.pathname !== `/edit/${id}` &&
-        window.location.pathname !== `/blog/${id}`
-      ) {
-        dispatch(removeSelectedBlog());
-      }
-    };
-  }, [id]);
+  // useEffect(() => {
+  //   fetchBlog();
+  //   return () => {
+  //     dispatch(setIsOpen(false));
+  //     if (
+  //       window.location.pathname !== `/edit/${id}` &&
+  //       window.location.pathname !== `/blog/${id}`
+  //     ) {
+  //       dispatch(removeSelectedBlog());
+  //     }
+  //   };
+  // }, [id]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 bg-white min-h-screen">
@@ -305,16 +403,17 @@ const renderCodeBlock = (code, specifiedLanguage = null) => {
                   src={
                     blog?.creator?.profilePic
                       ? blog?.creator?.profilePic
-                      : `https://api.dicebear.com/9.x/initials/svg?seed=${blog.creator.name}`
+                      : `https://api.dicebear.com/9.x/initials/svg?seed=${blog?.creator?.name}`
                   }
                   alt="Author"
                   className="w-full h-full rounded-full object-cover border border-gray-200"
                 />
               </div>
+              {console.log(blog?.creator?.name)}
               <div className="space-y-1">
                 <Link to={`/@${blog.creator.username}`}>
                   <h3 className="text-lg font-medium text-gray-900 hover:text-gray-700 transition-colors">
-                    {blog.creator.name}
+                    {blog?.creator?.name}
                   </h3>
                 </Link>
                 <div className="flex items-center space-x-3 text-sm text-gray-500">
@@ -432,10 +531,7 @@ const renderCodeBlock = (code, specifiedLanguage = null) => {
               </TooltipContent>
             </Tooltip>
             {/* Delete */}
-      <DeleteConfirmation
-        type="blog"
-        item={blog}
-      />
+            <DeleteConfirmation type="blog" item={blog} />
 
             <div className="flex items-center space-x-3 text-sm text-gray-500">
               <span>{formatDate(blog.createdAt)}</span>

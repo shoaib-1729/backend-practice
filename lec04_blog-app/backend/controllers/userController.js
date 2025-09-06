@@ -20,7 +20,7 @@ async function getUser(req, res) {
         // get the users
         return res.json({
             success: true,
-            message: "Users fetched successfully",
+            message: "Users loaded",
             users,
         });
     } catch (error) {
@@ -65,7 +65,7 @@ async function getUserById(req, res) {
         // get the users
         return res.json({
             success: true,
-            message: "Users fetched successfully",
+            message: "Profile loaded",
             user,
         });
     } catch (error) {
@@ -332,7 +332,7 @@ async function loginUser(req, res) {
         // success message
         return res.status(200).json({
             success: true,
-            message: "User logged in successfully",
+            message: "Logged in",
             user: {
                 id: checkExistingUser._id,
                 name: checkExistingUser.name,
@@ -389,7 +389,7 @@ async function verifyEmail(req, res) {
 
         return res.status(200).json({
             success: true,
-            message: "Email verified successfully",
+            message: "Email verified",
         });
     } catch (err) {
         return res.status(500).json({
@@ -422,7 +422,7 @@ async function googleAuth(req, res) {
         // Verify the token using Firebase Admin
         const decodedToken = await admin.auth().verifyIdToken(accessToken);
 
-        // The correct way to extract user info:
+        //  extract user info:
         const userName =
             decodedToken.name ||
             decodedToken.given_name + " " + decodedToken.family_name;
@@ -431,7 +431,7 @@ async function googleAuth(req, res) {
         // user exists karta hai
         const user = await User.findOne({ email: userEmail })
             .select(
-                "name bio email username followers following password isVerified isGoogleAuth blogs savedBlogs likedBlogs"
+                "name profilePic bio email username followers following password isVerified isGoogleAuth blogs savedBlogs likedBlogs"
             )
             .populate({
                 path: "blogs",
@@ -470,7 +470,7 @@ async function googleAuth(req, res) {
 
                 return res.status(200).json({
                     success: true,
-                    message: "Logged in successfully",
+                    message: "Logged in",
                     user: {
                         id: user._id,
                         name: user.name,
@@ -488,8 +488,8 @@ async function googleAuth(req, res) {
                 });
             } else {
                 return res.status(400).json({
-                    success: false, // Changed to false for error
-                    message: "This email is already registered using a password. Please log in using the login form.",
+                    success: false,
+                    message: "This email is already registered. Please log in with your password.",
                 });
             }
         }
@@ -519,6 +519,13 @@ async function googleAuth(req, res) {
                 name: newUser.name,
                 email: newUser.email,
                 username: newUser.username,
+                profilePic: newUser.profilePic,
+                bio: newUser.bio,
+                followers: newUser.followers,
+                following: newUser.following,
+                blogs: newUser.blogs,
+                likedBlogs: newUser.likedBlogs,
+                savedBlogs: newUser.savedBlogs,
                 token,
             },
         });
@@ -697,23 +704,56 @@ async function updateUser(req, res) {
 
         await user.save();
 
+        // find user
+        const updatedUser = await User.findById(userId)
+            .select(
+                "name email bio blogs followers following username password profilePic isVerified isGoogleAuth likedBlogs savedBlogs showLikedBlogs showSavedBlogs showDraftBlogs isTempPassword tempPasswordExpiry"
+            )
+            .populate({
+                path: "blogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "likedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "savedBlogs",
+                populate: {
+                    path: "creator",
+                    select: "name username profilePic",
+                },
+            })
+            .populate({
+                path: "followers following",
+                select: "name username email profilePic",
+            });
+
         // success message
         return res.status(200).json({
             success: true,
-            message: "User updated successfully",
+            message: "Profile updated",
             user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                profilePic: user.profilePic,
-                username: user.username,
-                bio: user.bio,
-                followers: user.followers,
-                following: user.following,
-                blogs: user.blogs,
-                likedBlogs: user.likedBlogs,
-                savedBlogs: user.savedBlogs,
-                token,
+                id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                profilePic: updatedUser.profilePic,
+                username: updatedUser.username,
+                bio: updatedUser.bio,
+                followers: updatedUser.followers,
+                following: updatedUser.following,
+                blogs: updatedUser.blogs,
+                likedBlogs: updatedUser.likedBlogs,
+                savedBlogs: updatedUser.savedBlogs,
+                showLikedBlogs: updatedUser.showLikedBlogs,
+                showDraftBlogs: updatedUser.showDraftBlogs,
+                showSavedBlogs: updatedUser.showSavedBlogs,
             },
         });
     } catch (error) {
@@ -733,6 +773,9 @@ async function deleteUser(req, res) {
 
         // pehle blogs fetch karo
         const blogs = await Blog.find({ _id: { $in: user.blogs } });
+
+        // collect blog ID
+        const blogIds = blogs.map(blog => blog._id.toString());
 
         // cloudinary images delete karo
         for (const blog of blogs) {
@@ -776,6 +819,11 @@ async function deleteUser(req, res) {
         await Blog.updateMany({ likedBy: userId }, { $pull: { likedBy: userId } });
         await Blog.updateMany({ savedBy: userId }, { $pull: { savedBy: userId } });
 
+
+        // saved blog/liked blog clean up
+        await User.updateMany({ savedBlog: { $in: user.blogs } }, { $pull: { savedBlog: { $in: user.blogs } } });
+        await User.updateMany({ likedBlog: { $in: user.blogs } }, { $pull: { likedBlog: { $in: user.blogs } } });
+
         // followers / following clean up
         await User.updateMany({ followers: userId }, { $pull: { followers: userId } });
         await User.updateMany({ following: userId }, { $pull: { following: userId } });
@@ -788,9 +836,11 @@ async function deleteUser(req, res) {
         // delete user profile pic
         await cloudinaryDestroyImage(user.profilePicId);
 
+
         return res.status(200).json({
             success: true,
-            message: "User deleted successfully",
+            message: "User removed",
+            deletedBlogIds: blogIds,
         });
     } catch (error) {
         return res.status(500).json({
@@ -959,7 +1009,7 @@ async function userSettings(req, res) {
         // success message
         return res.status(200).json({
             success: true,
-            message: "Settings saved successfully",
+            message: "Settings saved",
             user: {
                 id: updatedUser._id,
                 name: updatedUser.name,
@@ -1064,7 +1114,7 @@ async function resetUserPassword(req, res) {
 
         return res.status(200).json({
             success: true,
-            message: "Password has been reset successfully",
+            message: "Password reset",
         });
     } catch (error) {
         console.error(error);

@@ -20,8 +20,6 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
-
-
   const { token, name, username, profilePic } = useSelector(
     (state) => state.user
   );
@@ -38,7 +36,7 @@ const Navbar = () => {
   function handleLogout() {
     dispatch(logout());
     setShowPopup(false);
-    toast.success("Logged out successfully");
+    toast.success("Logged out");
     navigate("/");
   }
 
@@ -139,7 +137,6 @@ const Navbar = () => {
               <div className="absolute inset-0 bg-gray-300/15 group-hover:bg-gray-400/20 dark:bg-gray-700/20 dark:group-hover:bg-gray-600/30 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200" />
             </div>
           )}
-
         </div>
 
         {/* Mobile Menu Toggle */}

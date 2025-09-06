@@ -2,15 +2,16 @@ import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { Button } from "@/shadcn-components/ui/button";
+import { useDispatch, useSelector } from "react-redux";
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
 import EditorjsList from "@editorjs/list";
-import Checklist from "@editorjs/checklist";
 import CodeTool from "@editorjs/code";
 import Marker from "@editorjs/marker";
 import Embed from "@editorjs/embed";
 import ImageTool from "@editorjs/image";
+import { updateUser } from "../utils/userSlice";
 
 const AddBlog = () => {
   const [blogData, setBlogData] = useState({
@@ -21,6 +22,7 @@ const AddBlog = () => {
     draft: false,
     tag: [],
   });
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
 
   const { id } = useParams();
   const editorjsRef = useRef(null);
@@ -28,9 +30,12 @@ const AddBlog = () => {
   const { title, description, image, content, draft, tag } = useSelector(
     (slice) => slice.selectedBlog
   );
+
   const navigate = useNavigate();
 
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const dispatch = useDispatch();
+
+  const controllerRef = useRef(null);
 
   const handleBlogData = (e) => {
     // console.log(e.target)
@@ -50,8 +55,8 @@ const AddBlog = () => {
     } else if (name === "draft") {
       setBlogData((prevData) => ({
         ...prevData,
-        [name]: value==="true",
-      }))
+        [name]: value === "true",
+      }));
     } else {
       setBlogData((prevData) => ({
         ...prevData,
@@ -87,7 +92,7 @@ const AddBlog = () => {
       e.preventDefault();
       return;
     }
-    
+
     if (e.code === "Enter") {
       e.preventDefault();
       // enable button
@@ -120,13 +125,14 @@ const AddBlog = () => {
     setIsButtonDisabled(true);
 
     e.preventDefault();
+    controllerRef.current = new AbortController();
 
     let formData = new FormData();
 
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-         formData.append(key, value);
+        formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));
@@ -167,6 +173,7 @@ const AddBlog = () => {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
+          signal: controllerRef.current.signal,
         }
       );
       // console.log(blogData);
@@ -176,6 +183,8 @@ const AddBlog = () => {
         toast.success(res.data.message);
         // navigate -> home page
         navigate("/", { replace: true });
+        // update user
+        dispatch(updateUser(res.data.user));
       }
     } catch (err) {
       toast.error(err.response.data.message);
@@ -184,23 +193,37 @@ const AddBlog = () => {
   }
 
   function handleTagRemove(index) {
+    // enable update button
+    setIsButtonDisabled(false);
+
     const updatedTag = blogData.tag.filter((_, tagIndex) => index !== tagIndex);
 
     // set tag to blog data
     setBlogData((prev) => ({ ...prev, tag: updatedTag }));
   }
 
+  const handleCancel = () => {
+    if (controllerRef.current) {
+      // API cancel
+      controllerRef.current.abort();
+    }
+    // back ya close modal
+    navigate(-1);
+  };
+
   // form submit pr db call karwao -> create blog
   async function handlePostBlog(e) {
-    // enable button
+    // disable button
     setIsButtonDisabled(true);
 
     e.preventDefault();
+    controllerRef.current = new AbortController();
+
     let formData = new FormData();
     for (let data of Object.entries(blogData)) {
       const [key, value] = data;
       if (key == "image") {
-         formData.append(key, value);
+        formData.append(key, value);
       }
 
       formData.append(key, JSON.stringify(value));
@@ -214,7 +237,6 @@ const AddBlog = () => {
 
     // console.log(blogData)
 
-
     try {
       e.preventDefault();
       const res = await axios.post(
@@ -225,6 +247,7 @@ const AddBlog = () => {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
+          signal: controllerRef.current.signal,
         }
       );
 
@@ -235,6 +258,8 @@ const AddBlog = () => {
         navigate("/");
       }
     } catch (err) {
+      // enable button
+      // setIsButtonDisabled(false);
       toast.error(err.response.data.message);
       console.log("Error posting blog", err);
     }
@@ -259,14 +284,10 @@ const AddBlog = () => {
           class: EditorjsList,
           inlineToolbar: true,
         },
-      //    checklist: {
-      //   class: Checklist,
-      //   inlineToolbar: true,
-      // },
         image: {
           class: ImageTool,
           config: {
-            // captionPlaceholder : "Caption",
+            captionPlaceholder: "Caption",
             uploader: {
               uploadByFile: async (image) => {
                 return {
@@ -298,35 +319,20 @@ const AddBlog = () => {
       onChange: async () => {
         const data = await editorjsRef.current.save();
         // set content in blog data
-        setBlogData((blogData) => ({
+        (setBlogData((blogData) => ({
           ...blogData,
           content: data,
         })),
-          setIsButtonDisabled(false);
-        // editorjsRef.current = data;
-        // console.log(data);
+          setIsButtonDisabled(false));
       },
     });
   };
-
 
   useEffect(() => {
     if (editorjsRef.current === null) {
       initializeEditorjs();
     }
   }, []);
-
-  //   useEffect(() => {
-  //   // Wait until the DOM has the #editorjs element
-  //   const interval = setInterval(() => {
-  //     if (document.getElementById("editorjs") && !editorjsRef.current) {
-  //       clearInterval(interval);
-  //       initializeEditorjs();
-  //     }
-  //   }, 50);
-
-  //   return () => clearInterval(interval);
-  // }, []);
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -350,7 +356,6 @@ const AddBlog = () => {
             placeholder="Blog Title"
           />
         </div>
-
         {/* Description */}
         <div>
           <textarea
@@ -363,7 +368,6 @@ const AddBlog = () => {
             placeholder="Write a short description..."
           />
         </div>
-
         {/* Cover Image Upload */}
         <div>
           <div className="relative bg-gray-100 border border-gray-300 rounded-md overflow-hidden">
@@ -399,7 +403,6 @@ const AddBlog = () => {
             />
           </div>
         </div>
-
         {/* Tag */}
         <div className="space-y-1">
           {/* Tag Input */}
@@ -431,7 +434,6 @@ const AddBlog = () => {
             **you can add up to {10 - blogData.tag.length} more tag(s)
           </p>
         </div>
-
         {/* Draft Selector */}
         <div className="pt-2">
           <label className="block text-sm font-light text-gray-700 mb-1">
@@ -447,7 +449,6 @@ const AddBlog = () => {
             <option value={true}>Yes (Save as Draft)</option>
           </select>
         </div>
-
         {/* EditorJS Content */}
         <div>
           <div
@@ -455,29 +456,32 @@ const AddBlog = () => {
             className="bg-white border border-gray-200 rounded-md px-4 py-6 min-h-[300px]"
           />
         </div>
-
         {/* Submit Button */}
-        <div className="pt-4">
-          <button
-            disabled={isButtonDisabled}
-            type="submit"
-            className={`
-    w-full
-    text-lg
-    font-light
-    py-3
-    rounded-md
-    transition
-    duration-300
-    ${
-      isButtonDisabled
-        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-        : "bg-black hover:bg-gray-900 text-white cursor-pointer"
-    }
-  `}
+        <div className="pt-4 flex flex-col sm:flex-row sm:justify-end items-center gap-2">
+          {/* Cancel Button */}
+          <Button
+            onClick={handleCancel}
+            variant="outline"
+            className="w-full sm:w-40 border-red-600 text-red-600 hover:bg-red-50 cursor-pointer"
           >
-            {blogData.draft ? "Save as Draft" : (id ? "Update Blog" : "Publish Blog")}
-          </button>
+            Cancel
+          </Button>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            disabled={isButtonDisabled}
+            className={`
+      w-full sm:w-40 cursor-pointer
+      ${isButtonDisabled ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-900"}
+    `}
+          >
+            {blogData.draft
+              ? "Save as Draft"
+              : id
+                ? "Update Blog"
+                : "Publish Blog"}
+          </Button>
         </div>
       </form>
     </div>

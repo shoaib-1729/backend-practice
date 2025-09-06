@@ -17,15 +17,21 @@ import {
   TooltipTrigger,
 } from "@/shadcn-components/ui/tooltip";
 import { useDispatch, useSelector } from "react-redux";
- import { handleDeleteBlog, handleDeleteUser } from "../utils/helperFunc";
+import { handleDeleteBlog, handleDeleteUser } from "../utils/helperFunc";
 import HeroPage from "../pages/HeroPage";
+import { useEffect } from "react";
 
-const DeleteConfirmation = ({ type = "blog", item, setShowDeleteDropdown }) => {
+const DeleteConfirmation = ({ type, item, setShowDeleteDropdown }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { token, id: userId } = useSelector((state) => state.user);
+  const {
+    token,
+    id: userId,
+    savedBlogs,
+    likedBlogs,
+  } = useSelector((state) => state.user);
   const dispatch = useDispatch();
 
   // Configuration based on type
@@ -56,6 +62,7 @@ const DeleteConfirmation = ({ type = "blog", item, setShowDeleteDropdown }) => {
         </div>
       ),
     },
+
     user: {
       title: "Are you sure you want to delete your account?",
       description: (
@@ -86,30 +93,48 @@ const DeleteConfirmation = ({ type = "blog", item, setShowDeleteDropdown }) => {
 
   const currentConfig = config[type];
 
+  console.log("item:", item);
+  console.log("userId:", userId);
+  console.log("currentConfig: ", currentConfig);
+  console.log("canDelete:", currentConfig.canDelete);
+
   const onDeleteConfirm = async () => {
-    setIsDeleting(true);
-    setShowDeleteDropdown && setShowDeleteDropdown(false);
     try {
+      setIsDeleting(true);
       if (type === "blog") {
+        console.log(isDeleting);
+
         await handleDeleteBlog(item._id, token, dispatch);
       } else if (type === "user") {
-        await handleDeleteUser(token, dispatch);
+        await handleDeleteUser(
+          token,
+          savedBlogs,
+          likedBlogs,
+          setShowDeleteDropdown,
+          dispatch
+        );
       }
       // navigate to home page for both the cases
       // thoda delay for smooth UX, then navigate
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
       setIsDeleting(false);
     }
   };
 
+  // useEffect(() => {
+  //   console.log("isDeleting changed:", isDeleting);
+  // }, [isDeleting]);
+
   // Agar permission nahi hai toh null return
   if (!currentConfig.canDelete) {
     return null;
   }
+
+  console.log(isDeleting);
 
   return (
     <>
