@@ -10,8 +10,17 @@ import { updateUser } from "../utils/userSlice";
 import { useNavigate } from "react-router-dom";
 
 const EditProfile = () => {
-  const { name, token, id: userId, email, followers, following, username, bio, profilePic } =
-    useSelector((state) => state.user);
+  const {
+    name,
+    token,
+    id: userId,
+    email,
+    followers,
+    following,
+    username,
+    bio,
+    profilePic,
+  } = useSelector((state) => state.user);
 
   const [userData, setUserData] = useState({
     name,
@@ -45,66 +54,69 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [isUpdateRemoveButtonDisabled, setIsUpdateRemoveButtonDisabled] = useState(false);
-
+  const [isUpdateRemoveButtonDisabled, setIsUpdateRemoveButtonDisabled] =
+    useState(false);
 
   // Debounced username check
   const debounceTimer = useRef(null);
 
   const controllerRef = useRef(null);
 
-  const checkUsernameAvailability = useCallback(async (usernameToCheck) => {
-    if (!usernameToCheck || usernameToCheck === username) {
-      setUsernameStatus({
-        isChecking: false,
-        isAvailable: true,
-        message: "",
-        hasChecked: false,
-      });
-      return;
-    }
+  const checkUsernameAvailability = useCallback(
+    async (usernameToCheck) => {
+      if (!usernameToCheck || usernameToCheck === username) {
+        setUsernameStatus({
+          isChecking: false,
+          isAvailable: true,
+          message: "",
+          hasChecked: false,
+        });
+        return;
+      }
 
-    if (usernameToCheck.length < 3) {
-      setUsernameStatus({
-        isChecking: false,
-        isAvailable: false,
-        message: "Username must be at least 3 characters long",
-        hasChecked: true,
-      });
-      return;
-    }
+      if (usernameToCheck.length < 3) {
+        setUsernameStatus({
+          isChecking: false,
+          isAvailable: false,
+          message: "Username must be at least 3 characters long",
+          hasChecked: true,
+        });
+        return;
+      }
 
-    // Username valid - Set it
-    setUsernameStatus(prev => ({
-      ...prev,
-      isChecking: true,
-    }));
+      // Username valid - Set it
+      setUsernameStatus((prev) => ({
+        ...prev,
+        isChecking: true,
+      }));
 
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}/users/check-username/${usernameToCheck}?currentUserId=${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/users/check-username/${usernameToCheck}?currentUserId=${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      setUsernameStatus({
-        isChecking: false,
-        isAvailable: response.data.available,
-        message: response.data.message,
-        hasChecked: true,
-      });
-    } catch (error) {
-      setUsernameStatus({
-        isChecking: false,
-        isAvailable: false,
-        message: error.response?.data?.message || "Error checking username",
-        hasChecked: true,
-      });
-    }
-  }, [username, userId, token]);
+        setUsernameStatus({
+          isChecking: false,
+          isAvailable: response.data.available,
+          message: response.data.message,
+          hasChecked: true,
+        });
+      } catch (error) {
+        setUsernameStatus({
+          isChecking: false,
+          isAvailable: false,
+          message: error.response?.data?.message || "Error checking username",
+          hasChecked: true,
+        });
+      }
+    },
+    [username, userId, token]
+  );
 
   // Debounced username check effect
   useEffect(() => {
@@ -127,8 +139,8 @@ const EditProfile = () => {
 
   // Check if any field exceeds limit
   const hasExceededLimit = () => {
-    return Object.keys(LIMITS).some(field => 
-      inputNumChar[field] > LIMITS[field]
+    return Object.keys(LIMITS).some(
+      (field) => inputNumChar[field] > LIMITS[field]
     );
   };
 
@@ -146,13 +158,13 @@ const EditProfile = () => {
     } else {
       // Update userData
       setUserData((prev) => ({ ...prev, [name]: value }));
-      
+
       // Update character count
       setInputNumChar((prev) => ({ ...prev, [name]: value.length }));
 
       // Reset username status when typing
-      if (name === 'username') {
-        setUsernameStatus(prev => ({
+      if (name === "username") {
+        setUsernameStatus((prev) => ({
           ...prev,
           hasChecked: false,
           isAvailable: null,
@@ -162,15 +174,14 @@ const EditProfile = () => {
     }
   };
 
-
-const handleCancel = () => {
-  if (controllerRef.current) {
-    // API cancel
-    controllerRef.current.abort();
-  }
-  // back ya close modal
-  navigate(-1);
-};
+  const handleCancel = () => {
+    if (controllerRef.current) {
+      // API cancel
+      controllerRef.current.abort();
+    }
+    // back ya close modal
+    navigate(-1);
+  };
 
   const handleUpdateProfile = async () => {
     if (!userData.name || !userData.username) {
@@ -204,45 +215,44 @@ const handleCancel = () => {
     }
 
     try {
-  controllerRef.current = new AbortController();
+      controllerRef.current = new AbortController();
 
-  const res = await axios.patch(
-    `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-      signal: controllerRef.current.signal,
+      const res = await axios.patch(
+        `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controllerRef.current.signal,
+        }
+      );
+
+      if (res.status === 200) {
+        toast.success(res.data.message);
+        dispatch(
+          updateUser({
+            ...res.data.user,
+            id: userId,
+            email,
+            followers,
+            following,
+            token,
+          })
+        );
+        navigate(`/@${res.data.user.username}`);
+      }
+    } catch (err) {
+      if (err.name === "CanceledError") {
+        toast.error("Update request cancelled");
+      } else {
+        toast.error(err.response?.data?.message || "Error updating user");
+      }
+    } finally {
+      setIsButtonDisabled(false);
+      setIsUpdateRemoveButtonDisabled(false);
     }
-  );
-
-  if (res.status === 200) {
-    toast.success(res.data.message);
-    dispatch(
-      updateUser({
-        ...res.data.user,
-        id: userId,
-        email,
-        followers,
-        following,
-        token,
-      })
-    );
-    navigate(`/@${res.data.user.username}`);
-  }
-} catch (err) {
-  if (err.name === "CanceledError") {
-    console.log("Update request cancelled");
-  } else {
-    toast.error(err.response?.data?.message || "Error updating user");
-  }
-} finally {
-  setIsButtonDisabled(false);
-  setIsUpdateRemoveButtonDisabled(false);
-
-}
 
     // try {
     //   const res = await axios.patch(
@@ -280,12 +290,16 @@ const handleCancel = () => {
   // Get username status icon
   const getUsernameStatusIcon = () => {
     if (usernameStatus.isChecking) {
-      return <div className="animate-spin h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full"></div>;
+      return (
+        <div className="animate-spin h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
+      );
     }
     if (usernameStatus.hasChecked) {
-      return usernameStatus.isAvailable 
-        ? <span className="text-green-500">✓</span>
-        : <span className="text-red-500">✗</span>;
+      return usernameStatus.isAvailable ? (
+        <span className="text-green-500">✓</span>
+      ) : (
+        <span className="text-red-500">✗</span>
+      );
     }
     return null;
   };
@@ -310,7 +324,9 @@ const handleCancel = () => {
                 }
               />
             ) : (
-              <span className="text-gray-500 text-xs text-center">Select image</span>
+              <span className="text-gray-500 text-xs text-center">
+                Select image
+              </span>
             )}
           </label>
           <input
@@ -325,23 +341,26 @@ const handleCancel = () => {
         </div>
 
         <div className="flex space-x-4">
-          <Button 
-           disabled={isUpdateRemoveButtonDisabled}
+          <Button
+            disabled={isUpdateRemoveButtonDisabled}
             className={
-            isUpdateRemoveButtonDisabled
-              ? "opacity-50 cursor-not-allowed"
-              : "cursor-pointer"
-          }
-          onClick={() => fileInputRef.current.click()} variant="outline" size="sm">
+              isUpdateRemoveButtonDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }
+            onClick={() => fileInputRef.current.click()}
+            variant="outline"
+            size="sm"
+          >
             Update
           </Button>
           <Button
             disabled={isUpdateRemoveButtonDisabled}
             className={
-            isUpdateRemoveButtonDisabled
-              ? "opacity-50 cursor-not-allowed"
-              : "cursor-pointer"
-          }
+              isUpdateRemoveButtonDisabled
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            }
             onClick={() => {
               setIsButtonDisabled(false);
               setUserData((prev) => ({ ...prev, profilePic: null }));
@@ -370,10 +389,14 @@ const handleCancel = () => {
           className={inputNumChar.name > LIMITS.name ? "border-red-500" : ""}
         />
         <div className="flex justify-between items-center">
-          <p className={`text-xs ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`text-xs ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}
+          >
             {inputNumChar.name > LIMITS.name ? "Name is too long!" : ""}
           </p>
-          <p className={`text-xs text-right ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`text-xs text-right ${inputNumChar.name > LIMITS.name ? "text-red-500" : "text-gray-500"}`}
+          >
             {inputNumChar.name}/{LIMITS.name}
           </p>
         </div>
@@ -395,23 +418,31 @@ const handleCancel = () => {
             {getUsernameStatusIcon()}
           </div>
         </div>
-        
+
         {/* Username Status Messages */}
         {usernameStatus.isChecking && (
           <p className="text-xs text-yellow-600">Checking availability...</p>
         )}
-        
+
         {usernameStatus.hasChecked && (
-          <p className={`text-xs ${usernameStatus.isAvailable ? "text-green-600" : "text-red-500"}`}>
+          <p
+            className={`text-xs ${usernameStatus.isAvailable ? "text-green-600" : "text-red-500"}`}
+          >
             {usernameStatus.message}
           </p>
         )}
 
         <div className="flex justify-between items-center">
-          <p className={`text-xs ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}>
-            {inputNumChar.username > LIMITS.username ? "Username is too long!" : ""}
+          <p
+            className={`text-xs ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}
+          >
+            {inputNumChar.username > LIMITS.username
+              ? "Username is too long!"
+              : ""}
           </p>
-          <p className={`text-xs text-right ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`text-xs text-right ${inputNumChar.username > LIMITS.username ? "text-red-500" : "text-gray-500"}`}
+          >
             {inputNumChar.username}/{LIMITS.username}
           </p>
         </div>
@@ -430,10 +461,14 @@ const handleCancel = () => {
           className={inputNumChar.bio > LIMITS.bio ? "border-red-500" : ""}
         />
         <div className="flex justify-between items-center">
-          <p className={`text-xs ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`text-xs ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}
+          >
             {inputNumChar.bio > LIMITS.bio ? "Bio is too long!" : ""}
           </p>
-          <p className={`text-xs text-right ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}>
+          <p
+            className={`text-xs text-right ${inputNumChar.bio > LIMITS.bio ? "text-red-500" : "text-gray-500"}`}
+          >
             {inputNumChar.bio}/{LIMITS.bio}
           </p>
         </div>
@@ -441,20 +476,27 @@ const handleCancel = () => {
 
       {/* Info Text */}
       <div className="border-t pt-4 text-sm text-gray-600">
-         Go beyond the short bio—add photos and details to make your profile truly yours.
+        Go beyond the short bio—add photos and details to make your profile
+        truly yours.
       </div>
 
       {/* Buttons */}
       <div className="flex justify-end space-x-2">
-      <Button className="cursor-pointer" onClick={handleCancel} variant="outline">
-  Cancel
-</Button>
         <Button
-          disabled={isButtonDisabled || hasExceededLimit() || isUsernameInvalid()}
+          className="cursor-pointer"
+          onClick={handleCancel}
+          variant="outline"
+        >
+          Cancel
+        </Button>
+        <Button
+          disabled={
+            isButtonDisabled || hasExceededLimit() || isUsernameInvalid()
+          }
           onClick={handleUpdateProfile}
           className={
             isButtonDisabled || hasExceededLimit() || isUsernameInvalid()
-              ? "opacity-50 cursor-not-allowed" 
+              ? "opacity-50 cursor-not-allowed"
               : "cursor-pointer"
           }
         >

@@ -16,12 +16,9 @@ import SidebarBlogList from "./react-components/SidebarBlogList";
 import SettingPage from "./pages/SettingPage";
 import ResetPassword from "./react-components/ResetPassword";
 import ForgetPassword from "./react-components/ForgetPassword";
-import { useSelector } from "react-redux";
 
 function App() {
-  console.log(import.meta.env.VITE_BASE_URL);
   const location = useLocation();
-
 
   // Function to check if navbar should be hidden
   const shouldHideNavbar = () => {
@@ -43,7 +40,6 @@ function App() {
 
     return false;
   };
-
 
   return (
     <div className="min-h-screen flex flex-col theme-bg theme-text">

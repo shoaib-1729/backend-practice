@@ -7,7 +7,14 @@ import { useNavigate } from "react-router-dom";
 
 const SettingPage = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const { token, id: userId, username, showLikedBlogs, showSavedBlogs, showDraftBlogs} = useSelector((state) => state.user);
+  const {
+    token,
+    id: userId,
+    username,
+    showLikedBlogs,
+    showSavedBlogs,
+    showDraftBlogs,
+  } = useSelector((state) => state.user);
 
   const [settingsData, setSettingsData] = useState({
     showDraft: showDraftBlogs,
@@ -32,17 +39,11 @@ const SettingPage = () => {
     }));
   };
 
-
- // Add this function inside your SettingPage component
-const handleResetPassword = () => {
-  // Navigate to reset password page
-  navigate(`/reset-password/${userId}`);
-};
-
-
-
-
-  //   console.log(userData);
+  // Add this function inside your SettingPage component
+  const handleResetPassword = () => {
+    // Navigate to reset password page
+    navigate(`/reset-password/${userId}`);
+  };
 
   async function handleSettings() {
     // Backend call yahan maaro
@@ -59,7 +60,6 @@ const handleResetPassword = () => {
           },
         }
       );
-      // console.log(res);
 
       //  redirect to home page
       if (res.status == 200) {
@@ -74,7 +74,6 @@ const handleResetPassword = () => {
       }
     } catch (err) {
       toast.error(err.response.data.message);
-      console.log("Error posting blog", err);
       // enable button
       setIsButtonDisabled(false);
     }
@@ -174,26 +173,26 @@ const handleResetPassword = () => {
         </button>
       </div>
 
-{/* Reset Password Section */}
-<div className="mt-8 pt-6 border-t">
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    <div>
-      <h2 className="text-base sm:text-lg font-medium flex items-center gap-2">
-        <i class="fi fi-sr-lock"></i>
-        Password & Security
-      </h2>
-      <p className="text-sm text-gray-500 mt-1">
-        Change your password to keep your account secure.
-      </p>
-    </div>
-    <button
-      onClick={handleResetPassword}
-      className="px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 flex items-center gap-2 justify-center sm:justify-start cursor-pointer"
-    >
-      Reset Password
-    </button>
-  </div>
-</div>
+      {/* Reset Password Section */}
+      <div className="mt-8 pt-6 border-t">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-medium flex items-center gap-2">
+              <i class="fi fi-sr-lock"></i>
+              Password & Security
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Change your password to keep your account secure.
+            </p>
+          </div>
+          <button
+            onClick={handleResetPassword}
+            className="px-6 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors duration-200 flex items-center gap-2 justify-center sm:justify-start cursor-pointer"
+          >
+            Reset Password
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

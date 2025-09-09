@@ -19,9 +19,6 @@ const TagPage = () => {
     1
   );
 
-        // console.log(data)
-
-
   const cleanedTag = tagName.replace(/^#/, "");
 
   return (
@@ -50,14 +47,14 @@ const TagPage = () => {
           </h1>
           <p className="text-gray-600 text-base leading-relaxed">
             • Make sure all words are spelled correctly. <br />
-            • Try different keywords or more general terms. <br />
-            • Try using fewer words.
+            • Try different keywords or more general terms. <br />• Try using
+            fewer words.
           </p>
         </div>
       )}
 
       {/* Blog List */}
-  <DisplayBlog data={data} />
+      <DisplayBlog data={data} />
 
       {/* Load More Button */}
       <div className="flex justify-center mt-8">

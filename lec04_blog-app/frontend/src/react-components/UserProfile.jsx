@@ -13,6 +13,7 @@ import { UserContext } from "../context/UserContext";
 import { handleFollowCreator } from "../utils/helperFunc";
 import DeleteConfirmation from "./DeleteConfirmation"; // Import the reusable component
 import toast from "react-hot-toast";
+import { updateUser } from "@/utils/userSlice";
 
 const UserProfile = () => {
   const { username } = useParams();
@@ -24,9 +25,8 @@ const UserProfile = () => {
 
   const {
     token,
-    following,
+    followers,
     id: userId,
-    profilePic,
     savedBlogs,
     likedBlogs,
     bio,
@@ -124,8 +124,8 @@ const UserProfile = () => {
             {/* Profile Image */}
             <img
               src={
-                userData?.profilePic || profilePic
-                  ? userData?.profilePic || profilePic
+                userData?.profilePic
+                  ? userData?.profilePic
                   : `https://api.dicebear.com/9.x/initials/svg?seed=${userData?.name}`
               }
               alt="avatar"
@@ -138,7 +138,7 @@ const UserProfile = () => {
                 {userData?.name}
               </h1>
               <p className="text-base text-gray-600 font-medium">
-                {following?.length} followers
+                {followers?.length} followers
               </p>
             </div>
 
@@ -306,8 +306,8 @@ const UserProfile = () => {
               <div className="text-center mb-6">
                 <img
                   src={
-                    userData?.profilePic || profilePic
-                      ? userData?.profilePic || profilePic
+                    userData?.profilePic
+                      ? userData?.profilePic
                       : `https://api.dicebear.com/9.x/initials/svg?seed=${userData?.name}`
                   }
                   alt="avatar"
@@ -366,7 +366,11 @@ const UserProfile = () => {
                       >
                         <div className="flex items-center gap-3">
                           <img
-                            src={f.profilePic}
+                            src={
+                              f?.profilePic
+                                ? f?.profilePic
+                                : `https://api.dicebear.com/9.x/initials/svg?seed=${f?.name}`
+                            }
                             alt="avatar"
                             className="w-8 h-8 rounded-full object-cover border"
                           />
@@ -484,7 +488,11 @@ const UserProfile = () => {
                     className="flex items-center gap-3 bg-gray-50 hover:bg-gray-100 p-4 rounded-xl transition-all duration-200 hover:shadow-md"
                   >
                     <img
-                      src={f.profilePic}
+                      src={
+                        f.profilePic
+                          ? f.profilePic
+                          : `https://api.dicebear.com/9.x/initials/svg?seed=${f?.name}`
+                      }
                       alt="avatar"
                       className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
                     />

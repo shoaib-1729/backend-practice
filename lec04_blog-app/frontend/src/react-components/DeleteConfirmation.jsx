@@ -18,8 +18,7 @@ import {
 } from "@/shadcn-components/ui/tooltip";
 import { useDispatch, useSelector } from "react-redux";
 import { handleDeleteBlog, handleDeleteUser } from "../utils/helperFunc";
-import HeroPage from "../pages/HeroPage";
-import { useEffect } from "react";
+import toast from "react-hot-toast";
 
 const DeleteConfirmation = ({ type, item, setShowDeleteDropdown }) => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -93,17 +92,10 @@ const DeleteConfirmation = ({ type, item, setShowDeleteDropdown }) => {
 
   const currentConfig = config[type];
 
-  console.log("item:", item);
-  console.log("userId:", userId);
-  console.log("currentConfig: ", currentConfig);
-  console.log("canDelete:", currentConfig.canDelete);
-
   const onDeleteConfirm = async () => {
     try {
       setIsDeleting(true);
       if (type === "blog") {
-        console.log(isDeleting);
-
         await handleDeleteBlog(item._id, token, dispatch);
       } else if (type === "user") {
         await handleDeleteUser(
@@ -120,21 +112,15 @@ const DeleteConfirmation = ({ type, item, setShowDeleteDropdown }) => {
         navigate("/");
       }, 1000);
     } catch (error) {
-      console.error(`Error deleting ${type}:`, error);
+      toast.error(`Error deleting ${type}:`, error);
       setIsDeleting(false);
     }
   };
-
-  // useEffect(() => {
-  //   console.log("isDeleting changed:", isDeleting);
-  // }, [isDeleting]);
 
   // Agar permission nahi hai toh null return
   if (!currentConfig.canDelete) {
     return null;
   }
-
-  console.log(isDeleting);
 
   return (
     <>

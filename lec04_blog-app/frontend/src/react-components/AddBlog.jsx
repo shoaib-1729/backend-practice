@@ -38,7 +38,6 @@ const AddBlog = () => {
   const controllerRef = useRef(null);
 
   const handleBlogData = (e) => {
-    // console.log(e.target)
     if (blogData.title) {
       // enable button
       setIsButtonDisabled(false);
@@ -109,7 +108,6 @@ const AddBlog = () => {
       setBlogData((prev) => {
         const updatedTag = [...prev.tag, newTag];
         // True value
-        // console.log("✅ Inside setBlogData: ", updatedTag);
         return {
           ...prev,
           tag: updatedTag,
@@ -160,10 +158,6 @@ const AddBlog = () => {
 
     formData.append("existingImages", JSON.stringify(existingImages));
 
-    // console.log(existingImages);
-
-    console.log(blogData);
-
     try {
       const res = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/blogs/${id}`,
@@ -176,7 +170,6 @@ const AddBlog = () => {
           signal: controllerRef.current.signal,
         }
       );
-      // console.log(blogData);
 
       //  redirect to home page
       if (res.status == 200) {
@@ -188,7 +181,6 @@ const AddBlog = () => {
       }
     } catch (err) {
       toast.error(err.response.data.message);
-      console.log("Error posting blog", err);
     }
   }
 
@@ -235,8 +227,6 @@ const AddBlog = () => {
       }
     });
 
-    // console.log(blogData)
-
     try {
       e.preventDefault();
       const res = await axios.post(
@@ -258,10 +248,7 @@ const AddBlog = () => {
         navigate("/");
       }
     } catch (err) {
-      // enable button
-      // setIsButtonDisabled(false);
       toast.error(err.response.data.message);
-      console.log("Error posting blog", err);
     }
   }
 

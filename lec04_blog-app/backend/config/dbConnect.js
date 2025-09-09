@@ -1,13 +1,15 @@
 const mongoose = require("mongoose");
-// db connection
+const { DB_URI, DB_NAME } = require("./dotenv.config");
+const logger = require("../utils/logger");
+
 async function dbConnect() {
     try {
-        await mongoose.connect(`${process.env.MONGODB_URI}/${process.env.DB_NAME}`)
-        console.log("Database connected successfully...")
+        await mongoose.connect(`${DB_URI}/${DB_NAME}`);
+        logger.info("MongoDB connected successfully");
     } catch (error) {
-        console.log("Error connecting to DB", error);
+        logger.error("MongoDB connection failed: " + error.message);
+        process.exit(1);
     }
 }
-
 
 module.exports = dbConnect;

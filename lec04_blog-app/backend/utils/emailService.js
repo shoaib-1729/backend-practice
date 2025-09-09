@@ -1,8 +1,7 @@
+const { MAIL_USER, FRONTEND_URL } = require("../config/dotenv.config.js");
 const { generateToken } = require("../utils/generateToken.js");
 const transporter = require("../utils/mailTransporter.js");
 const randomPasswordGenerator = require("./randomPasswordGenerator.js");
-require("dotenv").config();
-
 
 async function sendVerificationEmail(user) {
     const { _id, email } = user;
@@ -12,13 +11,13 @@ async function sendVerificationEmail(user) {
 
     // send email
     await transporter.sendMail({
-        from: process.env.MAIL_USER,
+        from: MAIL_USER,
         to: email,
         subject: "Email Verification",
         text: "Please verify your email",
         html: `
       <h1>Please click the link to verify your email</h1>
-      <a href="http://localhost:5173/verify-user/${verificationToken}">Verify Email</a>
+      <a href="${FRONTEND_URL}/verify-user/${verificationToken}">Verify Email</a>
     `,
     });
 }
@@ -26,11 +25,11 @@ async function sendVerificationEmail(user) {
 async function sendForgetPasswordEmail(user) {
     const { email } = user;
 
-    const randPass = randomPasswordGenerator()
+    const randPass = randomPasswordGenerator();
 
     // send email
     await transporter.sendMail({
-        from: process.env.MAIL_USER,
+        from: MAIL_USER,
         to: email,
         subject: "Your New Temporary Password",
         text: "Check your email for new password",

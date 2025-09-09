@@ -19,6 +19,8 @@ const AuthForm = ({ type }) => {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -40,7 +42,6 @@ const AuthForm = ({ type }) => {
       }
 
       const idToken = await userData.getIdToken();
-      console.log("access token",idToken)
 
       // yeh data backend ko bhejna hoga
       const res = await axios.post(
@@ -49,7 +50,6 @@ const AuthForm = ({ type }) => {
           accessToken: idToken,
         }
       );
-
 
       dispatch(login(res.data.user));
 
@@ -62,11 +62,14 @@ const AuthForm = ({ type }) => {
       const errorMessage =
         err?.response?.data?.message ||
         "Something went wrong. Please try again.";
+      setIsButtonDisabled(false);
       toast.error(errorMessage);
     }
   }
 
   async function handleAuthForm(e) {
+    // disable button
+    setIsButtonDisabled(true);
     try {
       e.preventDefault();
       const res = await axios.post(
@@ -88,6 +91,7 @@ const AuthForm = ({ type }) => {
         "Something went wrong. Please try again.";
       toast.error(errorMessage);
     } finally {
+      setIsButtonDisabled(false);
       setUserData(() => ({
         name: "",
         email: "",
@@ -97,6 +101,8 @@ const AuthForm = ({ type }) => {
   }
 
   function handleInput(e) {
+    // enable button
+    setIsButtonDisabled(false);
     const { name, value } = e.target;
     setUserData((prev) => ({ ...prev, [name]: value }));
   }
@@ -161,7 +167,14 @@ const AuthForm = ({ type }) => {
             />
           </div>
 
-          <Button type="submit" className="w-full cursor-pointer">
+          <Button
+            type="submit"
+            disabled={isButtonDisabled}
+            className={`
+              w-full cursor-pointer
+               ${isButtonDisabled ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-900"}
+              `}
+          >
             {type === "signup" ? "Register" : "Sign In"}
           </Button>
 

@@ -1,24 +1,22 @@
 const jwt = require("jsonwebtoken");
+const logger = require("./logger");
+const { JWT_SECRET } = require("../config/dotenv.config");
 
 function generateToken(payload) {
-    const token = jwt.sign(
-        payload,
-        "jsonkakhatarnakwalakey",
-        // { expiresIn: '10y' }
-    );
+    const token = jwt.sign(payload, JWT_SECRET);
     return token;
 }
 
 function validToken(token) {
     try {
         const data = jwt.verify(token, "jsonkakhatarnakwalakey");
-        console.log("Token verified successfully");
+        logger.info("Token verified successfully");
         return data;
     } catch (err) {
-        console.log("Token verification error:", err.message);
+        logger.info("Token verification error:", err.message);
 
-        if (err.name === 'TokenExpiredError') {
-            console.log("Token expired at:", new Date(err.expiredAt));
+        if (err.name === "TokenExpiredError") {
+            logger.info("Token expired at:", new Date(err.expiredAt));
         }
 
         return null;
@@ -33,5 +31,5 @@ function decodeToken(token) {
 module.exports = {
     generateToken,
     validToken,
-    decodeToken
+    decodeToken,
 };

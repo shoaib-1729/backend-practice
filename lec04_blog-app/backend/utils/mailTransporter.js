@@ -1,18 +1,21 @@
 const nodemailer = require("nodemailer");
-require("dotenv").config();
+const {
+    MAIL_USER,
+    MAIL_PASS,
+    MAIL_HOST,
+    MAIL_PORT,
+    MAIL_SECURE,
+} = require("../config/dotenv.config");
 
-console.log("MAIL_USER:", process.env.MAIL_USER);
-console.log("MAIL_PASS:", process.env.MAIL_PASS);
 // Create a test account or replace with real credentials.
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    host: MAIL_HOST,
+    port: MAIL_PORT,
+    secure: MAIL_SECURE,
     auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
+        user: MAIL_USER,
+        pass: MAIL_PASS,
     },
 });
 
-
-module.exports = transporter
+module.exports = transporter;

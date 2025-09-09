@@ -60,7 +60,7 @@ const ResetPassword = () => {
         });
       }
     } catch (err) {
-      console.error("Password reset error:", err);
+      toast.error("Password reset error:", err);
       const errorMessage =
         err?.response?.data?.message ||
         "Something went wrong. Please try again.";

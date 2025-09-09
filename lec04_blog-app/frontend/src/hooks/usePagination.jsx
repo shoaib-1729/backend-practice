@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 
 export const usePagination = (
   path,
@@ -39,23 +40,25 @@ export const usePagination = (
   useEffect(() => {
     async function fetchBlog() {
       try {
-        const res = await axios.get(path === "tag" ? `${import.meta.env.VITE_BASE_URL}/tag/${tagName}` : `${import.meta.env.VITE_BASE_URL}/${path}`, {
-          params: { ...queryParams, pageNo, limit },
-        });
+        const res = await axios.get(
+          path === "tag"
+            ? `${import.meta.env.VITE_BASE_URL}/tag/${tagName}`
+            : `${import.meta.env.VITE_BASE_URL}/${path}`,
+          {
+            params: { ...queryParams, pageNo, limit },
+          }
+        );
         setData((prev) => [...prev, ...res.data.blogs]);
         setHasMoreBlogs(res.data.hasMoreBlogs);
         setBlogCount(res.data.blogCount);
       } catch (err) {
-        console.error("Error fetching blog:", err);
+        toast.error("Error fetching blog:", err);
         setData([]);
       }
     }
 
     fetchBlog();
   }, [JSON.stringify(queryParams), pageNo]);
-
-  
-
 
   return { data, blogCount, hasMoreBlogs };
 };

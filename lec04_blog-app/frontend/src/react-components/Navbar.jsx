@@ -27,7 +27,6 @@ const Navbar = () => {
   const handleWriteClick = () => {
     if (!token) {
       toast.error("You need to sign in first to carve your story!");
-      // navigate("/signin");
     } else {
       navigate("/add-blog");
     }
@@ -99,6 +98,7 @@ const Navbar = () => {
                 if (searchQuery.trim() && e.code === "Enter") {
                   const encodedQuery = searchQuery.trim().split(" ").join("+");
                   navigate(`/search-query?q=${encodedQuery}`);
+                  setSearchQuery("");
                 }
               }}
             />

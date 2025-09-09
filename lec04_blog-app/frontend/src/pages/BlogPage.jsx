@@ -30,6 +30,8 @@ const BlogPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [isFollowCreator, setIsFollowCreator] = useState(false);
 
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
   const { id } = useParams();
   const {
     token,
@@ -232,26 +234,6 @@ const BlogPage = () => {
     );
   };
 
-  // fetch blog using id
-  // async function fetchBlog() {
-  //   try {
-  //     const {
-  //       data: { blog },
-  //     } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs/${id}`);
-  //     setBlog(blog);
-  //     dispatch(addSelectedBlog(blog));
-
-  //     // check if current user liked the blog
-  //     if (blog.likedBy?.includes(userId)) setIsLiked(true);
-  //     // check if blog is saved by current user
-  //     if (blog.savedBy?.includes(userId)) setIsSaved(true);
-  //     // check if user follows creator
-  //     if (blog.creator?.followers?.includes(userId)) setIsFollowCreator(true);
-  //   } catch (err) {
-  //     console.error("Error fetching blog:", err);
-  //   }
-  // }
-
   async function fetchBlog() {
     // cancel old request if still pending
     if (controllerRef.current) {
@@ -296,16 +278,17 @@ const BlogPage = () => {
       setIsFollowCreator(isFollowing);
     } catch (err) {
       if (axios.isCancel(err)) {
-        console.log("Request cancelled due to navigation/change");
+        toast.error("Request cancelled due to navigation/change");
       } else {
-        console.error("Error fetching blog:", err);
+        // yaha status code check karo
+        // yaha status code check karo
+        if (err.response) {
+          // blog deleted/not found
+          setLoadingTimeout(true);
+        }
       }
     }
-    //  finally {
-    //   setLoading(false);
-    // }
   }
-
   // fetch blog whenever id changes
   useEffect(() => {
     fetchBlog();
@@ -337,37 +320,29 @@ const BlogPage = () => {
         );
         setIsLiked((prev) => !prev);
         dispatch(changeLikes(userId));
-        console.log(res.data.user);
         // update user
         dispatch(updateUser(res.data.user));
         toast.success(res.data.message);
       }
     } catch (err) {
       setIsLiked((prev) => !prev);
-      console.error("Error liking blog:", err);
+      toast.error("Error liking blog:", err);
     }
   }
-
-  // useEffect(() => {
-  //   fetchBlog();
-  //   return () => {
-  //     dispatch(setIsOpen(false));
-  //     if (
-  //       window.location.pathname !== `/edit/${id}` &&
-  //       window.location.pathname !== `/blog/${id}`
-  //     ) {
-  //       dispatch(removeSelectedBlog());
-  //     }
-  //   };
-  // }, [id]);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 bg-white min-h-screen">
       {!blog ? (
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-2xl font-light text-gray-400 animate-pulse">
-            Loading article...
-          </div>
+          {loadingTimeout ? (
+            <div className="text-2xl font-light text-gray-500">
+              Sorry! Can't fetch blog.
+            </div>
+          ) : (
+            <div className="text-2xl font-light text-gray-400 animate-pulse">
+              Loading article...
+            </div>
+          )}
         </div>
       ) : (
         <div key={blog._id} className="space-y-8">
@@ -409,7 +384,6 @@ const BlogPage = () => {
                   className="w-full h-full rounded-full object-cover border border-gray-200"
                 />
               </div>
-              {console.log(blog?.creator?.name)}
               <div className="space-y-1">
                 <Link to={`/@${blog.creator.username}`}>
                   <h3 className="text-lg font-medium text-gray-900 hover:text-gray-700 transition-colors">
