@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Link,
@@ -32,6 +32,27 @@ const UserProfile = () => {
     bio,
   } = useSelector((state) => state.user);
   const dispatch = useDispatch();
+
+  const dropdownRef = useRef(null);
+
+  // dropdown close on outside mouse click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDeleteDropdown(false);
+      }
+    }
+
+    if (showDeleteDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDeleteDropdown]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -90,7 +111,7 @@ const UserProfile = () => {
             {/* Settings/Options Button for Mobile - Top Right */}
             {userData?._id === userId && (
               <div className="absolute top-4 right-4">
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setShowDeleteDropdown(!showDeleteDropdown)}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
