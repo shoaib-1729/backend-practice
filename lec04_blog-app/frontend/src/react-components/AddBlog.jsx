@@ -86,7 +86,7 @@ const AddBlog = () => {
     }
   }, [id, title, description, image, content, draft, tag]);
 
-    // Cleanup function for abort controller
+  // Cleanup function for abort controller
   useEffect(() => {
     return () => {
       if (controllerRef.current) {
@@ -176,7 +176,7 @@ const AddBlog = () => {
       controllerRef.current = new AbortController();
 
       const res = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/blogs/${id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/${id}`,
         formData,
         {
           headers: {
@@ -248,7 +248,7 @@ const AddBlog = () => {
       controllerRef.current = new AbortController();
 
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/blogs`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs`,
         formData,
         {
           headers: {
@@ -336,8 +336,6 @@ const AddBlog = () => {
       },
     });
   };
-
-
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

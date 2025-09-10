@@ -247,7 +247,7 @@ const BlogPage = () => {
     try {
       const {
         data: { blog },
-      } = await axios.get(`${import.meta.env.VITE_BASE_URL}/blogs/${id}`, {
+      } = await axios.get(`${import.meta.env.envURL}/blogs/${id}`, {
         signal: controller.signal,
       });
 
@@ -314,7 +314,7 @@ const BlogPage = () => {
     try {
       if (token) {
         const res = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/blogs/like/${blog._id}`,
+          `${import.meta.env.VITE_BACKEND_URL}/blogs/like/${blog._id}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );

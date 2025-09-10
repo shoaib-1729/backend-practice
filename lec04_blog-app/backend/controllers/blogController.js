@@ -394,7 +394,7 @@ async function updateBlog(req, res) {
     blog.draft = draft;
 
     // save updated blog in DB
-    const updatedBlog = await blog.save();
+    await blog.save();
 
     if (draft) {
       return res.status(200).json({

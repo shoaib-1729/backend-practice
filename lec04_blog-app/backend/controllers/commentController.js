@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Comment = require("../models/commentModel.js")
-const Blog = require("../models/blogModel.js")
+const Comment = require("../models/commentModel.js");
+const Blog = require("../models/blogModel.js");
 
 //  add comment controller
 async function addComment(req, res) {
@@ -13,57 +13,55 @@ async function addComment(req, res) {
         const creator = req.user;
 
         // comment text  -> request body
-        const { comment } = req.body
+        const { comment } = req.body;
 
         // validation
         // blog id valid?
         if (!blog) {
             return res.status(400).json({
-                "success": false,
-                "message": "Blog does not exist",
-            })
+                success: false,
+                message: "Blog does not exist",
+            });
         }
 
         // no comment
         if (!comment) {
             return res.status(400).json({
-                "success": false,
-                "message": "Please enter the comment",
-            })
+                success: false,
+                message: "Please enter the comment",
+            });
         }
 
         // add comment after validation
         // create comment
         const newComment = await Comment.create({
-                comment,
-                blog: id,
-                user: creator,
-                likedBy: [], // Initialize empty likedBy array
-                replies: [] // Initialize empty replies array
-            })
-            .then((comment) => {
-                return comment.populate({
-                    path: "user",
-                    select: "name email profilePic"
-                })
-            })
+            comment,
+            blog: id,
+            user: creator,
+            likedBy: [], // Initialize empty likedBy array
+            replies: [], // Initialize empty replies array
+        }).then((comment) => {
+            return comment.populate({
+                path: "user",
+                select: "name email profilePic",
+            });
+        });
 
         // push comment in blog
-        await Blog.findByIdAndUpdate(id, { $push: { comments: newComment._id } })
+        await Blog.findByIdAndUpdate(id, { $push: { comments: newComment._id } });
 
         // response message
         return res.status(200).json({
-            "success": true,
-            "message": "Comment added",
-            newComment
-        })
-
+            success: true,
+            message: "Comment added",
+            newComment,
+        });
     } catch (err) {
         return res.status(500).json({
-            "success": false,
-            "message": "Error adding comment",
-            "error": err.message
-        })
+            success: false,
+            message: "Error adding comment",
+            error: err.message,
+        });
     }
 }
 
@@ -78,20 +76,20 @@ async function deleteComment(req, res) {
 
         // Check if the commentId is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(commentId)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
+            return res.status(400).json({ error: "Invalid ID format" });
         }
 
         // find the comment and populate blog details
         const comment = await Comment.findById(commentId).populate({
             path: "blog",
-            select: "creator comments"
+            select: "creator comments",
         });
 
         // Check if the comment exists
         if (!comment) {
             return res.status(404).json({
                 success: false,
-                message: "Comment not found"
+                message: "Comment not found",
             });
         }
 
@@ -117,29 +115,30 @@ async function deleteComment(req, res) {
             // check if replies exists
             if (comment.parentComment) {
                 await Comment.findByIdAndUpdate(comment.parentComment, {
-                    $pull: { replies: commentId }
-                })
+                    $pull: { replies: commentId },
+                });
             }
 
             await Comment.findByIdAndDelete(commentId);
         }
 
-        await deleteCommentAndReplies(commentId)
+        await deleteCommentAndReplies(commentId);
 
         // delete comment -> remove the comment id from the blog's comments array
-        await Blog.findByIdAndUpdate(comment.blog._id, { $pull: { comments: commentId } });
+        await Blog.findByIdAndUpdate(comment.blog._id, {
+            $pull: { comments: commentId },
+        });
 
         // response message
         return res.status(200).json({
             success: true,
-            message: "Comment deleted"
+            message: "Comment deleted",
         });
-
     } catch (err) {
         return res.status(500).json({
             success: false,
             message: "Error deleting comment",
-            error: err.message
+            error: err.message,
         });
     }
 }
@@ -158,20 +157,20 @@ async function editComment(req, res) {
 
         // Check if the commentId is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(commentId)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
+            return res.status(400).json({ error: "Invalid ID format" });
         }
 
         // find the comment and populate blog details
         const comment = await Comment.findById(commentId).populate({
             path: "blog",
-            select: "creator comments"
+            select: "creator comments",
         });
 
         // Check if the comment exists
         if (!comment) {
             return res.status(404).json({
                 success: false,
-                message: "Comment not found"
+                message: "Comment not found",
             });
         }
 
@@ -188,27 +187,26 @@ async function editComment(req, res) {
         // update the comment document from the Comment model
         const updatedComment = await Comment.findByIdAndUpdate(
             commentId, {
-                comment: updatedCommentContent
+                comment: updatedCommentContent,
             }, { new: true }
         ).then((comment) => {
             return comment.populate({
                 path: "user",
-                select: "name email profilePic"
-            })
-        })
+                select: "name email profilePic",
+            });
+        });
 
         // response message
         return res.status(200).json({
             success: true,
             message: "Comment updated",
-            updatedComment
+            updatedComment,
         });
-
     } catch (err) {
         return res.status(500).json({
             success: false,
             message: "Error updating comment",
-            error: err.message
+            error: err.message,
         });
     }
 }
@@ -221,7 +219,7 @@ async function likeComment(req, res) {
 
         // Check if the id is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(commentId)) {
-            return res.status(400).json({ error: 'Invalid ID format' });
+            return res.status(400).json({ error: "Invalid ID format" });
         }
 
         // find blog by id
@@ -233,9 +231,9 @@ async function likeComment(req, res) {
         // comment id valid?
         if (!comment) {
             return res.status(400).json({
-                "success": false,
-                "message": "Comment does not exist",
-            })
+                success: false,
+                message: "Comment does not exist",
+            });
         }
 
         // Initialize likedBy array if it doesn't exist
@@ -246,31 +244,34 @@ async function likeComment(req, res) {
         // user id exists in like array -> dislike, else like
         if (!comment.likedBy.includes(userId)) {
             // push user id to like array
-            await Comment.findByIdAndUpdate(commentId, { $push: { likedBy: userId } })
+            await Comment.findByIdAndUpdate(commentId, {
+                $push: { likedBy: userId },
+            });
 
             // response message
             return res.status(200).json({
-                "success": true,
-                "message": "Comment liked"
-            })
-
+                success: true,
+                message: "Comment liked",
+            });
         } else {
             // dislike comment logic
             // pull user id to like array
-            await Comment.findByIdAndUpdate(commentId, { $pull: { likedBy: userId } })
+            await Comment.findByIdAndUpdate(commentId, {
+                $pull: { likedBy: userId },
+            });
 
             // response message
             return res.status(200).json({
-                "success": true,
-                "message": "Comment disliked"
-            })
+                success: true,
+                message: "Comment disliked",
+            });
         }
     } catch (err) {
         return res.status(500).json({
-            "success": false,
-            "message": "Error liking comment",
-            "error": err.message
-        })
+            success: false,
+            message: "Error liking comment",
+            error: err.message,
+        });
     }
 }
 
@@ -281,7 +282,7 @@ async function addNestedComment(req, res) {
 
         const userId = req.user;
 
-        const { reply } = req.body
+        const { reply } = req.body;
 
         // find comment
         const comment = await Comment.findById(parentCommentId);
@@ -297,9 +298,9 @@ async function addNestedComment(req, res) {
 
         if (!blog) {
             return res.status(400).json({
-                "success": false,
-                "message": "Blog does not exist",
-            })
+                success: false,
+                message: "Blog does not exist",
+            });
         }
 
         // add reply after validation
@@ -309,8 +310,9 @@ async function addNestedComment(req, res) {
             comment: reply,
             parentComment: parentCommentId,
             user: userId,
-            likedBy: [], // Initialize empty likedBy array for replies too
-            replies: [] // Initialize empty replies array
+            // Initialize empty likedBy array for liked and replies
+            likedBy: [],
+            replies: [],
         }).then((reply) => {
             return reply.populate({
                 path: "user",
@@ -325,56 +327,15 @@ async function addNestedComment(req, res) {
 
         // response message
         return res.status(200).json({
-            "success": true,
-            "message": "Reply added",
-            newReply
-        })
-
-    } catch (err) {
-        return res.status(500).json({
-            "success": false,
-            "message": "Error adding reply",
-            "error": err.message
-        })
-    }
-}
-
-// NEW FUNCTION: Get all comments for a blog with proper population
-async function getCommentsForBlog(req, res) {
-    try {
-        const { id: blogId } = req.params;
-
-        // Check if the blogId is a valid MongoDB ObjectId
-        if (!mongoose.Types.ObjectId.isValid(blogId)) {
-            return res.status(400).json({ error: 'Invalid blog ID format' });
-        }
-
-        // Find all comments for the blog and populate necessary fields
-        const comments = await Comment.find({
-                blog: blogId,
-                parentComment: { $exists: false } // Only get top-level comments
-            })
-            .populate('user', 'name email profilePic')
-            .populate('likedBy', '_id') // Populate likedBy for checking likes
-            .populate({
-                path: 'replies',
-                populate: [
-                    { path: 'user', select: 'name email profilePic' },
-                    { path: 'likedBy', select: '_id' }
-                ]
-            })
-            .sort({ createdAt: -1 });
-
-        return res.status(200).json({
             success: true,
-            comments
+            message: "Reply added",
+            newReply,
         });
-
     } catch (err) {
         return res.status(500).json({
             success: false,
-            message: "Error fetching comments",
-            error: err.message
+            message: "Error adding reply",
+            error: err.message,
         });
     }
 }
@@ -385,5 +346,4 @@ module.exports = {
     editComment,
     likeComment,
     addNestedComment,
-    getCommentsForBlog // Add this new function to exports
-}
+};

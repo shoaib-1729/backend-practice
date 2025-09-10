@@ -37,7 +37,7 @@ const ResetPassword = () => {
 
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/auth/reset-password/${userId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/auth/reset-password/${userId}`,
         formData,
         {
           headers: {

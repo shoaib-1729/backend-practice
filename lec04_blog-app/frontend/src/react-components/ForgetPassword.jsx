@@ -16,7 +16,7 @@ const ForgetPassword = () => {
     try {
       setLoading(true);
       const res = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/auth/forget-password`,
+        `${import.meta.env.VITE_BACKEND_URL}/auth/forget-password`,
         { email }
       );
 

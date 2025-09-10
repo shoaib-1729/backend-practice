@@ -64,7 +64,7 @@ const UserProfile = () => {
       try {
         const newName = username?.split("@")[1];
         const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/users/${newName}`
+          `${import.meta.env.VITE_BACKEND_URL}/users/${newName}`
         );
         setUserData(res.data.user);
       } catch (err) {

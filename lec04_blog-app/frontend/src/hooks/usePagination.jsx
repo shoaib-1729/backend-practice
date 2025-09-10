@@ -42,8 +42,8 @@ export const usePagination = (
       try {
         const res = await axios.get(
           path === "tag"
-            ? `${import.meta.env.VITE_BASE_URL}/tag/${tagName}`
-            : `${import.meta.env.VITE_BASE_URL}/${path}`,
+            ? `${import.meta.env.VITE_BACKEND_URL}/tag/${tagName}`
+            : `${import.meta.env.VITE_BACKEND_URL}/${path}`,
           {
             params: { ...queryParams, pageNo, limit },
           }

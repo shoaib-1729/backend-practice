@@ -45,7 +45,7 @@ const AuthForm = ({ type }) => {
 
       // yeh data backend ko bhejna hoga
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/google-auth`,
+        `${import.meta.env.VITE_BACKEND_URL}/google-auth`,
         {
           accessToken: idToken,
         }
@@ -73,7 +73,7 @@ const AuthForm = ({ type }) => {
     try {
       e.preventDefault();
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/${type}`,
+        `${import.meta.env.VITE_BACKEND_URL}/${type}`,
         userData
       );
       dispatch(login(res.data.user));

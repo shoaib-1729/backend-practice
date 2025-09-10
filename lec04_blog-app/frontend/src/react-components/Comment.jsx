@@ -37,7 +37,7 @@ const Comment = () => {
   async function handleComment() {
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/blogs/comment/${id}`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${id}`,
         { comment },
         {
           headers: {
@@ -131,7 +131,7 @@ const DisplayComments = ({
   async function handleCommentLike(commentId) {
     try {
       const res = await axios.patch(
-        `${import.meta.env.VITE_BASE_URL}/blogs/like-comment/${commentId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/like-comment/${commentId}`,
         {},
         {
           headers: {
@@ -150,7 +150,7 @@ const DisplayComments = ({
   async function handleCommentUpdate(commentId) {
     try {
       const res = await axios.put(
-        `${import.meta.env.VITE_BASE_URL}/blogs/edit-comment/${commentId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/edit-comment/${commentId}`,
         { updatedCommentContent },
         {
           headers: {
@@ -175,7 +175,7 @@ const DisplayComments = ({
   async function handleCommentDelete(commentId) {
     try {
       const res = await axios.delete(
-        `${import.meta.env.VITE_BASE_URL}/blogs/comment/${commentId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/blogs/comment/${commentId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -192,7 +192,7 @@ const DisplayComments = ({
   async function handleReply(parentCommentId) {
     try {
       let res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/comment/${parentCommentId}/${blogId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/comment/${parentCommentId}/${blogId}`,
         { reply },
         {
           headers: {

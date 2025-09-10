@@ -290,9 +290,6 @@ async function loginUser(req, res) {
       });
     }
 
-    // todo: password validation
-    // #, a, A, 1, 6-20 chars
-
     // If it's a temporary password
     if (checkExistingUser.isTempPassword) {
       if (Date.now() > checkExistingUser.tempPasswordExpiry) {
@@ -696,8 +693,6 @@ async function updateUser(req, res) {
       user.profilePic = secure_url;
       user.profilePicId = public_id;
     }
-
-    // TODO: validations
 
     // username change karna hai
     if (username !== user.username) {
@@ -1106,7 +1101,6 @@ async function resetUserPassword(req, res) {
       });
     }
 
-    // New password !== confirm password
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
         success: false,
@@ -1114,7 +1108,6 @@ async function resetUserPassword(req, res) {
       });
     }
 
-    // New password !== confirm password
     if (currentPassword === newPassword) {
       return res.status(400).json({
         success: false,

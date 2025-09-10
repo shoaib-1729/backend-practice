@@ -92,7 +92,7 @@ const EditProfile = () => {
 
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/users/check-username/${usernameToCheck}?currentUserId=${userId}`,
+          `${import.meta.env.VITE_BACKEND_URL}/users/check-username/${usernameToCheck}?currentUserId=${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -226,7 +226,7 @@ const EditProfile = () => {
       controllerRef.current = new AbortController();
 
       const res = await axios.patch(
-        `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/users/${userId}`,
         formData,
         {
           headers: {

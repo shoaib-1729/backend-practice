@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
-import AuthForm from "./pages/authForm";
+import AuthForm from "./pages/AuthForm";
 import Navbar from "./react-components/Navbar";
 import HomePage from "./pages/HomePage";
 import AddBlog from "./react-components/AddBlog";

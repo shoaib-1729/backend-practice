@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Backend Kaise Ho Saare");
+  res.send("Backend Chal Raha Hai.");
 });
 
 // routes

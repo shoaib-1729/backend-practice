@@ -125,3 +125,6 @@
 [2025-09-10 20:55:39] [32minfo[39m: Token verified successfully
 [2025-09-10 21:04:47] [32minfo[39m: Token verified successfully
 [2025-09-10 21:04:53] [31merror[39m: Error while uploading image to cloudinary:  Missing required parameter - public_id
+[2025-09-10 22:48:15] [32minfo[39m: Cloudinary configured successfully...
+[2025-09-10 22:48:15] [32minfo[39m: Server is running on port 3000
+[2025-09-10 22:48:15] [32minfo[39m: MongoDB connected successfully

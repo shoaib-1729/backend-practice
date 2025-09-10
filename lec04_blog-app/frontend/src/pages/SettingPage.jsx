@@ -52,7 +52,7 @@ const SettingPage = () => {
     setIsButtonDisabled(true);
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/users/${username}/settings`,
+        `${import.meta.env.VITE_BACKEND_URL}/users/${username}/settings`,
         settingsData,
         {
           headers: {
