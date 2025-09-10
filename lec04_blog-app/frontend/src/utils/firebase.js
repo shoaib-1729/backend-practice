@@ -43,7 +43,6 @@ export async function googleAuth() {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    toast.success("Google sign-in successful");
     return user;
   } catch (error) {
     // Handle specific errors

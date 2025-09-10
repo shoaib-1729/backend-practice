@@ -118,6 +118,15 @@ const EditProfile = () => {
     [username, userId, token]
   );
 
+  // Cleanup function for abort controller
+  useEffect(() => {
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+    };
+  }, []);
+
   // Debounced username check effect
   useEffect(() => {
     if (debounceTimer.current) {
@@ -176,10 +185,9 @@ const EditProfile = () => {
 
   const handleCancel = () => {
     if (controllerRef.current) {
-      // API cancel
       controllerRef.current.abort();
+      controllerRef.current = null; // cleanup
     }
-    // back ya close modal
     navigate(-1);
   };
 
@@ -253,29 +261,6 @@ const EditProfile = () => {
       setIsButtonDisabled(false);
       setIsUpdateRemoveButtonDisabled(false);
     }
-
-    // try {
-    //   const res = await axios.patch(
-    //     `${import.meta.env.VITE_BASE_URL}/users/${userId}`,
-    //     formData,
-    //     {
-    //       headers: {
-    //         "Content-Type": "multipart/form-data",
-    //         Authorization: `Bearer ${token}`,
-    //       },
-    //     }
-    //   );
-
-    //   if (res.status === 200) {
-    //     toast.success(res.data.message);
-    //     dispatch(updateUser({ ...res.data.user, id: userId, email, followers, following, token }));
-    //     navigate(`/@${res.data.user.username}`);
-    //   }
-    // } catch (err) {
-    //   toast.error(err.response?.data?.message || "Error updating user");
-    // } finally {
-    //   setIsButtonDisabled(false);
-    // }
   };
 
   // Get username input styling

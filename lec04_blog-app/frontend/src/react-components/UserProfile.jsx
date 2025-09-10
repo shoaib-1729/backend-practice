@@ -11,9 +11,8 @@ import {
 } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { handleFollowCreator } from "../utils/helperFunc";
-import DeleteConfirmation from "./DeleteConfirmation"; // Import the reusable component
+import DeleteConfirmation from "./DeleteConfirmation";
 import toast from "react-hot-toast";
-import { updateUser } from "@/utils/userSlice";
 
 const UserProfile = () => {
   const { username } = useParams();
@@ -34,11 +33,18 @@ const UserProfile = () => {
   const dispatch = useDispatch();
 
   const dropdownRef = useRef(null);
+  const dropdownButtonRef = useRef(null);
 
   // dropdown close on outside mouse click
   useEffect(() => {
     function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      // Check if click is outside both dropdown and button
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        dropdownButtonRef.current &&
+        !dropdownButtonRef.current.contains(event.target)
+      ) {
         setShowDeleteDropdown(false);
       }
     }
@@ -53,7 +59,6 @@ const UserProfile = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showDeleteDropdown]);
-
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -95,6 +100,11 @@ const UserProfile = () => {
     }
   }, [location.pathname, userData, userId, username, navigate]);
 
+  const handleDropdownItemClick = (callback) => {
+    if (callback) callback();
+    setShowDeleteDropdown(false);
+  };
+
   if (!userData)
     return (
       <h1 className="text-center mt-20 text-lg font-semibold text-gray-600">
@@ -113,7 +123,10 @@ const UserProfile = () => {
               <div className="absolute top-4 right-4">
                 <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={() => setShowDeleteDropdown(!showDeleteDropdown)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteDropdown(!showDeleteDropdown);
+                    }}
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
                   >
                     <i className="fi fi-rr-menu-dots text-gray-600 text-lg cursor-pointer"></i>
@@ -121,21 +134,27 @@ const UserProfile = () => {
 
                   {/* Dropdown Menu */}
                   {showDeleteDropdown && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+                    <div
+                      ref={dropdownRef}
+                      className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Link
                         to="/edit-profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                        onClick={() => setShowDeleteDropdown(false)}
+                        onClick={() => handleDropdownItemClick()}
                       >
                         <i className="fi fi-rr-edit mr-3 text-gray-500"></i>
                         Edit Profile
                       </Link>
                       <div className="border-t border-gray-100 my-1"></div>
-                      <DeleteConfirmation
-                        type="user"
-                        item={userData}
-                        setShowDeleteDropdown={setShowDeleteDropdown}
-                      />
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DeleteConfirmation
+                          type="user"
+                          item={userData}
+                          setShowDeleteDropdown={setShowDeleteDropdown}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

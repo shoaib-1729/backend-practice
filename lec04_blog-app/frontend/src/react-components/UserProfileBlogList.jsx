@@ -4,23 +4,17 @@ import DisplayBlog from "./DisplayBlog";
 
 const UserProfileBlogList = () => {
   const { username } = useParams();
-  // const {showLikedBlogs,showDraftBlogs, showSavedBlogs} = useSelector(
-  //     (state) => state.user
-  //   );
   const location = useLocation();
   const userData = useUser();
 
   if (!userData) return null;
-
 
   // published stories
   if (location.pathname === `/${username}`) {
     return userData?.blogs && userData.blogs.length > 0 ? (
       <DisplayBlog data={userData?.blogs.filter((blog) => !blog?.draft)} />
     ) : (
-      <p className="text-gray-500 italic">
-        Write blog to publish your story.
-      </p>
+      <p className="text-gray-500 italic">Write blog to publish your story.</p>
     );
   }
 
@@ -33,7 +27,7 @@ const UserProfileBlogList = () => {
     );
   }
 
-// liked blogs
+  // liked blogs
   if (location.pathname === `/${username}/liked-blogs`) {
     return userData?.likedBlogs?.length > 0 ? (
       <DisplayBlog data={userData?.likedBlogs.filter((blog) => !blog?.draft)} />

@@ -86,6 +86,21 @@ const AddBlog = () => {
     }
   }, [id, title, description, image, content, draft, tag]);
 
+    // Cleanup function for abort controller
+  useEffect(() => {
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (editorjsRef.current === null) {
+      initializeEditorjs();
+    }
+  }, []);
+
   function handleTagKeyDown(e) {
     if (e.code === "Space") {
       e.preventDefault();
@@ -123,7 +138,6 @@ const AddBlog = () => {
     setIsButtonDisabled(true);
 
     e.preventDefault();
-    controllerRef.current = new AbortController();
 
     let formData = new FormData();
 
@@ -159,6 +173,8 @@ const AddBlog = () => {
     formData.append("existingImages", JSON.stringify(existingImages));
 
     try {
+      controllerRef.current = new AbortController();
+
       const res = await axios.put(
         `${import.meta.env.VITE_BASE_URL}/blogs/${id}`,
         formData,
@@ -180,7 +196,11 @@ const AddBlog = () => {
         dispatch(updateUser(res.data.user));
       }
     } catch (err) {
-      toast.error(err.response.data.message);
+      if (err.name === "CanceledError") {
+        toast.error("Update request cancelled");
+      } else {
+        toast.error(err.response?.data?.message || "Error updating user");
+      }
     }
   }
 
@@ -196,20 +216,17 @@ const AddBlog = () => {
 
   const handleCancel = () => {
     if (controllerRef.current) {
-      // API cancel
       controllerRef.current.abort();
+      controllerRef.current = null; // cleanup
     }
-    // back ya close modal
     navigate(-1);
   };
 
   // form submit pr db call karwao -> create blog
   async function handlePostBlog(e) {
+    e.preventDefault();
     // disable button
     setIsButtonDisabled(true);
-
-    e.preventDefault();
-    controllerRef.current = new AbortController();
 
     let formData = new FormData();
     for (let data of Object.entries(blogData)) {
@@ -228,7 +245,8 @@ const AddBlog = () => {
     });
 
     try {
-      e.preventDefault();
+      controllerRef.current = new AbortController();
+
       const res = await axios.post(
         `${import.meta.env.VITE_BASE_URL}/blogs`,
         formData,
@@ -248,7 +266,11 @@ const AddBlog = () => {
         navigate("/");
       }
     } catch (err) {
-      toast.error(err.response.data.message);
+      if (err.name === "CanceledError") {
+        toast.error("Update request cancelled");
+      } else {
+        toast.error(err.response?.data?.message || "Error updating user");
+      }
     }
   }
 
@@ -315,11 +337,7 @@ const AddBlog = () => {
     });
   };
 
-  useEffect(() => {
-    if (editorjsRef.current === null) {
-      initializeEditorjs();
-    }
-  }, []);
+
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
