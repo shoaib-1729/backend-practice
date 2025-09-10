@@ -7,17 +7,17 @@ const HeroPage = () => {
   return (
     <div className="bg-[#F5F4F0] min-h-screen flex flex-col overflow-x-hidden">
       {/* Hero Section */}
-      <div className="flex-1 flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 md:px-8 lg:px-16 py-8 sm:py-12 gap-8 lg:gap-12">
-        
+      <div className="flex-1 flex flex-col lg:flex-row items-center justify-between px-4 sm:px-6 md:px-8 lg:px-16 py-8 sm:py-12 gap-6 lg:gap-12">
         {/* Left Text */}
         <div className="w-full lg:max-w-xl text-center lg:text-left">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight text-gray-900 break-words">
-            Convey your heart <br className="hidden sm:block" /> 
+            Convey your heart <br className="hidden sm:block" />
             <span className="sm:hidden">through words.</span>
             <span className="hidden sm:inline">through words.</span>
           </h1>
           <p className="mt-4 text-base sm:text-lg text-gray-700 max-w-lg mx-auto lg:mx-0">
-            A place to redefine your soul by sharing stories with people around the globe.
+            A place to redefine your soul by sharing stories with people around
+            the globe.
           </p>
           <button
             onClick={() => navigate("/signin")}
@@ -28,11 +28,11 @@ const HeroPage = () => {
         </div>
 
         {/* Right Image */}
-        <div className="w-full lg:w-auto flex justify-center lg:justify-end">
+        <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
           <img
             src={heroIllustration}
             alt="hero-graphic"
-            className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl h-auto object-contain"
+            className="max-w-full h-auto object-contain flex-shrink-0"
           />
         </div>
       </div>
